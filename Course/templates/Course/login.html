@@ -1,0 +1,18 @@
+{% include 'template/base_head.html' %}
+{% include 'template/header.html' %}
+<center>
+    <div class="payment-info col-md-6 col-lg-4" style="margin-top: 15%;">
+        <h1>Авторизация</h1><br>
+        <form data-type="online" method="post" class="form-enroll-course form-base">
+            <fieldset>
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div class="text-center"><input type="hidden" name="utm_source" value="yandex">
+                    <button type="submit"
+                            class="btn btn-new btn-new--orange btn-new--width mb-new-2"><span>Записаться</span>
+                    </button>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</center>

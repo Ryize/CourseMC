@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>M&C - Занятия, расписание занятий</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+<body>
+<style>
+
+    td {
+	margin-left:8px;
+	font-weight: normal ;
+	font-size: 110%;
+	text-align: justify;
+	margin-right:3px;
+	margin-top: 0px;
+	text-indent: 6px;
+	margin:0px;
+	padding-bottom : 1px;
+	padding-left : 4px;
+	padding-right : 4px;
+	padding-top : 1px;
+	color:#003300
+}
+</style>
+{% include 'template/base_head.html' %}
+
+{% include 'template/header.html' %}
+<table class="table table-hover table-bordered" style="margin-top: 5%;">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+        <th scope="col">Тема урока</th>
+      <th scope="col">Время занятия</th>
+      <th scope="col">Материалы к уроку</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for schedule in schedules %}
+<tr>
+      <th scope="row">{{ forloop.counter }}</th>
+    <td>{{ schedule.theme | safe }}</td>
+    <td style="width: 20%;">{{ schedule.weekday }} {{ schedule.time_lesson }}</td>
+      <td style="width: 50%;">{{ schedule.lesson_materials | safe }}</td>
+    </tr>
+  {% empty %}
+  <center style="margin-top: 5%;"><h3 style="color: red;">У вас пока нету расписания!</h3></center>
+  {% endfor %}
+  </tbody>
+</table>
+</body>
+</html>
