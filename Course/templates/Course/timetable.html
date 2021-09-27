@@ -27,7 +27,17 @@
 {% include 'template/base_head.html' %}
 
 {% include 'template/header.html' %}
-<table class="table table-hover table-bordered" style="margin-top: 5%;">
+<div style="margin-top: 5%; width: 25%;">Введите название темы:
+    <form>
+        <input type="text" placeholder="Название темы" name="theme" class="form-control" style="border-radius: 10%;">
+        <input type="checkbox" name="primary" value="primary" class="form-control">Ключевой урок
+        <input type="checkbox" name="absent" value="absent" class="form-control">Урок который я пропустил
+        <center><input type="submit" value="Найти" class="form-control" style="width: 50%; margin-top: 5%;"></center>
+    </form>
+</div>
+<p style="margin-top: 5%;"><label  class="alert-danger">Красный фон</label> - означает что вы не присутствовали на уроке</p>
+<p><label style="text-size: 115%; text-weight: bold;" class="alert-primary"><strong>Стилем </strong></label>- будут выделены темы уроков с ключевыми темами</p>
+<table class="table table-hover table-bordered" style="margin-top: 1%;">
   <thead>
     <tr>
       <th scope="col">#</th>
@@ -40,7 +50,8 @@
   {% for schedule in schedules %}
 <tr>
       <th scope="row">{{ forloop.counter }}</th>
-    <td>{{ schedule.theme | safe }}</td>
+    <td
+            {% for i in schedule.absent.all %}{% if user.get_username == i.name %}class='alert-danger' title="Вы не присутствовали на этом уроке"{% endif %}{% endfor %}{% if schedule.key_topic %} class="alert-primary" style="font-size: 115%; font-weight: bold;"{% endif %}>{{ schedule.theme | safe }}</td>
     <td style="width: 20%;">{{ schedule.weekday }} {{ schedule.time_lesson }}</td>
       <td style="width: 50%;">{{ schedule.lesson_materials | safe }}</td>
     </tr>

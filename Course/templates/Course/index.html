@@ -29,29 +29,27 @@
                                                                                        href="https://brunoyam.com/online-kursy/python-s-nulya?utm_source=yandex&amp;utm_medium=cpc&amp;utm_term=%D0%9A%D1%83%D1%80%D1%81%D1%8B%20Python&amp;utm_content=4525053568_10565583907&amp;utm_campaign=Python-Online-POISK&amp;yclid=5379235251520329232#collapseMobileMenuFixed"
                                                                                        role="button"
                                                                                        aria-expanded="false"
-                                                                                       aria-controls="collapseMobileMenuFixed"
-                                                                                       class="d-inline d-md-none collapsed">
-                    <svg width="20" height="20" viewBox="0 0 20 16" fill="currentColor"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path d="M11.5 8.81608H0.5C0.223999 8.81608 0 8.44275 0 7.98275C0 7.52275 0.223999 7.14941 0.5 7.14941H11.5C11.776 7.14941 12 7.52275 12 7.98275C12 8.44275 11.776 8.81608 11.5 8.81608Z"
-                              fill="currentColor"></path>
-                        <path d="M19.1667 2.42692H0.833333C0.373332 2.42692 0 2.05359 0 1.59359C0 1.13359 0.373332 0.760254 0.833333 0.760254H19.1667C19.6267 0.760254 20 1.13359 20 1.59359C20 2.05359 19.6267 2.42692 19.1667 2.42692Z"
-                              fill="currentColor"></path>
-                        <path d="M19.1667 15.2048H0.833333C0.373332 15.2048 0 14.8314 0 14.3714C0 13.9114 0.373332 13.5381 0.833333 13.5381H19.1667C19.6267 13.5381 20 13.9114 20 14.3714C20 14.8314 19.6267 15.2048 19.1667 15.2048Z"
-                              fill="currentColor"></path>
-                    </svg>
+                                                                                       aria-controls="collapseMobileMenuFixed">
+                            <a class="logo-link" href="{% url 'home' %}"><h1 style="font-size: 215%"
+                                              alt="Учебный центр CourseMC - логотип"
+                                              class="img-fluid logo svg">M&C</h1></a>
+                    {% if user.is_authenticated %}
+                        <a
+                            href="{% url 'schedule' %}"
+                            class="btn btn-transparent ml-4"
+                            style="margin-left: 25px; color: #fd7e14">
+                             Расписание
+                            </a>
+                        {% else %}
+                        <a
+                            href="{% url 'account_login' %}"
+                            class="payment_price mb-0"
+                            style="margin-left: 25px;">
+                            Авторизоваться
+                            </a>
+                        {% endif %}
                 </a>
-                    <a href="https://brunoyam.com/online-kursy/python-s-nulya?utm_source=yandex&amp;utm_medium=cpc&amp;utm_term=%D0%9A%D1%83%D1%80%D1%81%D1%8B%20Python&amp;utm_content=4525053568_10565583907&amp;utm_campaign=Python-Online-POISK&amp;yclid=5379235251520329232#"
-                       data-toggle="modal" data-target="#callbackModel"
-                       onclick="ym(15894265,&#39;reachGoal&#39;,&#39;callback_click&#39;); gtag (&#39;send&#39;, &#39;event&#39;, &#39;callback&#39;, &#39;click&#39;); return true;"
-                       class="btn menu-main-btn">Заказать звонок</a> <a href="tel:88005513904"
-                                                                        onclick="ym(15894265,&#39;reachGoal&#39;,&#39;telefon_click&#39;);gtag(&#39;send&#39;, &#39;event&#39;, &#39;telefon&#39;, &#39;click&#39;);return true;"
-                                                                        class="btn btn-transparent btn-sm ml-4 flex-grow-1">
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M19.4561 14.678L16.6651 11.8869C15.6683 10.8901 13.9737 11.2889 13.575 12.5847C13.2759 13.4819 12.2791 13.9803 11.382 13.7809C9.38839 13.2825 6.69701 10.6908 6.1986 8.59746C5.89956 7.7003 6.49765 6.70349 7.39477 6.40448C8.69062 6.00576 9.08934 4.31119 8.09254 3.31438L5.30148 0.523324C4.50403 -0.174441 3.30786 -0.174441 2.6101 0.523324L0.716166 2.41726C-1.17777 4.41087 0.915528 9.69395 5.60052 14.3789C10.2855 19.0639 15.5686 21.2569 17.5622 19.2633L19.4561 17.3694C20.1539 16.5719 20.1539 15.3757 19.4561 14.678Z"
-                                  fill="#EB5D18"></path>
-                        </svg>
-                    </a></div>
+                    </div>
                 <div id="collapseMobileMenuFixed" class="col-12 collapse mobile-menu">
                     <div class="d-flex flex-column full_height"><a data-toggle="collapse"
                                                                    href="https://brunoyam.com/online-kursy/python-s-nulya?utm_source=yandex&amp;utm_medium=cpc&amp;utm_term=%D0%9A%D1%83%D1%80%D1%81%D1%8B%20Python&amp;utm_content=4525053568_10565583907&amp;utm_campaign=Python-Online-POISK&amp;yclid=5379235251520329232#collapseMobileMenuFixed"
@@ -100,16 +98,7 @@
                                 Контакты
                             </a></li>
                         </ul>
-                        <div class="mt-auto mobile_menu_bottom"><a href="tel:88005513904"
-                                                                   onclick="ym(15894265,&#39;reachGoal&#39;,&#39;telefon_click&#39;);gtag(&#39;send&#39;, &#39;event&#39;, &#39;telefon&#39;, &#39;click&#39;);return true;">8
-                            (800) 551-39-04</a>
-                            <div class="clearfix"></div>
-                            <a href="https://brunoyam.com/online-kursy/python-s-nulya?utm_source=yandex&amp;utm_medium=cpc&amp;utm_term=%D0%9A%D1%83%D1%80%D1%81%D1%8B%20Python&amp;utm_content=4525053568_10565583907&amp;utm_campaign=Python-Online-POISK&amp;yclid=5379235251520329232"
-                               data-toggle="modal" data-target="#callbackModel"
-                               onclick="ym(15894265,&#39;reachGoal&#39;,&#39;callback_click&#39;); gtag (&#39;send&#39;, &#39;event&#39;, &#39;callback&#39;, &#39;click&#39;); return true;"
-                               class="btn link-new">
-                                Заказать звонок
-                            </a></div>
+
                     </div>
                 </div>
             </div>
@@ -117,21 +106,7 @@
     </div>
     <main id="page-wrap" class="redesign_2020">
         <div itemscope="itemscope" itemtype="https://schema.org/Product">
-            <div class="tabs-menu-mobile tabs-menu-mobile--course d-md-none">
-                <div id="scroll-tabs" class="container new-grid">
-                    <div class="tabs-menu-mobile-wrapper"><a
-                            href="https://brunoyam.com/online-kursy/python-s-nulya?utm_source=yandex&amp;utm_medium=cpc&amp;utm_term=%D0%9A%D1%83%D1%80%D1%81%D1%8B%20Python&amp;utm_content=4525053568_10565583907&amp;utm_campaign=Python-Online-POISK&amp;yclid=5379235251520329232#About"
-                            class="tab-menu-mobile-link tab-menu-mobile-link--course scrollable_mobile">О курсе</a> <a
-                            href="https://brunoyam.com/online-kursy/python-s-nulya?utm_source=yandex&amp;utm_medium=cpc&amp;utm_term=%D0%9A%D1%83%D1%80%D1%81%D1%8B%20Python&amp;utm_content=4525053568_10565583907&amp;utm_campaign=Python-Online-POISK&amp;yclid=5379235251520329232#teachers"
-                            class="tab-menu-mobile-link tab-menu-mobile-link--course scrollable_mobile">Преподаватели</a>
-                        <a href="https://brunoyam.com/online-kursy/python-s-nulya?utm_source=yandex&amp;utm_medium=cpc&amp;utm_term=%D0%9A%D1%83%D1%80%D1%81%D1%8B%20Python&amp;utm_content=4525053568_10565583907&amp;utm_campaign=Python-Online-POISK&amp;yclid=5379235251520329232#payment"
-                           class="tab-menu-mobile-link tab-menu-mobile-link--course scrollable_mobile">Стоимость</a> <a
-                                href="https://brunoyam.com/online-kursy/python-s-nulya?utm_source=yandex&amp;utm_medium=cpc&amp;utm_term=%D0%9A%D1%83%D1%80%D1%81%D1%8B%20Python&amp;utm_content=4525053568_10565583907&amp;utm_campaign=Python-Online-POISK&amp;yclid=5379235251520329232#plan"
-                                class="tab-menu-mobile-link tab-menu-mobile-link--course scrollable_mobile">Программа</a>
-                        <a href="https://brunoyam.com/online-kursy/python-s-nulya?utm_source=yandex&amp;utm_medium=cpc&amp;utm_term=%D0%9A%D1%83%D1%80%D1%81%D1%8B%20Python&amp;utm_content=4525053568_10565583907&amp;utm_campaign=Python-Online-POISK&amp;yclid=5379235251520329232#block-clients"
-                           class="tab-menu-mobile-link tab-menu-mobile-link--course scrollable_mobile">О Школе</a></div>
-                </div>
-            </div>
+
             <div id="breadcrumbs" class="pt-new-2 breadcrumb-container">
                 <div class="container new-grid">
                     <div class="row">
@@ -1187,18 +1162,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row d-block d-md-none mt-new-3">
-                        <div class="col-12 text-center">
-                            <div class="d-block text-center medium_p mb-new-2">
-                                Остались вопросы? С радостью ответим на них!
-                            </div>
-                            <div class="d-block text-center"><a
-                                    href="https://brunoyam.com/online-kursy/python-s-nulya?utm_source=yandex&amp;utm_medium=cpc&amp;utm_term=%D0%9A%D1%83%D1%80%D1%81%D1%8B%20Python&amp;utm_content=4525053568_10565583907&amp;utm_campaign=Python-Online-POISK&amp;yclid=5379235251520329232#"
-                                    data-toggle="modal" data-target="#callbackModel"
-                                    onclick="ym(15894265,&#39;reachGoal&#39;,&#39;moregroup_click&#39;); return true;"
-                                    class="btn btn-new btn-new--orange mm-auto">Заказать звонок</a></div>
-                        </div>
-                    </div>
+
                 </div>
             </div>
             <div id="emotionProff" class="mt-new-10 pt-new-25 mb-new-10 d-block bg_grey">

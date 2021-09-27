@@ -1,4 +1,5 @@
 from ckeditor.fields import RichTextField
+from ckeditor_uploader.fields import RichTextUploadingField
 from django.db import models
 import random
 
@@ -16,7 +17,7 @@ class Student(models.Model):
         verbose_name_plural = 'Ученики'
 
     def __str__(self):
-        return f"{self.name} as{self.groups}"
+        return f"{self.name}"
 
 class LearnGroup(models.Model):
     title = models.CharField(max_length=32, verbose_name='Название')
@@ -50,7 +51,10 @@ class Schedule(models.Model):
     theme = RichTextField(max_length=128, verbose_name='Тема урока', default='Тема не задана!')
     weekday = models.DateField(verbose_name='День недели')
     time_lesson = models.TimeField(verbose_name='Время')
-    lesson_materials = RichTextField(verbose_name='Материалы к уроку', unique=False, default='Дополнительных материалов нету!')
+    lesson_materials = RichTextUploadingField(verbose_name='Материалы к уроку', unique=False, default='Дополнительных материалов нету!')
+    absent = models.ManyToManyField('Student', verbose_name='Отсутствующие', null=True, blank=True)
+    key_topic = models.BooleanField(default=False, verbose_name='Ключевая тема')
+
 
     class Meta:
         verbose_name = 'Расписание'

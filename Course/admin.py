@@ -46,11 +46,12 @@ class LearnGroupAdmin(admin.ModelAdmin):
 class ScheduleAdmin(admin.ModelAdmin):
     content = forms.CharField(widget=CKEditorUploadingWidget())
     class Meta:
-        list_display = ('group', 'weekday', 'time_lesson',)
-        list_display_links = ('group', 'weekday', 'time_lesson',)
-        list_filter = ('group', 'weekday', 'time_lesson',)
+        fields = ('title', 'is_studies', 'created_at',)
+        list_display = ('group', 'weekday', 'time_lesson', 'key_topic',)
+        list_display_links = ('group', 'weekday', 'time_lesson', 'key_topic',)
+        list_filter = ('group', 'weekday', 'time_lesson', 'key_topic',)
         empty_value_display = '-пустой-'
         list_per_page = 64
         list_max_show_all = 8
-        search_fields = ('__all__', )
+        #search_fields = ('__all__', )
         date_hierarchy = 'weekday'

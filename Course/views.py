@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth import get_user
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.generic.edit import FormView
@@ -36,7 +37,7 @@ class StudentRecordView(FormView):
         return JsonResponse(response)
 
 
-class TimetableView(ListView):
+class TimetableView(LoginRequiredMixin, ListView):
     model = Schedule
     template_name = 'Course/timetable.html'
     context_object_name = 'schedules'
@@ -44,5 +45,11 @@ class TimetableView(ListView):
     def get_queryset(self):
         student = Student.objects.get(name=get_user(self.request).username)
         student_group = Schedule.objects.filter(group=student.groups).order_by('-pk')
-        print(student_group)
+        if self.__get_param('theme') or self.__get_param('primary') or self.__get_param('absent'):
+            theme = self.request.GET.get('theme')
+            student_group = student_group.filter(theme__icontains=theme).filter(key_topic__exact=True).filter(absent__name__iexact=f'{student.name}')
+
         return student_group
+
+    def __get_param(self, name):
+        return self.request.GET.get(name)
