@@ -411,12 +411,21 @@
                             class="d-none link-phone d-lg-flex"
                             style="margin-left: 25px;">
                         {% if user.is_authenticated %}
+                        {% if user.is_superuser %}
+                        <a
+                            href="{% url 'admin:index' %}"
+                            class="d-none link-phone d-lg-flex"
+                            style="margin-left: 25px;">
+                             Настройки
+                            </a>
+                        {%endif%}
                         <a
                             href="{% url 'schedule' %}"
                             class="d-none link-phone d-lg-flex"
                             style="margin-left: 25px;">
                              Расписание
                             </a>
+
                         {% else %}
                         <a
                             href="{% url 'account_login' %}"
