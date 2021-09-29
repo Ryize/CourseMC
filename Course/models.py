@@ -54,7 +54,7 @@ class Schedule(models.Model):
     lesson_materials = RichTextUploadingField(verbose_name='Материалы к уроку', unique=False, default='Дополнительных материалов нету!')
     absent = models.ManyToManyField('Student', verbose_name='Отсутствующие', null=True, blank=True)
     key_topic = models.BooleanField(default=False, verbose_name='Ключевая тема')
-
+    is_display = models.BooleanField(default=True, verbose_name='Отображать')
 
     class Meta:
         verbose_name = 'Расписание'

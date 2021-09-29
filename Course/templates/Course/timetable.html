@@ -48,6 +48,7 @@
   </thead>
   <tbody>
   {% for schedule in schedules %}
+  {% if schedule.is_display %}
 <tr>
       <th scope="row">{{ forloop.counter }}</th>
     <td
@@ -55,8 +56,7 @@
     <td style="width: 20%;">{{ schedule.weekday }} {{ schedule.time_lesson }}</td>
       <td style="width: 50%;">{{ schedule.lesson_materials | safe }}</td>
     </tr>
-  {% empty %}
-  <center style="margin-top: 5%;"><h3 style="color: red;">У вас пока нету расписания!</h3></center>
+  {% endif %}
   {% endfor %}
   </tbody>
 </table>

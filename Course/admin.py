@@ -6,7 +6,7 @@ from .models import *
 
 @admin.register(Student)
 class PersonAdmin(admin.ModelAdmin):
-    fields = ('name', 'contact', 'email', 'password', 'groups', 'is_learned', 'created_at')
+    fields = ('name', 'contact', 'email', 'groups', 'is_learned', 'created_at')
     list_display = ('id', 'name', 'contact', 'groups', 'is_learned',)
     list_display_links = ('id', 'name', 'groups', 'contact',)
     list_filter = ('groups', 'is_learned',)
@@ -45,13 +45,12 @@ class LearnGroupAdmin(admin.ModelAdmin):
 @admin.register(Schedule)
 class ScheduleAdmin(admin.ModelAdmin):
     content = forms.CharField(widget=CKEditorUploadingWidget())
-    class Meta:
-        fields = ('title', 'is_studies', 'created_at',)
-        list_display = ('group', 'weekday', 'time_lesson', 'key_topic',)
-        list_display_links = ('group', 'weekday', 'time_lesson', 'key_topic',)
-        list_filter = ('group', 'weekday', 'time_lesson', 'key_topic',)
-        empty_value_display = '-пустой-'
-        list_per_page = 64
-        list_max_show_all = 8
-        #search_fields = ('__all__', )
-        date_hierarchy = 'weekday'
+    fields = ('theme', 'group', 'weekday', 'time_lesson', 'lesson_materials', 'absent', 'key_topic', 'is_display')
+    list_display = ('id', 'theme', 'group', 'weekday', 'time_lesson', 'is_display')
+    list_display_links = ('theme','group', 'weekday', 'time_lesson',)
+    list_filter = ('group', 'weekday', 'time_lesson', 'key_topic', 'is_display')
+    empty_value_display = '-пустой-'
+    list_per_page = 64
+    list_max_show_all = 8
+    search_fields = ('theme', 'lesson_materials',)
+    date_hierarchy = 'weekday'
