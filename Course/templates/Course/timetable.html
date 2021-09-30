@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>M&C - Занятия, расписание занятий</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-</head>
+    <!-- Bootstrap CSS (jsDelivr CDN) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+  <!-- Bootstrap Bundle JS (jsDelivr CDN) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj" crossorigin="anonymous"></script></head>
 <body>
 <style>
 
@@ -60,5 +62,62 @@
   {% endfor %}
   </tbody>
 </table>
+<nav aria-label="Page navigation example">
+      {% if is_paginated %}
+      {% if page_obj.has_other_pages %}
+    <style>
+        #pag {
+            margin-top: 75px;
+            height: 100%;
+        }
+    </style>
+    <nav aria-label="Navigation panel" id="pag">
+        <ul class="pagination justify-content-center">
+
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" tabindex="-1">Предыдущая
+                        страница</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1">Предыдущая страница</a>
+                </li>
+            {% endif %}
+            {% for p in page_obj.paginator.page_range %}
+
+                {% if forloop.first and p < page_obj.number|add:-3 %}
+                    <li class="page-item"><a class="page-link" href="?page=1">1</a>
+                    <li class="page-item"><a class="page-link" >...</a> </li>
+                {% endif %}
+
+                {% if p >= page_obj.number|add:-3 and p <= page_obj.number|add:3 %}
+                    <li class="page-item{% if p != page_obj.number %}{% else %} active{% endif %}"><a class="page-link"
+                                                                                                  href="?page={{ p }}">{{ p }}</a>
+                    </li>
+
+                {% endif %}
+
+                {% if forloop.last and p > page_obj.number|add:3 %}
+                    <li class="page-item"><a class="page-link" >...</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ paginator.num_pages }}">{{ paginator.num_pages }}</a>
+                {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Следующая страница</a>
+
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#">Следующая страница</a>
+                </li>
+            {% endif %}
+
+        </ul>
+    </nav>
+{% endif %}
+      {% endif %}
+    </nav>
 </body>
 </html>

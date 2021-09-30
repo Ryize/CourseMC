@@ -41,6 +41,7 @@ class TimetableView(LoginRequiredMixin, ListView):
     model = Schedule
     template_name = 'Course/timetable.html'
     context_object_name = 'schedules'
+    paginate_by = 1
 
     def get_queryset(self):
         student = Student.objects.get(name=get_user(self.request).username)
