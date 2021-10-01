@@ -46,14 +46,19 @@ class Teacher(models.Model):
         return f"{self.name}"
 
 class Schedule(models.Model):
-    #content = RichTextField()
+    LESSONG_TYPE_CHOICES = (
+        ('Практика', 'Практика'),
+        ('Новая тема', 'Новая тема'),
+        ('Ключевой урок', 'Ключевой урок'),
+    )
+
     group = models.ForeignKey('LearnGroup', on_delete=models.CASCADE, verbose_name='Группа обучения')
     theme = RichTextField(max_length=128, verbose_name='Тема урока', default='Тема не задана!')
     weekday = models.DateField(verbose_name='День недели')
     time_lesson = models.TimeField(verbose_name='Время')
     lesson_materials = RichTextUploadingField(verbose_name='Материалы к уроку', unique=False, default='Дополнительных материалов нету!')
     absent = models.ManyToManyField('Student', verbose_name='Отсутствующие', null=True, blank=True)
-    key_topic = models.BooleanField(default=False, verbose_name='Ключевая тема')
+    lesson_type = models.CharField(max_length=64, choices=LESSONG_TYPE_CHOICES, default='Практика', verbose_name='Тип урока')
     is_display = models.BooleanField(default=True, verbose_name='Отображать')
 
     class Meta:

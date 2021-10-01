@@ -46,11 +46,16 @@ class TimetableView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         student = Student.objects.get(name=get_user(self.request).username)
         student_group = Schedule.objects.filter(group=student.groups).order_by('-pk')
-        if self.__get_param('theme') or self.__get_param('primary') or self.__get_param('absent'):
-            theme = self.request.GET.get('theme')
-            student_group = student_group.filter(theme__icontains=theme).filter(key_topic__exact=True).filter(absent__name__iexact=f'{student.name}')
+        theme = self.__get_param('theme')
+        if theme:
+            student_group = student_group.filter(theme__icontains=theme)
+        if self.__get_param('primary'):
+            student_group =  student_group.filter(lesson_type__icontains=self.__get_param('primary'))
+        if self.__get_param('absent'):
+            student_group = student_group.filter(absent__name__iexact=f'{student.name}')
 
         return student_group
+
 
     def __get_param(self, name):
         return self.request.GET.get(name)

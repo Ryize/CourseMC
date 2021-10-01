@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <title>M&C - Занятия, расписание занятий</title>
     <!-- Bootstrap CSS (jsDelivr CDN) -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
-  <!-- Bootstrap Bundle JS (jsDelivr CDN) -->
-  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj" crossorigin="anonymous"></script></head>
+   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 <body>
 <style>
 
@@ -32,13 +30,15 @@
 <div style="margin-top: 5%;" class="col-sm-12 col-md-6 col-lg-4">Введите название темы:
     <form>
         <input type="text" placeholder="Название темы" name="theme" class="form-control" style="border-radius: 10%;">
-        <input type="checkbox" name="primary" value="primary" class="form-control">Ключевой урок
+        <input type="checkbox" name="primary" value="Ключевой урок" class="form-control">Ключевой урок
+        <input type="checkbox" name="primary" value="Новая тема" class="form-control">Новая тема
         <input type="checkbox" name="absent" value="absent" class="form-control">Урок который я пропустил
         <center><input type="submit" value="Найти" class="form-control" style="width: 50%; margin-top: 5%;"></center>
     </form>
 </div>
 <p style="margin-top: 5%;"><label  class="alert-danger">Красный фон</label> - означает что вы не присутствовали на уроке</p>
 <p><label style="text-size: 115%; text-weight: bold;" class="alert-primary"><strong>Стилем </strong></label>- будут выделены темы уроков с ключевыми темами</p>
+<p><label class="alert-warning">Жёлтый фон</label> - означает что была пройдена новая тема</p>
 <table class="table table-hover table-bordered" style="margin-top: 1%;">
   <thead>
     <tr>
@@ -54,7 +54,12 @@
 <tr>
       <th scope="row">{{ forloop.counter }}</th>
     <td
-            {% for i in schedule.absent.all %}{% if user.get_username == i.name %}class='alert-danger' title="Вы не присутствовали на этом уроке"{% endif %}{% endfor %}{% if schedule.key_topic %} class="alert-primary" style="font-size: 115%; font-weight: bold;"{% endif %}>{{ schedule.theme | safe }}</td>
+        {% for i in schedule.absent.all %}{% if user.get_username == i.name %}class='alert-danger' title="Вы не присутствовали на этом уроке"{% endif %}{% endfor %}{% if schedule.key_topic %} class="alert-primary" style="font-size: 115%; font-weight: bold;"{% endif %}
+        {% if schedule.lesson_type == 'Новая тема' %} class="alert-warning"
+        {% elif schedule.lesson_type == 'Ключевой урок' %} class="alert-primary"
+    {% endif %}
+    title="Это {{ schedule.lesson_type }}"
+    >{{ schedule.theme | safe }}</td>
     <td style="width: 20%;">{{ schedule.weekday }} {{ schedule.time_lesson }}</td>
       <td style="width: 50%;">{{ schedule.lesson_materials | safe }}</td>
     </tr>

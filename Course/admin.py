@@ -45,10 +45,10 @@ class LearnGroupAdmin(admin.ModelAdmin):
 @admin.register(Schedule)
 class ScheduleAdmin(admin.ModelAdmin):
     content = forms.CharField(widget=CKEditorUploadingWidget())
-    fields = ('theme', 'group', 'weekday', 'time_lesson', 'lesson_materials', 'absent', 'key_topic', 'is_display')
+    fields = ('theme', 'group', 'weekday', 'time_lesson', 'lesson_materials', 'absent', 'lesson_type', 'is_display')
     list_display = ('id', 'theme', 'group', 'weekday', 'time_lesson', 'is_display')
     list_display_links = ('theme','group', 'weekday', 'time_lesson',)
-    list_filter = ('group', 'weekday', 'time_lesson', 'key_topic', 'is_display')
+    list_filter = ('group', 'weekday', 'time_lesson', 'lesson_type', 'is_display')
     empty_value_display = '-пустой-'
     list_per_page = 64
     list_max_show_all = 8
