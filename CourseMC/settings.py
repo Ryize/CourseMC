@@ -46,8 +46,9 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'ckeditor',
     'ckeditor_uploader',
-    'crispy_forms',
+    'rest_framework',
     'Course.apps.AuthConfig',
+    'api.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
@@ -182,6 +183,7 @@ CKEDITOR_CONFIGS = {
         ]),
     }
 }
+
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'

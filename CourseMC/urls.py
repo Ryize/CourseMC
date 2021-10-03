@@ -20,6 +20,7 @@ urlpatterns = [
     path('coursemc_control/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
     path('ckeditor/', include('ckeditor_uploader.urls')),
+    path('api/', include('api.urls')),
     path('', include('social_django.urls')),
     path('', include('Course.urls')),
 ]
