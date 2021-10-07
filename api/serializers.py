@@ -18,6 +18,14 @@ class ScheduleListSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ScheduleUserSerializer(serializers.ModelSerializer):
+    """Список расписаний пользователя"""
+
+    class Meta:
+        model = Schedule
+        fields = ('name')
+
+
 class StudentListSerializer(serializers.ModelSerializer):
     """Список всех студентов"""
 

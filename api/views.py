@@ -17,11 +17,25 @@ class ScheduleViewSet(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = ScheduleListSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(status=201)
-        return Response(status=400)
+        username = request.data['username']
+        student = Student.objects.get(name=username)
+        group = student.groups.all()
+        print('!!!!!!!!!')
+        return Response(group)
+
+
+class ScheduleUserViewSet(APIView):
+    """
+    Вывод расписаний пользователя
+    """
+
+    def post(self, request):
+        username = request.data['username']
+        student = Student.objects.get(name=username)
+        group = student.groups
+        sсhedule = Schedule.objects.filter(group=group).values()
+        print(type(sсhedule))
+        return Response(sсhedule)
 
 
 class StudentViewSet(APIView):
