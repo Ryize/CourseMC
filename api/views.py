@@ -3,8 +3,8 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from Course.models import Schedule, Student
-from .serializers import ScheduleListSerializer, StudentListSerializer
+from Course.models import Schedule, Student, LearnGroup
+from .serializers import ScheduleListSerializer, StudentListSerializer, LearnGroupListSerializer
 
 
 class ScheduleViewSet(APIView):
@@ -17,16 +17,16 @@ class ScheduleViewSet(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        username = request.data['username']
-        student = Student.objects.get(name=username)
-        group = student.groups.all()
-        print('!!!!!!!!!')
-        return Response(group)
-
-
-class ScheduleUserViewSet(APIView):
+        serializer = ScheduleListSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=201)
+        return Response(status=400)
+        
+        
+class ScheduleGet(APIView):
     """
-    Вывод расписаний пользователя
+    Вывод расписаний с определённым пользователем
     """
 
     def post(self, request):
@@ -34,8 +34,7 @@ class ScheduleUserViewSet(APIView):
         student = Student.objects.get(name=username)
         group = student.groups
         sсhedule = Schedule.objects.filter(group=group).values()
-        print(type(sсhedule))
-        return Response(sсhedule)
+        return Response(sсhedule)   
 
 
 class StudentViewSet(APIView):
@@ -49,6 +48,23 @@ class StudentViewSet(APIView):
 
     def post(self, request):
         serializer = StudentListSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=201)
+        return Response(status=400)
+        
+        
+class LearnGroupViewSet(APIView):
+    """
+    Вывод всех групп
+    """
+    def get(self, request):
+        groups = LearnGroup.objects.all()
+        serializer = LearnGroupListSerializer(groups, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = LearnGroupListSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(status=201)

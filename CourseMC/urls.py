@@ -15,12 +15,20 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls.static import static
+from django.conf import settings
 
 urlpatterns = [
     path('coursemc_control/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
     path('ckeditor/', include('ckeditor_uploader.urls')),
-    path('api/', include('api.urls')),
+    path('api/v1/', include('api.urls')),
     path('', include('social_django.urls')),
     path('', include('Course.urls')),
 ]
+
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+
+# ... остальная часть вашего URLconf здесь ...
+
+urlpatterns += staticfiles_urlpatterns()

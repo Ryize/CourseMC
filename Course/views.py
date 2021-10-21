@@ -50,7 +50,7 @@ class TimetableView(LoginRequiredMixin, ListView):
         if theme:
             student_group = student_group.filter(theme__icontains=theme)
         if self.__get_param('lesson_type'):
-            student_group = student_group.filter(lesson_type__icontains=self.__get_param('lesson_type'))
+            student_group =  student_group.filter(lesson_type__icontains=self.__get_param('lesson_type'))
         if self.__get_param('absent'):
             student_group = student_group.filter(absent__name__iexact=f'{student.name}')
 

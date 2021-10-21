@@ -6,7 +6,7 @@ from .models import *
 
 @admin.register(Student)
 class PersonAdmin(admin.ModelAdmin):
-    fields = ('name', 'contact', 'email', 'groups', 'is_learned', 'created_at')
+    fields = ('name', 'contact', 'email', 'password', 'groups', 'is_learned', 'created_at')
     list_display = ('id', 'name', 'contact', 'groups', 'is_learned',)
     list_display_links = ('id', 'name', 'groups', 'contact',)
     list_filter = ('groups', 'is_learned',)

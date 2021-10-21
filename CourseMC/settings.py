@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'r)++8x6o+%a+55^*kf44@5_rezvzv$m5b(51@w=pbasn_2c7s#'
+SECRET_KEY = 'r)+kik+8x6o+%a+55hdjkf44@5_rezvzv$m5b(51lkij=pbasgfhde(__gshw'
 SOCIAL_AUTH_VK_OAUTH2_KEY = '7951107'
 SOCIAL_AUTH_VK_OAUTH2_SECRET = 'ab825789ab825789ab82578950abfb048aaab82ab825789cac22c88943e5f898833038e'
 LOGIN_REDIRECT_URL = '/'
@@ -28,7 +28,7 @@ LOGIN_REDIRECT_URL = '/'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['coursemc.space', 'www.coursemc.space']
 
 # Application definition
 
@@ -46,9 +46,9 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'ckeditor',
     'ckeditor_uploader',
+    'crispy_forms',
     'rest_framework',
     'Course.apps.AuthConfig',
-    'api.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
@@ -184,7 +184,6 @@ CKEDITOR_CONFIGS = {
     }
 }
 
-
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
@@ -210,6 +209,8 @@ SITE_ID = 1
 
 STATIC_URL = '/static/'
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
+    os.path.join(BASE_DIR, "CourseMC/static"),
 ]
