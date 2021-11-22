@@ -28,7 +28,7 @@ LOGIN_REDIRECT_URL = '/'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['coursemc.space', 'www.coursemc.space']
+ALLOWED_HOSTS = ['coursemc.space', 'www.coursemc.space', 'localhost', '127.0.0.1']
 
 # Application definition
 
@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'rest_framework',
     'Course.apps.AuthConfig',
+    'reviews.apps.ReviewsConfig',
 ]
 
 MIDDLEWARE = [
@@ -157,7 +158,7 @@ CKEDITOR_CONFIGS = {
             ]},
         ],
         'toolbar': 'YourCustomToolbarConfig',  # put selected toolbar config here
-        'toolbarGroups': [{ 'name': 'document', 'groups': [ 'mode', 'document', 'doctools' ] }],
+        'toolbarGroups': [{'name': 'document', 'groups': ['mode', 'document', 'doctools']}],
         # 'height': 291,
         # 'width': '100%',
         # 'filebrowserWindowHeight': 725,
@@ -166,7 +167,7 @@ CKEDITOR_CONFIGS = {
         # 'mathJaxLib': '//cdn.mathjax.org/mathjax/2.2-latest/MathJax.js?config=TeX-AMS_HTML',
         'tabSpaces': 4,
         'extraPlugins': ','.join([
-            'uploadimage', # the upload image feature
+            'uploadimage',  # the upload image feature
             # your extra plugins here
             'div',
             'autolink',
@@ -194,7 +195,7 @@ CKEDITOR_UPLOAD_PATH = "uploads/"
 
 LANGUAGE_CODE = 'ru'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 

@@ -1,199 +1,150 @@
 {% load static %}
 
 <div class="container-fluid pl-0 pr-0 header fixed-top fixed-active">
-        <div class="container new-grid">
-            <div class="row">
-                <div class="col-8 d-flex align-items-center"><a data-toggle="collapse"
-                                                                                                                                role="button" aria-expanded="false"
-                                                                aria-controls="collapseMobileMenu"
-                                                                class="d-inline d-lg-none collapsed">
-                    <svg width="20" height="20" viewBox="0 0 20 16" fill="currentColor"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path d="M11.5 8.81608H0.5C0.223999 8.81608 0 8.44275 0 7.98275C0 7.52275 0.223999 7.14941 0.5 7.14941H11.5C11.776 7.14941 12 7.52275 12 7.98275C12 8.44275 11.776 8.81608 11.5 8.81608Z"
-                              fill="currentColor"></path>
-                        <path d="M19.1667 2.42692H0.833333C0.373332 2.42692 0 2.05359 0 1.59359C0 1.13359 0.373332 0.760254 0.833333 0.760254H19.1667C19.6267 0.760254 20 1.13359 20 1.59359C20 2.05359 19.6267 2.42692 19.1667 2.42692Z"
-                              fill="currentColor"></path>
-                        <path d="M19.1667 15.2048H0.833333C0.373332 15.2048 0 14.8314 0 14.3714C0 13.9114 0.373332 13.5381 0.833333 13.5381H19.1667C19.6267 13.5381 20 13.9114 20 14.3714C20 14.8314 19.6267 15.2048 19.1667 15.2048Z"
-                              fill="currentColor"></path>
-                    </svg>
-                </a> <a class="logo-link" href="{% url 'home' %}"><h1 style="font-size: 215%"
-                                              alt="Учебный центр CourseMC - логотип"
-                                              class="img-fluid logo svg">M&C</h1></a>
-                    <div class="courses-menu">
-                        <div class="container new-grid d-flex flex-column">
-                            <div class="courses-menu__close-btn">
-                                <svg width="32" height="32" viewBox="0 0 32 32" fill="none"
-                                     xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M18.9317 16.0263L31.3919 3.56574C32.2028 2.75523 32.2028 1.44475 31.3919 0.634247C30.5814 -0.176259 29.2709 -0.176259 28.4604 0.634247L15.9998 13.0948L3.53966 0.634247C2.72877 -0.176259 1.41867 -0.176259 0.608165 0.634247C-0.202722 1.44475 -0.202722 2.75523 0.608165 3.56574L13.0683 16.0263L0.608165 28.4868C-0.202722 29.2973 -0.202722 30.6078 0.608165 31.4183C1.01209 31.8226 1.54319 32.0257 2.07391 32.0257C2.60463 32.0257 3.13535 31.8226 3.53966 31.4183L15.9998 18.9578L28.4604 31.4183C28.8647 31.8226 29.3954 32.0257 29.9261 32.0257C30.4569 32.0257 30.9876 31.8226 31.3919 31.4183C32.2028 30.6078 32.2028 29.2973 31.3919 28.4868L18.9317 16.0263Z"
-                                          fill="#9AA1B0"></path>
-                                </svg>
-                            </div>
-                                
-                                
-                                
-                            <div class="courses-menu__footer courses-menu__footer__online">
-                                <div class="logo"><img src="{% static 'indexPage/logo2020.png' %}"
-                                                       alt="Учебный центр M&C - логотип"></div>
-                                <div class="contacts"><p class="mb-0"><a href="https://t.me/mchekashov"
-                                                                         class="zphone">t.me/mchekashov</a> <span>chekashovmatvey@gmail.com</span>
-                                </p>
-                                    <a href="https://brunoyam.com/online-kursy/python-s-nulya?utm_source=yandex&amp;utm_medium=cpc&amp;utm_term=%D0%9A%D1%83%D1%80%D1%81%D1%8B%20Python&amp;utm_content=4525053568_10565583907&amp;utm_campaign=Python-Online-POISK&amp;yclid=5379235251520329232#"
-                                       data-toggle="modal" data-target="#callbackModel"
-                                       class="btn btn-lg menu-main-btn">chekashovmatvey@gmail.com</a></div>
-                            </div>
+    <div class="container new-grid">
+        <div class="row">
+            <div class="col-8 d-flex align-items-center"><a data-toggle="collapse"
+                                                            role="button" aria-expanded="false"
+                                                            aria-controls="collapseMobileMenu"
+                                                            class="d-inline d-lg-none collapsed">
+                <svg width="20" height="20" viewBox="0 0 20 16" fill="currentColor"
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11.5 8.81608H0.5C0.223999 8.81608 0 8.44275 0 7.98275C0 7.52275 0.223999 7.14941 0.5 7.14941H11.5C11.776 7.14941 12 7.52275 12 7.98275C12 8.44275 11.776 8.81608 11.5 8.81608Z"
+                          fill="currentColor"></path>
+                    <path d="M19.1667 2.42692H0.833333C0.373332 2.42692 0 2.05359 0 1.59359C0 1.13359 0.373332 0.760254 0.833333 0.760254H19.1667C19.6267 0.760254 20 1.13359 20 1.59359C20 2.05359 19.6267 2.42692 19.1667 2.42692Z"
+                          fill="currentColor"></path>
+                    <path d="M19.1667 15.2048H0.833333C0.373332 15.2048 0 14.8314 0 14.3714C0 13.9114 0.373332 13.5381 0.833333 13.5381H19.1667C19.6267 13.5381 20 13.9114 20 14.3714C20 14.8314 19.6267 15.2048 19.1667 15.2048Z"
+                          fill="currentColor"></path>
+                </svg>
+            </a> <a class="logo-link" href="{% url 'home' %}"><h1 style="font-size: 215%"
+                                                                  alt="Учебный центр CourseMC - логотип"
+                                                                  class="img-fluid logo svg">M&C</h1></a>
+                <div class="courses-menu">
+                    <div class="container new-grid d-flex flex-column">
+                        <div class="courses-menu__close-btn">
+                            <svg width="32" height="32" viewBox="0 0 32 32" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18.9317 16.0263L31.3919 3.56574C32.2028 2.75523 32.2028 1.44475 31.3919 0.634247C30.5814 -0.176259 29.2709 -0.176259 28.4604 0.634247L15.9998 13.0948L3.53966 0.634247C2.72877 -0.176259 1.41867 -0.176259 0.608165 0.634247C-0.202722 1.44475 -0.202722 2.75523 0.608165 3.56574L13.0683 16.0263L0.608165 28.4868C-0.202722 29.2973 -0.202722 30.6078 0.608165 31.4183C1.01209 31.8226 1.54319 32.0257 2.07391 32.0257C2.60463 32.0257 3.13535 31.8226 3.53966 31.4183L15.9998 18.9578L28.4604 31.4183C28.8647 31.8226 29.3954 32.0257 29.9261 32.0257C30.4569 32.0257 30.9876 31.8226 31.3919 31.4183C32.2028 30.6078 32.2028 29.2973 31.3919 28.4868L18.9317 16.0263Z"
+                                      fill="#9AA1B0"></path>
+                            </svg>
+                        </div>
+
+
+                        <div class="courses-menu__footer courses-menu__footer__online">
+                            <div class="logo"><img src="{% static 'indexPage/logo2020.png' %}"
+                                                   alt="Учебный центр M&C - логотип"></div>
+                            <div class="contacts"><p class="mb-0"><a href="https://t.me/mchekashov"
+                                                                     class="zphone">t.me/mchekashov</a> <span>chekashovmatvey@gmail.com</span>
+                            </p>
+                                <a href="https://brunoyam.com/online-kursy/python-s-nulya?utm_source=yandex&amp;utm_medium=cpc&amp;utm_term=%D0%9A%D1%83%D1%80%D1%81%D1%8B%20Python&amp;utm_content=4525053568_10565583907&amp;utm_campaign=Python-Online-POISK&amp;yclid=5379235251520329232#"
+                                   data-toggle="modal" data-target="#callbackModel"
+                                   class="btn btn-lg menu-main-btn">chekashovmatvey@gmail.com</a></div>
                         </div>
                     </div>
                 </div>
-                <div class="col-4 d-flex flex-row-reverse">
-                    <a
-                            href="{% url 'account_login' %}"
-                            class="d-none link-phone d-lg-flex"
-                            style="margin-left: 25px;">
-                        {% if user.is_authenticated %}
-                        {% if user.is_staff %}
-                        <a
-                            href="{% url 'admin:index' %}"
-                            class="d-none link-phone d-lg-flex"
-                            style="margin-left: 25px;">
-                             Настройки
-                            </a>
-                        {% endif %}
-                        <a
-                            href="{% url 'schedule' %}"
-                            class="d-none link-phone d-lg-flex"
-                            style="margin-left: 25px;">
-                             Расписание
-                            </a>
-                        {% else %}
-                        <a
-                            href="{% url 'account_login' %}"
-                            class="d-none link-phone d-lg-flex"
-                            style="margin-left: 25px;">
-                            Авторизоваться
-                            </a>
-                        {% endif %}
-
-                    <div class="d-none d-lg-inline-block"><a
-                            href="https://vk.com/matvey.chekashov"
-                            class="btn btn-transparent ml-4"
-                            target="_blank">
-
-
-                        vk.com/matvey.chekashov
-                    </a></div>
-                    <a href="https://t.me/mchekashov"
-                       onclick="ym(15894265,&#39;reachGoal&#39;,&#39;telefon_click&#39;);gtag(&#39;send&#39;, &#39;event&#39;, &#39;telefon&#39;, &#39;click&#39;);return true;"
-                       class="d-none link-phone d-lg-flex">t.me/mchekashov
-                    </a> <a href="tel:88124099059"
-                            onclick="ym(15894265,&#39;reachGoal&#39;,&#39;telefon_click&#39;);gtag(&#39;send&#39;, &#39;event&#39;, &#39;telefon&#39;, &#39;click&#39;);return true;"
-                            class="d-block d-lg-none btn btn-transparent btn-sm ml-4">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M19.4561 14.678L16.6651 11.8869C15.6683 10.8901 13.9737 11.2889 13.575 12.5847C13.2759 13.4819 12.2791 13.9803 11.382 13.7809C9.38839 13.2825 6.69701 10.6908 6.1986 8.59746C5.89956 7.7003 6.49765 6.70349 7.39477 6.40448C8.69062 6.00576 9.08934 4.31119 8.09254 3.31438L5.30148 0.523324C4.50403 -0.174441 3.30786 -0.174441 2.6101 0.523324L0.716166 2.41726C-1.17777 4.41087 0.915528 9.69395 5.60052 14.3789C10.2855 19.0639 15.5686 21.2569 17.5622 19.2633L19.4561 17.3694C20.1539 16.5719 20.1539 15.3757 19.4561 14.678Z"
-                              fill="#EB5D18"></path>
-                    </svg>
-                </a></div>
-                <div id="collapseMobileMenu" class="col-12 collapse mobile-menu">
-                    <div class="d-flex flex-column full_height"><a data-toggle="collapse"
-                                                                   href="https://brunoyam.com/online-kursy/python-s-nulya?utm_source=yandex&amp;utm_medium=cpc&amp;utm_term=%D0%9A%D1%83%D1%80%D1%81%D1%8B%20Python&amp;utm_content=4525053568_10565583907&amp;utm_campaign=Python-Online-POISK&amp;yclid=5379235251520329232#collapseMobileMenu"
-                                                                   role="button" aria-expanded="false"
-                                                                   aria-controls="collapseMobileMenuFixed"
-                                                                   class="collapsed close_mobile_menu">
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.8323 10.0161L19.6199 2.22822C20.1267 1.72165 20.1267 0.902605 19.6199 0.396038C19.1134 -0.110528 18.2943 -0.110528 17.7877 0.396038L9.9999 8.18388L2.21229 0.396038C1.70548 -0.110528 0.88667 -0.110528 0.380103 0.396038C-0.126701 0.902605 -0.126701 1.72165 0.380103 2.22822L8.16771 10.0161L0.380103 17.8039C-0.126701 18.3105 -0.126701 19.1295 0.380103 19.6361C0.632556 19.8888 0.964494 20.0157 1.2962 20.0157C1.6279 20.0157 1.9596 19.8888 2.21229 19.6361L9.9999 11.8482L17.7877 19.6361C18.0404 19.8888 18.3721 20.0157 18.7038 20.0157C19.0355 20.0157 19.3672 19.8888 19.6199 19.6361C20.1267 19.1295 20.1267 18.3105 19.6199 17.8039L11.8323 10.0161Z"
-                                  fill="black"></path>
-                        </svg>
-                    </a> <a class="logo-link text-center"><img
-                            src="{% static 'indexPage/logo2020.png' %}" alt="Учебный центр M&C - логотип"
-                            class="img-fluid logo svg mr-0"></a>
-                        <ul class="list-unstyled">
-                            <li><a class="has_children">
-                                Курсы
-                            </a>
-                                <ul class="list-unstyled">
-                                    <li><a href="https://brunoyam.com/kursy-programmirovaniya" target="_self">
-                                        Программирование
-                                    </a></li>
-                                    <li><a href="https://brunoyam.com/kursy-internet-marketing" target="_self">
-                                        Маркетинг
-                                    </a></li>
-                                    <li><a href="https://brunoyam.com/kursy-grafiki-dizaina" target="_self">
-                                        Дизайн
-                                    </a></li>
-                                    <li><a href="https://brunoyam.com/kursy-analitika-dannyh" target="_self">
-                                        Аналитика
-                                    </a></li>
-                                    <li><a href="https://brunoyam.com/online-kursy" target="_self">
-                                        Онлайн курсы
-                                    </a></li>
-                                </ul>
-                            </li>
-                            <li><a href="https://brunoyam.com/about" target="_self">
-                                О нас
-                            </a></li>
-                            <li><a href="https://brunoyam.com/korporativnoe-obuchenie" target="_self">
-                                Компаниям
-                            </a></li>
-                            <li><a href="https://brunoyam.com/blog" target="_self">
-                                Блог
-                            </a></li>
-                            <li><a href="https://brunoyam.com/kontakty" target="_self">
-                                Контакты
-                            </a></li>
-                        </ul>
-                        <div class="mt-auto mobile_menu_bottom"><a href="tel:88005513904"
-                                                                   onclick="ym(15894265,&#39;reachGoal&#39;,&#39;telefon_click&#39;);gtag(&#39;send&#39;, &#39;event&#39;, &#39;telefon&#39;, &#39;click&#39;);return true;">8
-                            (800) 551-39-04</a>
-                            <div class="clearfix"></div>
-                            <a href="https://brunoyam.com/online-kursy/python-s-nulya?utm_source=yandex&amp;utm_medium=cpc&amp;utm_term=%D0%9A%D1%83%D1%80%D1%81%D1%8B%20Python&amp;utm_content=4525053568_10565583907&amp;utm_campaign=Python-Online-POISK&amp;yclid=5379235251520329232"
-                               onclick="ym(15894265,&#39;reachGoal&#39;,&#39;callback_click&#39;); gtag (&#39;send&#39;, &#39;event&#39;, &#39;callback&#39;, &#39;click&#39;); return true;"
-                               data-toggle="modal" data-target="#callbackModel" class="btn link-new">
-                                Заказать звонок
-                            </a></div>
-                    </div>
-                </div>
             </div>
+            <div class="col-4 d-flex flex-row-reverse">
+                <a
+                        href="{% url 'account_login' %}"
+                        class="d-none link-phone d-lg-flex"
+                        style="margin-left: 25px;">
+
+                    {% if not user.is_authenticated %}
+                        <a href="https://vk.com/matvey.chekashov" class="d-none link-phone d-lg-flex" target="_blank">
+                            vk.com/matvey.chekashov
+                        </a>
+                        <a href="https://t.me/mchekashov" class="d-none link-phone d-lg-flex" target="_blank">
+                            t.me/mchekashov
+                        </a>
+                    {% endif %}
+
+                    {% if user.is_authenticated %}
+                        {% if user.is_staff %}
+                            <a href="{% url 'admin:index' %}" class="btn btn-transparent ml-4 d-lg-flex link-phone">
+                                Настройки
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{% url 'account_login' %}" class="btn btn-transparent ml-4 d-lg-flex link-phone">
+                            Авторизоваться
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'review' %}" class="btn btn-transparent ml-4 d-lg-flex link-phone" target="_blank">
+                        Отзывы
+                    </a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'schedule' %}" class="btn btn-transparent ml-4 d-lg-flex link-phone"
+                           style="margin-left: 25px;">
+                            Расписание
+                        </a>
+                    {% endif %}
+                </a></div>
+
+
         </div>
     </div>
+</div>
+</div>
 <script>
     var matchHeight = function () {
-    var div = '';
+        var div = '';
 
-    function init(div) {
-        eventListeners();
-        matchHeight(div);
-    }
+        function init(div) {
+            eventListeners();
+            matchHeight(div);
+        }
 
-    function eventListeners() {
-        $(window).on('resize', function () {
-            matchHeight();
+        function eventListeners() {
+            $(window).on('resize', function () {
+                matchHeight();
+            });
+        }
+
+        function matchHeight(div) {
+            var groupName = $(div);
+            var groupHeights = [];
+            groupName.css('min-height', 'auto');
+            groupName.each(function () {
+                groupHeights.push($(this).outerHeight());
+            });
+            var maxHeight = Math.max.apply(null, groupHeights);
+            groupName.css('min-height', maxHeight);
+        };
+        return {
+            init: init
+        };
+    }();
+
+    jQuery(document).ready(function ($) {
+
+        if ($(window).width() >= 767.99) {
+            matchHeight.init('#guarantees .col-md-3 > .img');
+            matchHeight.init('#guarantees .col-md-3 > .text');
+        }
+
+
+        var scrollPrev = 0;
+        $(window).scroll(function () {
+            var scrolled = $(window).scrollTop();
+            var checkpoint = 71;
+            var $header = $('.fixed-top');
+            if (scrolled < scrollPrev) {
+                if (scrolled > checkpoint) {
+                    $header.addClass('fixed-active');
+                    setTimeout(function () {
+                        $header
+                    }, 200);
+                } else {
+                    $header.removeClass('fixed-active');
+                }
+            } else {
+                $header.removeClass('fixed-active');
+                if (scrolled > checkpoint) {
+                    $header.addClass('fixed-active')
+                }
+            }
+            scrollPrev = scrolled;
         });
-    }
-
-    function matchHeight(div) {
-        var groupName = $(div);
-        var groupHeights = [];
-        groupName.css('min-height', 'auto');
-        groupName.each(function () {
-            groupHeights.push($(this).outerHeight());
-        });
-        var maxHeight = Math.max.apply(null, groupHeights);
-        groupName.css('min-height', maxHeight);
-    };
-    return {
-        init: init
-    };
-}();
-
-jQuery(document).ready(function ($) {
-
-    if ($(window).width() >= 767.99) {
-        matchHeight.init('#guarantees .col-md-3 > .img');
-        matchHeight.init('#guarantees .col-md-3 > .text');
-    }
-
-
-    var scrollPrev = 0;
-    $(window).scroll(function () {
         var scrolled = $(window).scrollTop();
         var checkpoint = 71;
         var $header = $('.fixed-top');
@@ -213,120 +164,100 @@ jQuery(document).ready(function ($) {
             }
         }
         scrollPrev = scrolled;
-    });
-    var scrolled = $(window).scrollTop();
-    var checkpoint = 71;
-    var $header = $('.fixed-top');
-    if (scrolled < scrollPrev) {
-        if (scrolled > checkpoint) {
-            $header.addClass('fixed-active');
-            setTimeout(function () {
-                $header
-            }, 200);
-        } else {
-            $header.removeClass('fixed-active');
-        }
-    } else {
-        $header.removeClass('fixed-active');
-        if (scrolled > checkpoint) {
-            $header.addClass('fixed-active')
-        }
-    }
-    scrollPrev = scrolled;
 
-    $(".tools-tabs li a").click(function (e) {
+        $(".tools-tabs li a").click(function (e) {
+            e.preventDefault();
+            $(".tools-tabs li").removeClass("active");
+            $(this).closest('li').addClass("active");
+            $(".tab_content_container > .tab_content_active").removeClass("tab_content_active");
+            $(this.rel).addClass("tab_content_active");
+        });
+    });
+
+    jQuery('img.svg').each(function () {
+        var $img = jQuery(this);
+        var imgID = $img.attr('id');
+        var imgClass = $img.attr('class');
+        var imgURL = $img.attr('src');
+
+        jQuery.get(imgURL, function (data) {
+            var $svg = jQuery(data).find('svg');
+
+            if (typeof imgID !== 'undefined') {
+                $svg = $svg.attr('id', imgID);
+            }
+            if (typeof imgClass !== 'undefined') {
+                $svg = $svg.attr('class', imgClass + ' replaced-svg');
+            }
+
+            $svg = $svg.removeAttr('xmlns:a');
+
+            if (!$svg.attr('viewBox') && $svg.attr('height') && $svg.attr('width')) {
+                $svg.attr('viewBox', '0 0 ' + $svg.attr('height') + ' ' + $svg.attr('width'))
+            }
+
+            $img.replaceWith($svg);
+
+        }, 'xml');
+
+    });
+
+    if (document.querySelector(".courses-menu")) {
+        const coursesMenu = document.querySelector(".courses-menu");
+        const showMenuBtn = document.querySelector(".show-courses-menu");
+        const closeBtn = document.querySelector(".courses-menu__close-btn");
+
+
+        showMenuBtn && showMenuBtn.addEventListener("click", (e) => {
+            e.preventDefault()
+            coursesMenu.classList.add("courses-menu--show")
+        });
+
+        closeBtn.addEventListener("click", () => coursesMenu.classList.remove("courses-menu--show"));
+
+        const trendList = document.querySelector(".trends ul");
+        const courses = document.getElementsByClassName("courses__items");
+        const trends = document.getElementsByClassName("trend");
+
+        trendList.addEventListener("mouseover", (event) => {
+            const target = event.target;
+            const courseURL = target.getAttribute("data-tab");
+            if (courseURL) {
+                const courseItem = document.getElementById(courseURL);
+                const onlineItem = document.getElementById('online_' + courseURL);
+
+                for (let trend of trends) {
+                    trend.classList.remove("trend--active");
+                }
+
+                target.classList.add("trend--active");
+
+                for (let course of courses) {
+                    course.classList.remove("courses__items--show");
+                }
+                courseItem.classList.toggle("courses__items--show");
+                onlineItem.classList.toggle("courses__items--show");
+            }
+        });
+    }
+
+    $('.teacher-portfolio_item').on('click', function (e) {
         e.preventDefault();
-        $(".tools-tabs li").removeClass("active");
-        $(this).closest('li').addClass("active");
-        $(".tab_content_container > .tab_content_active").removeClass("tab_content_active");
-        $(this.rel).addClass("tab_content_active");
-    });
-});
-
-jQuery('img.svg').each(function () {
-    var $img = jQuery(this);
-    var imgID = $img.attr('id');
-    var imgClass = $img.attr('class');
-    var imgURL = $img.attr('src');
-
-    jQuery.get(imgURL, function (data) {
-        var $svg = jQuery(data).find('svg');
-
-        if (typeof imgID !== 'undefined') {
-            $svg = $svg.attr('id', imgID);
+        const dataAttr = e.target.parentElement.getAttribute("data-teach-fancybox");
+        const teacherPortfolios = document.querySelectorAll(`.slick-active [data-teach-fancybox="${dataAttr}"]`);
+        let index = 0;
+        for (teacherPortfolio of teacherPortfolios) {
+            teacherPortfolio.setAttribute("index", index)
+            index++;
         }
-        if (typeof imgClass !== 'undefined') {
-            $svg = $svg.attr('class', imgClass + ' replaced-svg');
-        }
-
-        $svg = $svg.removeAttr('xmlns:a');
-
-        if (!$svg.attr('viewBox') && $svg.attr('height') && $svg.attr('width')) {
-            $svg.attr('viewBox', '0 0 ' + $svg.attr('height') + ' ' + $svg.attr('width'))
-        }
-
-        $img.replaceWith($svg);
-
-    }, 'xml');
-
-});
-
-if (document.querySelector(".courses-menu")) {
-    const coursesMenu = document.querySelector(".courses-menu");
-    const showMenuBtn = document.querySelector(".show-courses-menu");
-    const closeBtn = document.querySelector(".courses-menu__close-btn");
-
-    
-    showMenuBtn && showMenuBtn.addEventListener("click", (e) => {
-        e.preventDefault()
-        coursesMenu.classList.add("courses-menu--show")
+        $.fancybox.open(teacherPortfolios, {}, +e.target.parentElement.getAttribute("index"));
     });
 
-    closeBtn.addEventListener("click", () => coursesMenu.classList.remove("courses-menu--show"));
-
-    const trendList = document.querySelector(".trends ul");
-    const courses = document.getElementsByClassName("courses__items");
-    const trends = document.getElementsByClassName("trend");
-
-    trendList.addEventListener("mouseover", (event) => {
-        const target = event.target;
-        const courseURL = target.getAttribute("data-tab");
-        if (courseURL) {
-            const courseItem = document.getElementById(courseURL);
-            const onlineItem = document.getElementById('online_' + courseURL);
-
-            for (let trend of trends) {
-                trend.classList.remove("trend--active");
-            }
-
-            target.classList.add("trend--active");
-
-            for (let course of courses) {
-                course.classList.remove("courses__items--show");
-            }
-            courseItem.classList.toggle("courses__items--show");
-            onlineItem.classList.toggle("courses__items--show");
-        }
-    });
-}
-
-$('.teacher-portfolio_item').on('click', function(e) { 
-    e.preventDefault();
-    const dataAttr = e.target.parentElement.getAttribute("data-teach-fancybox");
-    const teacherPortfolios = document.querySelectorAll(`.slick-active [data-teach-fancybox="${dataAttr}"]`);
-    let index = 0;
-    for (teacherPortfolio of teacherPortfolios) {
-        teacherPortfolio.setAttribute("index", index)
-        index++;
+    function copyToClipboard(element) {
+        var $temp = $("<input>");
+        $("body").append($temp);
+        $temp.val($(element).text()).select();
+        document.execCommand("copy");
+        $temp.remove();
     }
-    $.fancybox.open(teacherPortfolios, {}, +e.target.parentElement.getAttribute("index"));
-});
-
-function copyToClipboard(element) {
-  var $temp = $("<input>");
-  $("body").append($temp);
-  $temp.val($(element).text()).select();
-  document.execCommand("copy");
-  $temp.remove();
-}
 </script>

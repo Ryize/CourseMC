@@ -25,6 +25,7 @@ urlpatterns = [
     path('api/v1/', include('api.urls')),
     path('', include('social_django.urls')),
     path('', include('Course.urls')),
+    path('reviews/', include('reviews.urls')),
 ]
 
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns

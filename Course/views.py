@@ -1,13 +1,9 @@
-from django.contrib import messages
 from django.contrib.auth import get_user
-from django.db.models import Q
 from django.http import JsonResponse
-from django.shortcuts import render
 from django.views.generic.edit import FormView
 from django.contrib.auth.models import User
 from .forms import *
-from django.contrib.auth.decorators import login_required
-from .models import Student, LearnGroup, Schedule
+from .models import Student, Schedule
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView
 
@@ -50,7 +46,7 @@ class TimetableView(LoginRequiredMixin, ListView):
         if theme:
             student_group = student_group.filter(theme__icontains=theme)
         if self.__get_param('lesson_type'):
-            student_group =  student_group.filter(lesson_type__icontains=self.__get_param('lesson_type'))
+            student_group = student_group.filter(lesson_type__icontains=self.__get_param('lesson_type'))
         if self.__get_param('absent'):
             student_group = student_group.filter(absent__name__iexact=f'{student.name}')
 
