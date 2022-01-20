@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'ckeditor',
     'ckeditor_uploader',
-    'crispy_forms',
     'rest_framework',
     'Course.apps.AuthConfig',
     'reviews.apps.ReviewsConfig',
