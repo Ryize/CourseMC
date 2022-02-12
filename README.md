@@ -6,7 +6,7 @@ MC programming course website. Made with Django([Go course website](https://cour
 
 Clone the repository
 ```
-https://github.com/Ryize/CourseMC.git
+git clone https://github.com/Ryize/CourseMC.git
 ```
 
 Install requirements
