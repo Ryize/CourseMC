@@ -4,13 +4,13 @@ MC programming course website. Made with Django([Go course website](https://cour
 
 ## Deploy locally:
 
-Clone the repository and go to installed folder
+Clone the repository and go to installed folder:
 ```
 git clone https://github.com/Ryize/CourseMC.git
 cd CourseMC
 ```
 
-Install requirements
+Install requirements:
 ```
 pip3 install -r requirements.txt
 ```
@@ -24,13 +24,13 @@ ALLOWED_HOSTS = ['127.0.0.1']
 DEBUG = True
 ```
 
-Collect statics and run migrations
+Collect statics and run migrations:
 ```
 python3 manage.py collectstatic
 python3 manage.py migrate
 ```
 
-Run the website
+Run the website:
 ```
 python3 manage.py runserver
 ```
