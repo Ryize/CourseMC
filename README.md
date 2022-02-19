@@ -35,4 +35,4 @@ Run the website
 python3 manage.py runserver
 ```
 
-> Technologies used in the project: Python 3, PyTelegramBotApi, pydub, requests, os.
+> Technologies used in the project: Python 3, Django, djangorestframework.
