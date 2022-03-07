@@ -32,4 +32,10 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 # ... остальная часть вашего URLconf здесь ...
 
+# handler404 = "CourseMC.views.page_not_found_view"  # If debug=false, enable this to display a 404 page
+
 urlpatterns += staticfiles_urlpatterns()
+
+urlpatterns += static(
+    settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
+)
