@@ -51,6 +51,12 @@ class TimetableView(LoginRequiredMixin, ListView):
             student_group = student_group.filter(absent__name__iexact=f'{student.name}')
 
         return student_group
+    
+    def dispatch(self, request, *args, **kwargs):
+        student = Student.objects.filter(name=get_user(self.request).username).first()
+        if not student:
+            return redirect('home')
+        return super().dispatch(request, *args, **kwargs)
 
     def __get_param(self, name):
         return self.request.GET.get(name)
