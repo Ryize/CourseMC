@@ -1,0 +1,155 @@
+{% extends 'questionnaire/template/base.html' %}
+{% load static %}
+{% load questionnaire_tags %}
+{% block head %}
+    <link rel="stylesheet" href="{% static 'css/dynamic_background.css' %}">
+    <link rel="stylesheet" href="{% static 'css/list_poll.css' %}">
+{% endblock %}
+
+{% block content %}
+
+    <div class="row" id="row" style="width: 100%;">
+        <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1"></div>
+        <div class="col-xs-10 col-sm-12 col-md-10 col-lg-10">
+            <ol class="bullet">
+
+                <center><h1>Мои опросы</h1></center>
+                <br>
+
+                {% for poll in my_polls %}
+
+                    <li>
+                        <span>{{ poll.title }}</span>
+                        <br>
+                        <span><small>{{ poll.description }}</small></span>
+                        <hr>
+                        <p><label class="pointer" id="{{ forloop.counter }}"
+                                  onclick="showQuestion(this, 'quest-'+this.id, 2)"><strong><i>Нажмите
+                            для
+                            отображения вопросов и ответов</i></strong></label></p>
+                        <div id="quest-{{ forloop.counter }}" style="display: none;">
+                            {% for question in poll.questions.all %}
+
+                                <p>Вопрос: <strong>{{ question.question }}</strong></p>
+                                <label title="{{ question.question }}">Варианты ответов:</label>
+                                {% for answer in question.answers.all %}
+                                    {% if answer.correct %}
+                                        <p title="Это правильный ответ">{{ forloop.counter }}) {{ answer.answer }} ✅</p>
+                                    {% else %}
+                                        <p title="Это не правильный ответ">{{ forloop.counter }}) {{ answer.answer }}
+                                            ❌</p>
+                                    {% endif %}
+                                {% endfor %}
+                                <br>
+                                <hr>
+
+                            {% endfor %}
+                            <label style="float: right"><small>Можно пройти до: {{ poll.lifetime }}</small></label>
+                            <br>
+                        </div>
+                        <br>
+                        <p><label class="pointer" id="press_show_statistic"
+                                  onclick="showQuestion(this, 'poll-info-{{ forloop.counter }}', 1)"><strong><i>Нажмите
+                            для отображения статистики опроса</i></strong></label></p>
+                        <div id="poll-info-{{ forloop.counter }}" style="display: none;">
+                            Прошли опрос: {{ poll.passed_quiz.all|length }}
+                            {% if poll.passed_quiz.all|length > 0 %}
+                                <div class="row">
+                                    {% for passed_quiz in poll.passed_quiz.all %}
+                                        <hr>
+                                        <label style="margin-top: 35px;"><strong><big>Имя: {{ passed_quiz.passed_user }}</big></strong></label>
+                                        {% for passed_question in passed_quiz.quiz.user_quiz.all %}
+                                            {% if passed_question.user == passed_quiz.passed_user %}
+                                                <div class="col-xs-12 col-sm-12 col-md-4 col-lg-4"
+                                                     style="margin-top: 20px;">
+                                                    <label>Вопрос: {{ passed_question.question }}</label><br>
+
+                                                    <label style="{% if passed_question.answers.correct %}background-color: LimeGreen;{% else %}background-color: Salmon;{% endif %}">Ответ
+                                                        пользователя: {{ passed_question.answers }}</label><br>
+                                                    <label>
+                                                        <small>Правильный ответ(ы):
+                                                            {% for answer in passed_question.question.answers.all %}
+                                                                {% if answer.correct %}
+                                                                    <span><strong>{{ answer }} </strong></span><br>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </small>
+                                                    </label>
+                                                </div>
+                                                <br>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                </div>
+                                <hr>
+                                <p>{{ poll|statistic:user.pk|safe }}</p>
+                            {% endif %}
+                        </div>
+                        <br>
+                        <label style="float: right"><small>Создан: {{ poll.created_at }}</small></label>
+                        <p onclick="copyURL('copy_url-{{ poll.pk }}')">
+                            <input type="hidden" value="http://{{ request.get_host }}{% url 'take_poll' poll.pk %}"
+                                   id="copy_url-{{ poll.pk }}">
+                            <small>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                     class="bi bi-subtract" viewBox="0 0 16 16">
+                                    <path d="M0 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2H2a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H2z"/>
+                                </svg>
+                                <label class="pointer">Скопировать ссылку</label>
+                            </small>
+                        </p>
+
+                    </li>
+
+                {% endfor %}
+
+            </ol>
+        </div>
+    </div>
+
+    {% include 'questionnaire/includes/pagination.html' %}
+
+    <script>
+        function showQuestion(element, id, statusSend) {
+            el = document.getElementById(id)
+            console.log(el, id, statusSend)
+            text = {
+                1: '<strong>Нажмите для отображения статистики опроса</strong>',
+                2: '<strong>Нажмите для отображения вопросов и ответов</strong>',
+                3: 'Нажмите для скрытия статистики опроса',
+                4: 'Нажмите для скрытия вопросов и ответов',
+            }
+            if (el.style.display === 'none') {
+                el.style = 'display: block;'
+                element.textContent = text[statusSend + 2]
+            } else {
+                el.style = 'display: none;'
+                element.innerHTML = text[statusSend]
+            }
+        }
+
+        function copyURL(id) {
+            const str = document.getElementById(id).value;
+            const el = document.createElement('textarea');
+            el.value = str;
+            el.setAttribute('readonly', '');
+            el.style.position = 'absolute';
+            el.style.left = '-9999px';
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+
+            const ul = document.getElementById('messages-list')
+            const li = document.createElement('li')
+            const div = document.createElement('div')
+            div.textContent = 'Ссылка успешно скопирована!'
+            div.classList = 'alert alert-info msg fade show'
+            div.role = 'alert'
+            li.appendChild(div)
+            ul.appendChild(li)
+            fade_alerts()
+        }
+    </script>
+
+{% endblock %}

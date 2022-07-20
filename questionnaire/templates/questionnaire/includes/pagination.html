@@ -1,0 +1,65 @@
+<nav aria-label="Navigation">
+    {% if is_paginated %}
+        {% if page_obj.has_other_pages %}
+            <style>
+                #pag {
+                    margin-top: 75px;
+                    height: 100%;
+                }
+            </style>
+            <nav aria-label="Navigation panel" id="pag">
+                <ul class="pagination justify-content-center">
+
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" tabindex="-1"
+                               style="color: black">Предыдущая
+                                страница</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1">Предыдущая страница</a>
+                        </li>
+                    {% endif %}
+                    {% for p in page_obj.paginator.page_range %}
+
+                        {% if forloop.first and p < page_obj.number|add:-3 %}
+                            <li class="page-item"><a class="page-link" href="?page=1" style="color: black">1</a>
+                            <li class="page-item"><a class="page-link" style="color: black">...</a></li>
+                        {% endif %}
+
+                        {% if p >= page_obj.number|add:-3 and p <= page_obj.number|add:3 %}
+                            <li style='color: black;'
+                                class="page-item{% if p != page_obj.number %}{% else %} active{% endif %}"><a
+                                    class="page-link"
+                                    href="?page={{ p }}"
+                                    {% if p != page_obj.number %}style='color: black;'{% else %}
+                                    style='color: white'{% endif %}>{{ p }}</a>
+                            </li>
+
+                        {% endif %}
+
+                        {% if forloop.last and p > page_obj.number|add:3 %}
+                            <li class="page-item"><a class="page-link" style="color: black">...</a></li>
+                            <li class="page-item">
+                            <a class="page-link" href="?page={{ paginator.num_pages }}"
+                               style="color: black">{{ paginator.num_pages }}</a>
+                        {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" style="color: black">Следующая
+                                страница</a>
+
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#">Следующая страница</a>
+                        </li>
+                    {% endif %}
+
+                </ul>
+            </nav>
+        {% endif %}
+    {% endif %}
+</nav>

@@ -1,0 +1,59 @@
+h1 {
+    margin-bottom: 2%;
+}
+
+.bullet {
+    margin-left: 0;
+    list-style: none;
+    counter-reset: li;
+    padding-top: 10%;
+}
+
+.bullet li {
+    position: relative;
+    margin-bottom: 1.5em;
+    border: 3px solid #CADFCF;
+    padding: 0.6em;
+    border-radius: 4px;
+    background: #FEFEFE;
+    color: #231F20;
+    font-family: "Trebuchet MS", "Lucida Sans";
+}
+
+.bullet li:before {
+    position: absolute;
+    top: -0.7em;
+    padding-left: 0.4em;
+    padding-right: 0.4em;
+    font-size: 16px;
+    font-weight: bold;
+    color: #DCC24B;
+    background: #FEFEFE;
+    border-radius: 50%;
+    counter-increment: li;
+    content: counter(li);
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+.correct-answer{
+    color: SpringGreen;
+}
+
+.incorrect-answer{
+    color: Salmon;
+}
+
+.hide-block{
+    display: none;
+}
+
+#row {
+    width: 100%;
+}
+
+#username{
+    margin-top: 250px;
+}

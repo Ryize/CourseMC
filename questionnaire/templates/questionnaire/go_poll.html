@@ -1,0 +1,22 @@
+{% extends 'questionnaire/template/base.html' %}
+{% load static %}
+{% block content %}
+    <title>Пройти опрос - YourQuestionnaire</title>
+    <link rel="stylesheet" href="{% static 'css/form.css' %}">
+
+    <form class="decor" method="post" action="{% url 'go_poll' %}">
+        <div class="form-left-decoration"></div>
+        <div class="form-right-decoration"></div>
+        <div class="circle"></div>
+        <div class="form-inner">
+            <h3>Пройти опрос</h3>
+            {% csrf_token %}
+            <br>
+            <label>Введите id опроса:</label>
+                <input oninput="this.value = this.value.replace(/[^0-9]/g, '');" type="text" placeholder="Введите id опроса" name="poll_id" required>
+            <input type="submit" value="Перейти">
+        </div>
+    </form>
+
+    </div>
+{% endblock %}

@@ -1,0 +1,138 @@
+{% extends 'questionnaire/template/base.html' %}
+{% load static %}
+{% load questionnaire_tags %}
+{% block head %}
+    <link rel="stylesheet" href="{% static 'css/rating.css' %}">
+    <link rel="stylesheet" href="{% static 'css/form.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dynamic_background.css' %}">
+{% endblock %}
+
+{% block content %}
+
+    <style>
+
+        /* Styling the Body element i.e. Color,
+        Font, Alignment */
+        body {
+            font-family: Verdana;
+            text-align: center;
+        }
+
+        /* Styling the Form (Color, Padding, Shadow) */
+        aside {
+            background-color: #fff;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 30px 20px;
+            box-shadow: 2px 5px 10px rgba(110, 0, 0, 0.5);
+        }
+
+        /* Styling form-control Class */
+        .form-control {
+            text-align: left;
+            margin-bottom: 25px;
+        }
+
+        /* Styling form-control Label */
+        .form-control label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        /* Styling form-control input,
+        select, textarea */
+        .form-control input,
+        .form-control select,
+        .form-control textarea {
+            border: 1px solid #777;
+            border-radius: 2px;
+            font-family: inherit;
+            padding: 10px;
+            display: block;
+            width: 95%;
+        }
+
+        /* Styling form-control Radio
+        button and Checkbox */
+        .form-control input[type="radio"],
+        .form-control input[type="checkbox"] {
+            display: inline-block;
+            width: auto;
+        }
+
+        /* Styling Button */
+        button {
+            background-color: #05c46b;
+            border: 1px solid #777;
+            border-radius: 2px;
+            font-family: inherit;
+            font-size: 21px;
+            display: block;
+            width: 100%;
+            margin-top: 50px;
+            margin-bottom: 20px;
+        }
+
+        .btn-link {
+            border: none;
+            outline: none;
+            background: none;
+            cursor: pointer;
+            color: #0000EE;
+            padding: 0;
+            margin: 0;
+            text-decoration: none;
+            font-family: inherit;
+            font-size: inherit;
+            width: auto;
+            height: auto;
+        }
+    </style>
+
+    <div style="height: 85vh;">
+        {% include 'questionnaire/includes/flash_messages.html' %}
+
+        <aside>
+            <form id="form" method="post">
+
+                {% csrf_token %}
+
+                <div class="rating">
+
+                    <input type="radio" id="star-1" name="rating" value="5">
+                    <label for="star-1" title="Оценка «5»"></label>
+
+                    <input type="radio" id="star-2" name="rating" value="4">
+                    <label for="star-2" title="Оценка «4»"></label>
+
+                    <input type="radio" id="star-3" name="rating" value="3">
+                    <label for="star-3" title="Оценка «3»"></label>
+
+                    <input type="radio" id="star-4" name="rating" value="2">
+                    <label for="star-4" title="Оценка «2»"></label>
+
+                    <input type="radio" id="star-5" name="rating" value="1">
+                    <label for="star-5" title="Оценка «1»"></label>
+                    <span>Оценка: </span>
+                </div>
+
+                <div class="form-control border-0">
+
+                    <div class="form-control border-0">
+                        <label for="inp-1">
+                            <span>Ваш комментарий:</span>
+                            <textarea class="form-control" rows="5" maxlength="1000"
+                                      placeholder="Максимум 750 символов..." name="comment"></textarea>
+                        </label>
+                    </div>
+
+                    <button type="submit" value="submit">
+                        Сохранить отзыв
+                    </button>
+                </div>
+            </form>
+        </aside>
+    </div>
+
+
+{% endblock %}
