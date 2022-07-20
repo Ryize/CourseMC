@@ -1,0 +1,62 @@
+{% load static %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
+      crossorigin="anonymous">
+<style>
+    .badge-light {
+        margin-top: 2.5em;
+    }
+
+    .errorlist {
+        list-style: none;
+        padding-left: 0px;
+        opacity: 0.8;
+        color: #dc3545;
+        font-size: 12px;
+    }
+
+    .msg {
+        margin: 0 !important;
+        margin-bottom: 4px !important;
+        margin-top: 4px !important;
+    }
+
+    .messages {
+        z-index: 500;
+        position: fixed;
+        right: 0.5vw;
+        margin-top: 70px;
+        list-style: none;
+        text-align: right;
+    }
+
+    .alert {
+        margin-top: 1rem;
+    }
+
+    .alert-error {
+        background-color: #f2dede;
+        border-color: #ebcccc;
+        color: #a94442;
+    }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" referrerpolicy="no-referrer"></script>
+{% block messages %}
+    <ul class="messages" id="messages-list">
+        {% if messages %}
+            {% for message in messages %}
+                <li>
+                    {% if message.tags %}
+                        <div class="alert alert-{{ message.tags }} msg fade show" role="alert">{{ message }}</div>
+                    {% else %}
+                        <div class="alert alert-info msg fade show" role="alert">{{ message }}</div>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        {% endif %}
+    </ul>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'js/flash.js' %}"></script>
+{% endblock %}

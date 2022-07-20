@@ -42,16 +42,27 @@ class LearnGroupAdmin(admin.ModelAdmin):
     list_max_show_all = 8
     search_fields = ['title']
 
+
 @admin.register(Schedule)
 class ScheduleAdmin(admin.ModelAdmin):
     content = forms.CharField(widget=CKEditorUploadingWidget())
-    class Meta:
-        fields = ('title', 'is_studies', 'created_at',)
-        list_display = ('group', 'weekday', 'time_lesson', 'key_topic',)
-        list_display_links = ('group', 'weekday', 'time_lesson', 'key_topic',)
-        list_filter = ('group', 'weekday', 'time_lesson', 'key_topic',)
-        empty_value_display = '-пустой-'
-        list_per_page = 64
-        list_max_show_all = 8
-        #search_fields = ('__all__', )
-        date_hierarchy = 'weekday'
+    fields = ('theme', 'group', 'weekday', 'time_lesson', 'lesson_materials', 'absent', 'lesson_type', 'is_display')
+    list_display = ('id', 'theme', 'group', 'weekday', 'time_lesson', 'is_display')
+    list_display_links = ('theme', 'group', 'weekday', 'time_lesson',)
+    list_filter = ('group', 'weekday', 'time_lesson', 'lesson_type', 'is_display')
+    empty_value_display = '-пустой-'
+    list_per_page = 64
+    list_max_show_all = 8
+    search_fields = ('theme', 'lesson_materials',)
+    date_hierarchy = 'weekday'
+
+
+@admin.register(StudentQuestion)
+class StudentQuestionAdmin(admin.ModelAdmin):
+    fields = ('group', 'question', 'solved',)
+    list_display = ('group', 'question', 'solved', 'created_at',)
+    list_display_links = ('group', 'question', 'solved',)
+    list_filter = ('group', 'created_at', 'solved',)
+    list_per_page = 64
+    list_max_show_all = 8
+    search_fields = ['created_at']

@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'r)++8x6o+%a+55^*kf44@5_rezvzv$m5b(51@w=pbasn_2c7s#'
+SECRET_KEY = 'r)+kik+8x6o+%a+55hdjkf44@5_rezvzv$m5b(51lkij=pbasgfhde(__gshw'
 SOCIAL_AUTH_VK_OAUTH2_KEY = '7951107'
 SOCIAL_AUTH_VK_OAUTH2_SECRET = 'ab825789ab825789ab82578950abfb048aaab82ab825789cac22c88943e5f898833038e'
 LOGIN_REDIRECT_URL = '/'
@@ -28,7 +28,7 @@ LOGIN_REDIRECT_URL = '/'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['coursemc.space', 'www.coursemc.space', 'localhost', '127.0.0.1']
 
 # Application definition
 
@@ -46,8 +46,10 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'ckeditor',
     'ckeditor_uploader',
-    'crispy_forms',
+    'rest_framework',
+    'reviews.apps.ReviewsConfig',
     'Course.apps.AuthConfig',
+    'questionnaire.apps.QuestionnaireConfig',
 ]
 
 MIDDLEWARE = [
@@ -156,7 +158,7 @@ CKEDITOR_CONFIGS = {
             ]},
         ],
         'toolbar': 'YourCustomToolbarConfig',  # put selected toolbar config here
-        'toolbarGroups': [{ 'name': 'document', 'groups': [ 'mode', 'document', 'doctools' ] }],
+        'toolbarGroups': [{'name': 'document', 'groups': ['mode', 'document', 'doctools']}],
         # 'height': 291,
         # 'width': '100%',
         # 'filebrowserWindowHeight': 725,
@@ -165,7 +167,7 @@ CKEDITOR_CONFIGS = {
         # 'mathJaxLib': '//cdn.mathjax.org/mathjax/2.2-latest/MathJax.js?config=TeX-AMS_HTML',
         'tabSpaces': 4,
         'extraPlugins': ','.join([
-            'uploadimage', # the upload image feature
+            'uploadimage',  # the upload image feature
             # your extra plugins here
             'div',
             'autolink',
@@ -193,7 +195,7 @@ CKEDITOR_UPLOAD_PATH = "uploads/"
 
 LANGUAGE_CODE = 'ru'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
@@ -208,6 +210,8 @@ SITE_ID = 1
 
 STATIC_URL = '/static/'
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
+    os.path.join(BASE_DIR, "CourseMC/static"),
 ]

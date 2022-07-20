@@ -1,0 +1,147 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content=
+            "width=device-width, initial-scale=1.0">
+    <title>
+        {{ poll.title }} - YourQuestionnaire
+    </title>
+    {% include 'questionnaire/includes/header.html' %}
+    <style>
+
+        /* Styling the Body element i.e. Color,
+        Font, Alignment */
+        body {
+            font-family: Verdana;
+            text-align: center;
+        }
+
+        /* Styling the Form (Color, Padding, Shadow) */
+        aside {
+            background-color: #fff;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 30px 20px;
+            box-shadow: 2px 5px 10px rgba(110, 0, 0, 0.5);
+        }
+
+        /* Styling form-control Class */
+        .form-control {
+            text-align: left;
+            margin-bottom: 25px;
+        }
+
+        /* Styling form-control Label */
+        .form-control label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        /* Styling form-control input,
+        select, textarea */
+        .form-control input,
+        .form-control select,
+        .form-control textarea {
+            border: 1px solid #777;
+            border-radius: 2px;
+            font-family: inherit;
+            padding: 10px;
+            display: block;
+            width: 95%;
+        }
+
+        /* Styling form-control Radio
+        button and Checkbox */
+        .form-control input[type="radio"],
+        .form-control input[type="checkbox"] {
+            display: inline-block;
+            width: auto;
+        }
+
+        /* Styling Button */
+        button {
+            background-color: #05c46b;
+            border: 1px solid #777;
+            border-radius: 2px;
+            font-family: inherit;
+            font-size: 21px;
+            display: block;
+            width: 100%;
+            margin-top: 50px;
+            margin-bottom: 20px;
+        }
+
+        .btn-link {
+            border: none;
+            outline: none;
+            background: none;
+            cursor: pointer;
+            color: #0000EE;
+            padding: 0;
+            margin: 0;
+            text-decoration: none;
+            font-family: inherit;
+            font-size: inherit;
+            width: auto;
+            height: auto;
+        }
+    </style>
+    <link rel="stylesheet" href="{% static 'css/dynamic_background.css' %}">
+</head>
+
+<body style="height: 100vh;">
+{% include 'questionnaire/includes/flash_messages.html' %}
+<br>
+<div class="text-center">
+<h1>{{ poll.title }}</h1>
+<small>{{ poll.description }}</small>
+</div>
+<aside>
+    <form id="form" method="post" action="{% url 'take_poll' poll.pk %}">
+
+        {% csrf_token %}
+        <input type="hidden" name="number_question" value="{{ question.pk }}">
+
+        <div class="form-control border-0">
+
+            <div class="form-control">
+                <label>{{ question.question }}</label>
+                <label for="inp-1">
+                    {% for answer in question.answers.all %}
+                        <input type="radio"
+                               name="answers" value="{{ answer.pk }}" id="number-{{ question.pk }}" class="m-2">
+                        <span>{{ answer.answer }}</span><br>
+                    {% endfor %}
+                </label>
+            </div>
+
+            <button type="submit" value="submit">
+                Сохранить ответ
+            </button>
+        </div>
+    </form>
+    {% if poll.questions.all.0.pk != question.pk %}
+        <form method="post" action="{% url 'take_poll' poll.pk %}" onclick="this.submit()" id="back">
+            {% csrf_token %}
+            <input type="hidden" name="number_question" value="{{ question.pk|add:-1 }}" form="back">
+            <input type="hidden" name="redirect" value="1" form="back">
+            <button type="submit" name="your_name" value="your_value" class="btn-link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                     class="bi bi-arrow-return-left" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd"
+                          d="M14.5 1.5a.5.5 0 0 1 .5.5v4.8a2.5 2.5 0 0 1-2.5 2.5H2.707l3.347 3.346a.5.5 0 0 1-.708.708l-4.2-4.2a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 8.3H12.5A1.5 1.5 0 0 0 14 6.8V2a.5.5 0 0 1 .5-.5z"/>
+                </svg>
+                Назад
+            </button>
+
+        </form>
+    {% endif %}
+</aside>
+</body>
+
+</html>
+

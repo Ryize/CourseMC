@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        {% block head %}
+
+        {% endblock %}
+    </head>
+    <body>
+    {% include 'questionnaire/includes/flash_messages.html' %}
+        {% block header %}
+            {% include "questionnaire/includes/header.html" %}
+        {% endblock %}
+
+        {% block content %}
+            <center><h1>Стартовая страница base.html</h1></center>
+        {% endblock %}
+    </body>
+</html>
