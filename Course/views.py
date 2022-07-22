@@ -1,6 +1,5 @@
 import datetime
 import os
-from io import BytesIO
 
 import docx
 
@@ -9,7 +8,7 @@ from django.http import JsonResponse, HttpResponse
 from django.shortcuts import redirect
 from django.views.generic.edit import FormView
 from django.contrib.auth.models import User
-from docx.shared import Pt, RGBColor
+from docx.shared import RGBColor
 
 from .forms import *
 from django.contrib.auth.decorators import login_required
@@ -66,12 +65,13 @@ class TimetableView(LoginRequiredMixin, ListView):
             student_group = student_group.filter(lesson_type__icontains=self.__get_param('lesson_type'))
         if self.__get_param('absent'):
             student_group = student_group.filter(absent__name__iexact=f'{student.name}')
-
         return student_group
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
         context['reviews_count'] = Review.objects.all().count()
+        student = Student.objects.filter(name=get_user(self.request).username).first()
+        context['create_report'] = Schedule.objects.filter(group=student.groups).order_by('-weekday')
         return context
 
     def dispatch(self, request, *args, **kwargs):
@@ -126,7 +126,6 @@ def download_report(request, group_id):
 def get_training_program(response):
     schedules = Schedule.objects.filter(group=LearnGroup.objects.filter(title='Вояджер').first()).order_by(
         'weekday').all()
-    destination_document_file = BytesIO()
     doc = docx.Document()
     doc.add_heading(f'Программа курса Python разработки', 0)
     paragraph = doc.add_paragraph('Получено: ')

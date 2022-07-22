@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from Course.models import Schedule, Student, LearnGroup
+from Course.models import Schedule, Student, LearnGroup, StudentQuestion
 
 
 class ScheduleListSerializer(serializers.ModelSerializer):
@@ -29,8 +29,8 @@ class StudentListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         fields = '__all__'
-        
-        
+
+
 class LearnGroupListSerializer(serializers.ModelSerializer):
     """Список всех учебных групп"""
 
@@ -41,4 +41,11 @@ class LearnGroupListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LearnGroup
+        fields = '__all__'
+
+
+class StudentQuestionListSerializer(serializers.ModelSerializer):
+    """Список всех вопросов учеников"""
+    class Meta:
+        model = StudentQuestion
         fields = '__all__'
