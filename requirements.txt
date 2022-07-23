@@ -9,7 +9,11 @@ defusedxml==0.7.1
 Django==3.2.7
 django-allauth==0.45.0
 django-ckeditor==6.1.0
+django-grappelli==3.0.3
+django-jazzmin==2.5.0
+django-jet==1.0.8
 django-js-asset==1.2.2
+django-suit @ https://github.com/darklow/django-suit/tarball/v2
 djangorestframework==3.13.1
 fonttools==4.34.4
 htmldocx==0.0.6
