@@ -1,0 +1,45 @@
+{% load static %}
+<html lang="ru">
+<head>
+    <title>Список статей - CourseMC</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+{% include 'blog/includes/header.html' %}
+<link rel="stylesheet" href="{% static 'css/post_list.css' %}">
+
+<div class="container">
+    {% for post in posts %}
+        <div class="card">
+            <div class="card__header cursor-pointer" onclick="document.location=`{% url 'post_view' post.pk %}`">
+                <img src="{{ post.image.url }}"
+                     alt="Фото статьи" class="card__image"
+                     width="600">
+            </div>
+            <div class="card__body" style="cursor: pointer;">
+
+                    <span class="tag">
+                        {% for category in post.categories.all %}
+                            <span style="background-color: {{ category.color }}; padding: 5px; border-radius: 15%;"><small><strong>{{ category.title }}</strong></small></span>
+                        {% endfor %}
+                    </span>
+                <label onclick="document.location=`{% url 'post_view' post.pk %}`" style="cursor: pointer;">
+                    <h4>{{ post.title }} {% if not post.is_displayed %} <small><i>(<u>На рассмотрении</u>)</i></small>{% endif %}</h4>
+                    <p>{{ post.description }}</p>
+                </label>
+            </div>
+            <div class="card__footer">
+                <div class="user">
+                    <div class="user__info">
+                        <h5>{{ post.author }}</h5>
+                        <small>{{ post.created_at }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+</body>
+</html>

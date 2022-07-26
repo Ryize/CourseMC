@@ -33,7 +33,6 @@ ALLOWED_HOSTS = ['coursemc.space', 'www.coursemc.space', 'localhost', '127.0.0.1
 # Application definition
 
 INSTALLED_APPS = [
-    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -48,9 +47,11 @@ INSTALLED_APPS = [
     'ckeditor',
     'ckeditor_uploader',
     'rest_framework',
+    'colorfield',
     'reviews.apps.ReviewsConfig',
     'Course.apps.AuthConfig',
     'questionnaire.apps.QuestionnaireConfig',
+    'blog.apps.BlogConfig',
 ]
 
 MIDDLEWARE = [
@@ -175,7 +176,6 @@ CKEDITOR_CONFIGS = {
             'autoembed',
             'embedsemantic',
             'autogrow',
-            # 'devtools',
             'widget',
             'lineutils',
             'clipboard',
