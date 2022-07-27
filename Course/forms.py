@@ -14,7 +14,9 @@ class StudentForm(ModelForm):
         self.fields['name'].widget.attrs.update({'class': 'form-control', 'placeholder': "Имя*"})
         self.fields['contact'].widget.attrs.update({'class': 'form-control', 'placeholder': "Ссылка на ВК/Телеграм*"})
         self.fields['email'].widget.attrs.update({'class': 'form-control', 'placeholder': "Почта*"})
-        self.fields['password'].widget.attrs.update({'class': 'form-control', 'placeholder': "Необязательно", 'value': random.randint(1111, 9999)})
+        self.fields['password'].widget.attrs.update(
+            {'class': 'form-control', 'placeholder': "Необязательно", 'value': random.randint(1111, 9999)})
+
 
 class AuthForm(ModelForm):
     class Meta:
