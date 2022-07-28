@@ -1,0 +1,54 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block head_title %}{% trans "Signup" %}{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="container-fluid">
+
+
+        <div class="card mb-3">
+            <div class="card-header bg-primary">
+               <h3><b><font color="white">{% trans "Sign Up" %}</font></b></h3></div>
+            <div class="card-body">
+
+
+<p>{% blocktrans %}У вас уже есть учетная запись? Тогда, пожалуйста,  <a href="{{ login_url }}">авторизуйтесь</a>.{% endblocktrans %}</p>
+
+<form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
+  {% csrf_token %}
+
+<table class="table">{{ form.as_table }}</table>
+
+    <label>Я согласен с <a href="{% url 'privacy' %}">политикой конфидициальности и пользовательским соглашением</a> <input id="policy" type="checkbox" onclick="
+    func()
+"></label><br>
+
+  {% if redirect_field_value %}
+  <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+  {% endif %}
+  <button class="btn btn-primary" type="submit" id="buttonreg" disabled>{% trans "Зарегестрироваться" %} &raquo;</button>
+</form>
+</div>
+</div>
+</div>
+</div>
+
+    <script>
+    function func(){
+            submitbtn = document.getElementById('buttonreg');
+    console.log('s');
+    if (document.getElementById('policy').checked){
+        submitbtn.disabled = '';
+        submitbtn.title = 'Зарегестрироваться';
+    }
+    else{
+        submitbtn.disabled = 'disabled';
+        submitbtn.title = 'Подтвердите политику конфиденциальности и пользовательское соглашение';
+        alert('Подтвердите политику конфиденциальности и пользовательское соглашение');
+    }
+    }
+    </script>
+
+{% endblock %}

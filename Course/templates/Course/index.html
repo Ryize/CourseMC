@@ -1,12 +1,13 @@
 {% load static %}
 
 <!DOCTYPE html>
-<!-- saved from url=(0224)https://brunoyam.com/online-kursy/python-s-nulya?utm_source=yandex&utm_medium=cpc&utm_term=%D0%9A%D1%83%D1%80%D1%81%D1%8B%20Python&utm_content=4525053568_10565583907&utm_campaign=Python-Online-POISK&yclid=5379235251520329232 -->
-<html lang="ru" m_init="2259300202109111032">
+<html lang="ru">
 {% include 'template/base_head.html' %}
 
-<body id="top" data-course-id="56">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+<body class="p-0" id="top">
+{% include 'template/header.html' %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
+      integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
 <!-- Google Tag Manager (noscript) -->
 <noscript>
     <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TKT3RK4"
@@ -16,102 +17,19 @@
 <h2>
     <ul class="messages">
         {% for message in messages %}
-        <script>alert(message);</script>
+            <script>alert(message);</script>
         {% endfor %}
     </ul>
 </h2>
 <div id="app">
-    {% include 'template/header.html' %}
-    <div class="header-mobile fixed-top d-md-none container-fluid fixed-active">
-        <div class="container">
-            <div class="row">
-                <div class="col-12 d-flex justify-content-start align-items-center"><a data-toggle="collapse"
-                                                                                       href="https://brunoyam.com/online-kursy/python-s-nulya?utm_source=yandex&amp;utm_medium=cpc&amp;utm_term=%D0%9A%D1%83%D1%80%D1%81%D1%8B%20Python&amp;utm_content=4525053568_10565583907&amp;utm_campaign=Python-Online-POISK&amp;yclid=5379235251520329232#collapseMobileMenuFixed"
-                                                                                       role="button"
-                                                                                       aria-expanded="false"
-                                                                                       aria-controls="collapseMobileMenuFixed">
-                            <a class="logo-link" href="{% url 'home' %}"><h1 style="font-size: 215%"
-                                              alt="Учебный центр CourseMC - логотип"
-                                              class="img-fluid logo svg">M&C</h1></a>
-                    {% if user.is_authenticated %}
-                        <a
-                            href="{% url 'schedule' %}"
-                            class="btn btn-transparent ml-4"
-                            style="margin-left: 25px; color: #fd7e14">
-                             Расписание
-                            </a>
-                        {% else %}
-                        <a
-                            href="{% url 'account_login' %}"
-                            class="payment_price mb-0"
-                            style="margin-left: 25px;">
-                            Авторизоваться
-                            </a>
-                        {% endif %}
-                </a>
-                    </div>
-                <div id="collapseMobileMenuFixed" class="col-12 collapse mobile-menu">
-                    <div class="d-flex flex-column full_height"><a data-toggle="collapse"
-                                                                   href="https://brunoyam.com/online-kursy/python-s-nulya?utm_source=yandex&amp;utm_medium=cpc&amp;utm_term=%D0%9A%D1%83%D1%80%D1%81%D1%8B%20Python&amp;utm_content=4525053568_10565583907&amp;utm_campaign=Python-Online-POISK&amp;yclid=5379235251520329232#collapseMobileMenuFixed"
-                                                                   role="button" aria-expanded="false"
-                                                                   aria-controls="collapseMobileMenuFixed"
-                                                                   class="collapsed close_mobile_menu">
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.8323 10.0161L19.6199 2.22822C20.1267 1.72165 20.1267 0.902605 19.6199 0.396038C19.1134 -0.110528 18.2943 -0.110528 17.7877 0.396038L9.9999 8.18388L2.21229 0.396038C1.70548 -0.110528 0.88667 -0.110528 0.380103 0.396038C-0.126701 0.902605 -0.126701 1.72165 0.380103 2.22822L8.16771 10.0161L0.380103 17.8039C-0.126701 18.3105 -0.126701 19.1295 0.380103 19.6361C0.632556 19.8888 0.964494 20.0157 1.2962 20.0157C1.6279 20.0157 1.9596 19.8888 2.21229 19.6361L9.9999 11.8482L17.7877 19.6361C18.0404 19.8888 18.3721 20.0157 18.7038 20.0157C19.0355 20.0157 19.3672 19.8888 19.6199 19.6361C20.1267 19.1295 20.1267 18.3105 19.6199 17.8039L11.8323 10.0161Z"
-                                  fill="black"></path>
-                        </svg>
-                    </a> <a class="logo-link text-center"><img
-                            src="{% static 'indexPage/logo2020.png' %}" alt="Учебный центр M&C - логотип"
-                            class="img-fluid logo svg mr-0"></a>
-                        <ul class="list-unstyled">
-                            <li><a class="has_children">
-                                Курсы
-                            </a>
-                                <ul class="list-unstyled">
-                                    <li><a href="https://brunoyam.com/kursy-programmirovaniya" target="_self">
-                                        Программирование
-                                    </a></li>
-                                    <li><a href="https://brunoyam.com/kursy-internet-marketing" target="_self">
-                                        Маркетинг
-                                    </a></li>
-                                    <li><a href="https://brunoyam.com/kursy-grafiki-dizaina" target="_self">
-                                        Дизайн
-                                    </a></li>
-                                    <li><a href="https://brunoyam.com/kursy-analitika-dannyh" target="_self">
-                                        Аналитика
-                                    </a></li>
-                                    <li><a href="https://brunoyam.com/online-kursy" target="_self">
-                                        Онлайн курсы
-                                    </a></li>
-                                </ul>
-                            </li>
-                            <li><a href="https://brunoyam.com/about" target="_self">
-                                О нас
-                            </a></li>
-                            <li><a href="https://brunoyam.com/korporativnoe-obuchenie" target="_self">
-                                Компаниям
-                            </a></li>
-                            <li><a href="https://brunoyam.com/blog" target="_self">
-                                Блог
-                            </a></li>
-                            <li><a href="https://brunoyam.com/kontakty" target="_self">
-                                Контакты
-                            </a></li>
-                        </ul>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
     <main id="page-wrap" class="redesign_2020">
-        <div itemscope="itemscope" itemtype="https://schema.org/Product">
+        <div itemscope="itemscope">
 
             <div id="breadcrumbs" class="pt-new-2 breadcrumb-container">
                 <div class="container new-grid">
                     <div class="row">
                         <div class="col-12">
-                            <ol itemscope="itemscope" itemtype="https://schema.org/BreadcrumbList" class="breadcrumb">
+                            <ol itemscope="itemscope" class="breadcrumb">
                                 <li class="breadcrumb-item active">Онлайн-курс Профессия Python-разработчик</li>
                             </ol>
                         </div>
@@ -119,38 +37,6 @@
                 </div>
             </div>
             <div id="hero" class="mt-0 mb-new-10 d-block">
-                <div class="redesign_course_bg">
-                    <div class="row_course_bg row_course_bg--hero d-flex justify-content-start">
-                        <div class="item_course_bg item_course_bg--prog_border d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                        <div class="item_course_bg item_course_bg--prog_border d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--prog_border d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                        <div class="item_course_bg item_course_bg--prog_color z-top"></div>
-                        <div class="item_course_bg item_course_bg--prog_border d-none d-md-block"></div>
-                    </div>
-                    <div class="row_course_bg row_course_bg--hero d-flex justify-content-start">
-                        <div class="item_course_bg item_course_bg--empty d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--prog_border d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--empty d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--prog_border d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--empty d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--empty d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--prog_border d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--empty d-none d-md-block"></div>
-                    </div>
-                    <div class="row_course_bg row_course_bg--hero d-flex justify-content-start">
-                        <div class="item_course_bg item_course_bg--prog_border d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--prog_border d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--empty d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--empty d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--prog_grey"></div>
-                        <div class="item_course_bg item_course_bg--prog_border d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                        <div class="item_course_bg item_course_bg--prog_border d-none d-md-block"></div>
-                    </div>
-                </div>
                 <div class="container new-grid content_course_bg">
                     <div class="row">
                         <div class="col-md-7 z-middle d-none d-md-block"><h2 itemprop="name" class="hero_margin_top h2">
@@ -161,7 +47,7 @@
                                 старта работы в Python программировании (Junior Python Developer). <br>
                                 Последнее обновление курса - 14 июня 2022 года
                             </p>
-                            
+
                         </div>
                         <div class="col-12 d-block z-middle d-md-none">
                             <div class="h1 hero_margin_top m-h1">Онлайн-курс Профессия <span>Python-разработчик</span>
@@ -177,14 +63,6 @@
                                 </video>
                             </div>
                         </div>
-                        <div class="col-12 z-middle d-block d-md-none"><p class="mt-new-3 mb-new-7 medium_p">
-                            Практический онлайн-курс по Python: от Git и алгоритмов до django и unit-тестирования.
-                            Создадите несколько действующих сервисов и получите все необходимые навыки и знания для
-                            старта работы в Python программировании (Junior Python Developer). <br>
-                            Последнее обновление курса - 14 июня 2022 года
-                        </p>
-                            
-                        </div>
                     </div>
                 </div>
             </div>
@@ -192,43 +70,6 @@
                 <div class="container new-grid">
                     <div class="row">
                         <div class="col-12"><h2 class="mb-new-7">О курсе</h2></div>
-                        <div class="d-block d-md-none">
-                            <div class="about_dop_info row">
-                                <div class="about_dop_info_line col-6">
-                                    <div class="h2 d-inline-block about_dop_info_num">1 350 <b>₽</b></div>
-                                    <div class="h5 d-block">в месяц</div>
-                                </div>
-                                <div class="about_dop_info_line col-6">
-                                    <div class="h2 d-inline-block about_dop_info_num">9</div>
-                                    <div class="h5 d-block"> месяцев обучения</div>
-                                </div>
-                                <div class="about_dop_info_line col-6">
-                                    <div class="d-inline-block about_dop_info_num mb-new-1">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                             xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M12 0C5.38346 0 0 5.38346 0 12C0 18.6165 5.38346 24 12 24C18.6165 24 24 18.6165 24 12C24 5.38346 18.6165 0 12 0ZM18.7068 8.84211L11.0376 16.4511C10.5865 16.9023 9.86466 16.9323 9.38346 16.4812L5.32331 12.782C4.84211 12.3308 4.81203 11.5789 5.23308 11.0977C5.68421 10.6165 6.43609 10.5865 6.91729 11.0376L10.1353 13.985L16.9925 7.12782C17.4737 6.64662 18.2256 6.64662 18.7068 7.12782C19.188 7.60902 19.188 8.3609 18.7068 8.84211Z"
-                                                  fill="#EB5D18"></path>
-                                        </svg>
-                                    </div>
-                                    <div class="h5 d-block">
-                                        Дата: Когда вам удобно
-                                    </div>
-                                </div>
-                                <div class="about_dop_info_line col-6">
-                                    <div class="d-inline-block about_dop_info_num mb-new-1">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                             xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M12 0C5.38346 0 0 5.38346 0 12C0 18.6165 5.38346 24 12 24C18.6165 24 24 18.6165 24 12C24 5.38346 18.6165 0 12 0ZM18.7068 8.84211L11.0376 16.4511C10.5865 16.9023 9.86466 16.9323 9.38346 16.4812L5.32331 12.782C4.84211 12.3308 4.81203 11.5789 5.23308 11.0977C5.68421 10.6165 6.43609 10.5865 6.91729 11.0376L10.1353 13.985L16.9925 7.12782C17.4737 6.64662 18.2256 6.64662 18.7068 7.12782C19.188 7.60902 19.188 8.3609 18.7068 8.84211Z"
-                                                  fill="#EB5D18"></path>
-                                        </svg>
-                                    </div>
-                                    <div class="h5 d-block">
-                                        Место: В любом месте
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
                     </div>
                     <div class="row">
                         <div class="d-none d-md-block col-md-6">
@@ -249,7 +90,7 @@
                                 <p style="margin-bottom: 16px; line-height: 24px;">Видеоматериалы, созданные с любовью,
                                     много практических заданий для отработки знаний и <span style="font-weight: bold;">3 проекта</span>&nbsp;—&nbsp;сайт
                                     интернет-магазина или блога, Telegam-bot и написание игры (шахматы или gomoku)</p>
-                                
+
                             </div>
                         </div>
                         <div class="d-none d-md-block col-md-6">
@@ -284,7 +125,7 @@
                                 интернет-магазина или блога, Telegam-bot и написание игры (шахматы или gomoku)</p></div>
                         <a href="https://brunoyam.com/online-kursy/python-s-nulya?utm_source=yandex&amp;utm_medium=cpc&amp;utm_term=%D0%9A%D1%83%D1%80%D1%81%D1%8B%20Python&amp;utm_content=4525053568_10565583907&amp;utm_campaign=Python-Online-POISK&amp;yclid=5379235251520329232#"
                            class="link_read_more orange_link">Читать дальше</a></div>
-                    
+
                 </div>
             </section>
             <div id="results_block" class="mt-new-10 pt-new-15 pb-new-15 mb-new-10 d-block prog_bg text-white">
@@ -320,7 +161,7 @@
                                 <div class="h4 mb-new-2">Для тех, кто хочет стать Python-разработчиком</div>
                                 <p>Основная задача курса - подготовить вас к профессии Python-разработчик. После
                                     обучения вы сможете найти работу и уже в рамках компании быстро развивать свои
-                                    навыки</p> 
+                                    навыки</p>
                             </div>
                         </div>
                         <div class="col-12 col-md-6">
@@ -331,7 +172,7 @@
                         </div>
                     </div>
                 </div>
-                
+
             </div>
 
             <div id="how_study" class="pt-new-20 pb-new-10 d-block">
@@ -395,23 +236,6 @@
                                     </svg>
                                 </div>
                             </div>
-                            <ul class="check_list d-block d-md-none">
-                                <li>
-                                    имаетесь с наставником вместе с группой других учеников<br>(В группе до 4'х человек)
-                                </li>
-                                <li>
-                                    Задания состоят из трёх уровней сложности. Отправляете задания на проверку
-                                    наставнику
-                                </li>
-                                <li>
-                                    Параллельно ведется проектная работа. Выполненные проекты - это ваше готовое
-                                    портфолио
-                                </li>
-                                <li>
-                                    В течение 24 часов наставник даёт развёрнутый ответ, указывает на ошибки, отвечает
-                                    на вопросы. Когда результат устроит всех - откроется следующий модуль
-                                </li>
-                            </ul>
                         </div>
                     </div>
                 </div>
@@ -465,37 +289,8 @@
                     </div>
                 </div>
             </div>
-            
+
             <div id="payment" class="mt-new-10 pt-new-15 pb-new-15 mb-new-10 d-block bg_grey">
-                <div class="redesign_course_bg redesign_course_bg--emotion d-none d-md-block">
-                    <div class="row_course_bg row_course_bg--emotion d-flex justify-content-start">
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                        <div class="item_course_bg item_course_bg--prog_border"></div>
-                        <div class="item_course_bg item_course_bg--prog_border"></div>
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                        <div class="item_course_bg item_course_bg--prog_grey"></div>
-                        <div class="item_course_bg item_course_bg--prog_border"></div>
-                    </div>
-                    <div class="row_course_bg row_course_bg--emotion d-flex justify-content-start">
-                        <div class="item_course_bg item_course_bg--prog_border"></div>
-                        <div class="item_course_bg item_course_bg--prog_border"></div>
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                        <div class="item_course_bg item_course_bg--prog_border"></div>
-                        <div class="item_course_bg item_course_bg--prog_border"></div>
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                    </div>
-                    <div class="row_course_bg row_course_bg--emotion d-flex justify-content-start">
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                        <div class="item_course_bg item_course_bg--prog_grey"></div>
-                        <div class="item_course_bg item_course_bg--prog_border"></div>
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                        <div class="item_course_bg item_course_bg-prog_border"></div>
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                    </div>
-                </div>
                 <div class="container new-grid content_course_bg content_course_bg--payment">
                     <div class="row z-middle">
                         <div class="col-12"><h2 class="mb-new-8"><span>Получите
@@ -513,7 +308,7 @@
                             <div class="clearfix"></div>
                             <div class="payment_price payment_price--confirm"></div>
                             <div class="clearfix"></div>
-                            <div class="payment_price mb-0">от 1 150 <b>₽</b></div>
+                            <div class="payment_price mb-0">от 1 350 <b>₽</b></div>
                             <div class="payment_price payment_price--old payment_price--noborder mb-0">
                                 /мес
                             </div>
@@ -523,12 +318,15 @@
                             <div class="clearfix"></div>
                         </div>
                         <div class="payment-info col-md-6 col-lg-4">
-                            <form data-type="online" method="post" class="form-enroll-course form-base" id="contactForm">
+                            <form data-type="online" method="post" class="form-enroll-course form-base"
+                                  id="contactForm">
                                 <fieldset>
                                     {% csrf_token %}
                                     {{ form.as_p }}
                                     <div class="text-center"><input type="hidden" name="utm_source" value="yandex">
-                                        <input type="button" name="signupSubmit" id="signupSubmit" class="btn btn-success btn-lg" value="Записаться" onclick="sendUserdata()"/>
+                                        <input type="button" name="signupSubmit" id="signupSubmit"
+                                               class="btn btn-success btn-lg" value="Записаться"
+                                               onclick="sendUserdata()"/>
                                     </div>
                                 </fieldset>
                             </form>
@@ -536,54 +334,50 @@
 
                         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
                         <script>
-    function sendUserdata() {
-        // get the nickname
-        var name = document.getElementsByName('name')[0].value
-        var contact = document.getElementsByName('contact')[0].value
-        var email = document.getElementsByName('email')[0].value
-        var password = document.getElementsByName('password')[0].value
-        data = {
-            name: name,
-            contact: contact,
-            email: email,
-            password: password
-            }
-        // GET AJAX request
-        $.ajax({
-            type : "POST",
-            url: "{% url 'home' %}",
-            data: {
-            name: name,
-            contact: contact,
-            email: email,
-            password: password,
-            csrfmiddlewaretoken: '{{ csrf_token }}',
-            dataType: "json",
-            },
-           success: function (response) {
-               // if not valid user, alert the user
-                if(response["success"]){
-                    alert("Спасибо за обращение, мы свяжемся с вами в ближайшее время!");
-                    document.getElementById("signupSubmit").classList.add('disabled');
-                }
-                else{
-                    alert(response["error_message"]);
-                }
-            },
-            error: function (response) {
-                if(response["success"]){
-                    alert("Спасибо за обращение, мы свяжемся с вами в ближайшее время!");
-                    document.getElementById("signupSubmit").classList.add('disabled');
-                }
-                else{
-                    alert(response["error_message"]);
-                }
-            }
-       })
-    }
-</script>
-
-  </script>
+                            function sendUserdata() {
+                                // get the nickname
+                                var name = document.getElementsByName('name')[0].value
+                                var contact = document.getElementsByName('contact')[0].value
+                                var email = document.getElementsByName('email')[0].value
+                                var password = document.getElementsByName('password')[0].value
+                                data = {
+                                    name: name,
+                                    contact: contact,
+                                    email: email,
+                                    password: password
+                                }
+                                // GET AJAX request
+                                $.ajax({
+                                    type: "POST",
+                                    url: "{% url 'home' %}",
+                                    data: {
+                                        name: name,
+                                        contact: contact,
+                                        email: email,
+                                        password: password,
+                                        csrfmiddlewaretoken: '{{ csrf_token }}',
+                                        dataType: "json",
+                                    },
+                                    success: function (response) {
+                                        // if not valid user, alert the user
+                                        if (response["success"]) {
+                                            alert("Спасибо за обращение, мы свяжемся с вами в ближайшее время!");
+                                            document.getElementById("signupSubmit").classList.add('disabled');
+                                        } else {
+                                            alert(response["error_message"]);
+                                        }
+                                    },
+                                    error: function (response) {
+                                        if (response["success"]) {
+                                            alert("Спасибо за обращение, мы свяжемся с вами в ближайшее время!");
+                                            document.getElementById("signupSubmit").classList.add('disabled');
+                                        } else {
+                                            alert(response["error_message"]);
+                                        }
+                                    }
+                                })
+                            }
+                        </script>
 
                         <div class="form-payment-container form-payment-info col-12 col-lg-4">
                             <div class="clearfix"></div>
@@ -617,8 +411,9 @@
                                             <button type="button" data-toggle="collapse"
                                                     data-target="#collapseCoursePlan102" aria-expanded="true"
                                                     aria-controls="collapseCoursePlan102"
-                                                    class="btn btn-link btn-link--plan" style='text-decoration: none;'><span
-                                                    class="plan_class d-none d-md-block" >1 блок</span> <span
+                                                    class="btn btn-link btn-link--plan"
+                                                    style='text-decoration: none;'><span
+                                                    class="plan_class d-none d-md-block">1 блок</span> <span
                                                     class="plan_title">Основы Python</span></button>
                                         </div>
                                     </div>
@@ -1012,37 +807,6 @@
                 </div>
             </div>
             <div id="emotionProff" class="mt-new-10 pt-new-25 mb-new-10 d-block bg_grey">
-                <div class="redesign_course_bg redesign_course_bg--proff">
-                    <div class="row_course_bg row_course_bg--proff d-none d-md-flex justify-content-start">
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                        <div class="item_course_bg item_course_bg--prog_border"></div>
-                        <div class="item_course_bg item_course_bg--prog_border"></div>
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                    </div>
-                    <div class="row_course_bg row_course_bg--proff d-flex justify-content-center justify-content-md-start">
-                        <div class="item_course_bg item_course_bg--empty d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--empty d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--prog_border d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--prog_photo d-none d-md-block"
-                             style="background: url(&quot;https://brunoyam.com/storage&quot;) center center / contain no-repeat;"></div>
-                        <div class="item_course_bg item_course_bg--prog_grey"></div>
-                        <div class="item_course_bg item_course_bg--prog_border d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--prog_color d-block d-md-none"></div>
-                        <div class="item_course_bg item_course_bg--empty d-block d-md-none"></div>
-                        <div class="item_course_bg item_course_bg--empty item_course_bg--prog_m_white d-block d-md-none"></div>
-                    </div>
-                    <div class="row_course_bg row_course_bg--proff d-flex justify-content-center justify-content-md-start">
-                        <div class="item_course_bg item_course_bg--prog_border d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                        <div class="item_course_bg item_course_bg--prog_border d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--empty item_course_bg--prog_m_white"></div>
-                        <div class="item_course_bg item_course_bg--prog_color d-block d-md-none"></div>
-                        <div class="item_course_bg item_course_bg--prog_border d-none d-md-block"></div>
-                        <div class="item_course_bg item_course_bg--empty"></div>
-                    </div>
-                </div>
                 <div class="container new-grid content_course_bg content_course_bg--proff">
                     <div class="row z-middle">
                         <div class="col-12 text-center text-md-left">
@@ -1050,13 +814,10 @@
                             <div class="h3 mb-new-3 proff_text">Средняя зарплата мидл Python-разработчика в России в
                                 2021 году
                             </div>
-                            <p class="d-block medium_p pb-0">По данным <a href='https://hh.ru/article/24562' style='text-decoration: none;'>hh.ru</a></p></div>
+                            <p class="d-block medium_p pb-0">По данным <a href='https://hh.ru/article/24562'
+                                                                          style='text-decoration: none;'>hh.ru</a></p>
+                        </div>
                     </div>
-                </div>
-            </div>
-            <div class="container-fluid bg-light-grey pl-0 pr-0">
-                <div class="container seo-block">
-                    <div class="row justify-content-center seo-text"></div>
                 </div>
             </div>
         </div>
