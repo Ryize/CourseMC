@@ -12,6 +12,7 @@ django-ckeditor==6.1.0
 django-grappelli==3.0.3
 django-jazzmin==2.5.0
 django-jet==1.0.8
+django-colorfield==0.7.2
 django-js-asset==1.2.2
 django-suit @ https://github.com/darklow/django-suit/tarball/v2
 djangorestframework==3.13.1
