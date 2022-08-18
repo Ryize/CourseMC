@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'Course.apps.AuthConfig',
     'questionnaire.apps.QuestionnaireConfig',
     'blog.apps.BlogConfig',
+    'silk',
 ]
 
 MIDDLEWARE = [
@@ -62,6 +63,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'silk.middleware.SilkyMiddleware',
+    'blog.Error500.Error500',
 ]
 
 ROOT_URLCONF = 'CourseMC.urls'
@@ -94,6 +97,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'ATOMIC_REQUESTS': True,
     }
 }
 

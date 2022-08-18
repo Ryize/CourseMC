@@ -44,6 +44,7 @@ class StudentRecordView(FormView):
         return JsonResponse(response)
 
     def get_context_data(self, *, object_list=None, **kwargs):
+        1/0
         context = super().get_context_data(**kwargs)
         context['reviews_count'] = Review.objects.all().count()
         return context

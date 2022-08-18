@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.views.generic import ListView, DetailView, CreateView
@@ -24,7 +25,10 @@ class PostListView(ListView):
     template_name = 'blog/post_list.html'
     context_object_name = 'posts'
 
+    @transaction.atomic
     def get_queryset(self):
+        q1 = Post.objects.filter(is_displayed=True, title='jdwjdwj').count()
+        1/0
         return Post.objects.filter(is_displayed=True).prefetch_related('categories').all()
 
 
@@ -50,11 +54,13 @@ class PostView(DetailView):
 
 
 @login_required
+@transaction.atomic
 def create_comment(request):
     if request.is_ajax():
         content = request.POST.get('content')
         post_id = int(request.POST.get('post_id'))
+
         post = Post.objects.filter(pk=post_id).first()
-        comment = Comment(comment=content, author=request.user, post=post)
-        comment.save()
+        Comment.objects.create(comment=content, author=request.user, post=post)
+        Category.objects.create(title='Тестовая категория!')
         return JsonResponse({'success': True})
