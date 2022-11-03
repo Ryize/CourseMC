@@ -6,16 +6,11 @@
     <!-- Bootstrap CSS (jsDelivr CDN) -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
           integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
-            crossorigin="anonymous"></script>
-<body class="p-0" >
+<body class='p-0'>
+{% include 'template/header.html' %}
 {% include 'template/flash_message.html'%}
 {% include 'template/base_head.html' %}
 
-{% include 'template/header.html' %}
-
-<!-- Bootstrap CSS (Cloudflare CDN) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.1/css/bootstrap.min.css"
       integrity="sha512-T584yQ/tdRR5QwOpfvDfVQUidzfgc2339Lc8uBDtcp/wYu80d7jwBgAxbyMh0a9YM9F8N3tdErpFI8iaGx6x5g=="
       crossorigin="anonymous" referrerpolicy="no-referrer">
@@ -27,7 +22,6 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.1/js/bootstrap.min.js"
         integrity="sha512-UR25UO94eTnCVwjbXozyeVd6ZqpaAE9naiEUBK/A+QDbfSTQFhPGj5lOR6d8tsgbBk84Ggb5A3EkjsOgPRPcKA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
 <style>
     #myInput {
         background-image: url('https://free-png.ru/wp-content/uploads/2021/07/free-png.ru-44-700x700.png');
@@ -182,7 +176,7 @@
               d="M7.646 11.354a.5.5 0 0 1 0-.708L10.293 8 7.646 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0z"/>
         <path fill-rule="evenodd" d="M4.5 8a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5z"/>
     </svg>
-    <a class="underline-one" onclick="changeFilterVisible()"> Фильтры</a>
+    <a id="filter-text" onclick="changeFilterVisible()"> Фильтры</a>
     <form id="filter-form">
         <br>
         <input name='theme' type="text" id="myInput" onkeyup="myFunction()" placeholder="Введите название темы..."
@@ -225,8 +219,7 @@
 </div>
 
 <p style="margin-top: 5%;">
-    <label class="alert-danger">Красный фон</label> - означает что вы не присутствовали на <label id="super-button"
-                                                                                                  onclick="superButtonMagic()">уроке</label>
+    <label class="alert-danger">Красный фон</label> - означает что вы не присутствовали на уроке
 </p>
 
 <p><label style="text-size: 115%; text-weight: bold;" class="alert-primary">
@@ -359,6 +352,7 @@
                     {% if page_obj.has_next %}
                         <li class="page-item">
                             <a class="page-link" href="?page={{ page_obj.next_page_number }}">Следующая страница</a>
+
                         </li>
                     {% else %}
                         <li class="page-item disabled">
@@ -381,7 +375,6 @@
         }
     }
 </script>
-
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
 <script>
@@ -408,10 +401,19 @@
         });
         return false;
     }
-</script>
+    
+    function showMessage(text, code) {
+        const ul = document.getElementById('messages-list')
+        const li = document.createElement('li')
+        const div = document.createElement('div')
+        div.textContent = text
+        div.classList = 'alert alert-' + code + ' msg fade show'
+        div.role = 'alert'
+        li.appendChild(div)
+        ul.appendChild(li)
+        fade_alerts()
+    }
 
-
-<script>
     function superButtonMagic() {
         // создаем AJAX-вызов
         $.ajax({
@@ -434,20 +436,6 @@
         });
         return false;
     }
-
-    function showMessage(text, code) {
-        const ul = document.getElementById('messages-list')
-        const li = document.createElement('li')
-        const div = document.createElement('div')
-        div.textContent = text
-        div.classList = 'alert alert-' + code + ' msg fade show'
-        div.role = 'alert'
-        li.appendChild(div)
-        ul.appendChild(li)
-        fade_alerts()
-    }
 </script>
-
-
 </body>
 </html>

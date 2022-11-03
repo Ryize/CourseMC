@@ -1,84 +1,88 @@
 import datetime
 import os
+from io import BytesIO
 
 import docx
-
 from django.contrib.auth import get_user
-from django.http import JsonResponse, HttpResponse
-from django.shortcuts import redirect
-from django.views.generic.edit import FormView
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from docx.shared import RGBColor
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect
+from django.views.generic import ListView
+from django.views.generic.edit import FormView
+from docx.shared import Pt, RGBColor
+from htmldocx import HtmlToDocx
+
+from reviews.models import Review
 
 from .forms import *
-from django.contrib.auth.decorators import login_required
-from .models import Student, Schedule, LearnGroup, StudentQuestion
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView
-from reviews.models import Review
-from htmldocx import HtmlToDocx
+from .models import LearnGroup, Schedule, Student, StudentQuestion
 
 
 class StudentRecordView(FormView):
-    template_name = 'Course/index.html'
+    template_name = "Course/index.html"
     form_class = StudentForm
-    login_url = '/login/'
+    login_url = "/login/"
 
     def form_valid(self, form):
         form.save()
-        name = form.cleaned_data['name']
-        email = form.cleaned_data['email']
-        password = form.cleaned_data['password']
+        name = form.cleaned_data["name"]
+        email = form.cleaned_data["email"]
+        password = form.cleaned_data["password"]
         user = User.objects.create_user(name, email, password)
         user.save()
         response = {
-            'success': True,
+            "success": True,
         }
         return JsonResponse(response)
 
     def form_invalid(self, form):
-        response = {
-            'success': False,
-            'error_message': 'Форма заполнена не верно!'
-        }
+        response = {"success": False, "error_message": "Форма заполнена не верно!"}
         return JsonResponse(response)
 
     def get_context_data(self, *, object_list=None, **kwargs):
-        1/0
         context = super().get_context_data(**kwargs)
-        context['reviews_count'] = Review.objects.all().count()
+        context["reviews_count"] = Review.objects.all().count()
         return context
 
 
 class TimetableView(LoginRequiredMixin, ListView):
     model = Schedule
-    template_name = 'Course/timetable.html'
-    context_object_name = 'schedules'
+    template_name = "Course/timetable.html"
+    context_object_name = "schedules"
     paginate_by = 16
 
     def get_queryset(self):
         student = Student.objects.filter(name=get_user(self.request).username).first()
-        student_group = Schedule.objects.filter(group=student.groups).order_by('-weekday')
-        theme = self.__get_param('theme')
+        student_group = Schedule.objects.filter(group=student.groups).order_by(
+            "-weekday"
+        )
+        theme = self.__get_param("theme")
         if theme:
             student_group = student_group.filter(theme__icontains=theme)
-        if self.__get_param('lesson_type'):
-            student_group = student_group.filter(lesson_type__icontains=self.__get_param('lesson_type'))
-        if self.__get_param('absent'):
-            student_group = student_group.filter(absent__name__iexact=f'{student.name}')
+        if self.__get_param("lesson_type"):
+            student_group = student_group.filter(
+                lesson_type__icontains=self.__get_param("lesson_type")
+            )
+        if self.__get_param("absent"):
+            student_group = student_group.filter(absent__name__iexact=f"{student.name}")
+
         return student_group
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['reviews_count'] = Review.objects.all().count()
+        context["reviews_count"] = Review.objects.all().count()
         student = Student.objects.filter(name=get_user(self.request).username).first()
-        context['create_report'] = Schedule.objects.filter(group=student.groups).order_by('-weekday')
+        context["create_report"] = Schedule.objects.filter(
+            group=student.groups
+        ).order_by("-weekday")
         return context
 
     def dispatch(self, request, *args, **kwargs):
         student = Student.objects.filter(name=get_user(self.request).username).first()
         if not student:
-            return redirect('home')
+            return redirect("home")
         return super().dispatch(request, *args, **kwargs)
 
     def __get_param(self, name):
@@ -89,13 +93,13 @@ class TimetableView(LoginRequiredMixin, ListView):
 def download_report(request, group_id):
     group = LearnGroup.objects.filter(pk=group_id).first()
     if not group:
-        return redirect('home')
+        return redirect("home")
     schedules = group.schedules.all()
     students = group.students
     schedule_count, students_count = schedules.count(), students.count()
-    schedules_primary = schedules.filter(lesson_type='Ключевой урок').count()
-    schedules_new_theme = schedules.filter(lesson_type='Новая тема').count()
-    practice_schedules = schedules.filter(lesson_type='Практика').count()
+    schedules_primary = schedules.filter(lesson_type="Ключевой урок").count()
+    schedules_new_theme = schedules.filter(lesson_type="Новая тема").count()
+    practice_schedules = schedules.filter(lesson_type="Практика").count()
 
     result_data = f"""Отчёт о группе {group.title}
 {'-' * 64}
@@ -111,39 +115,45 @@ def download_report(request, group_id):
     Контакты: {student.contact or 'Не указаны!'}
     Пропущенных урока: {student.absents.count()}
         """
-    result_data += f'\n\nЧасов обучения: {schedules.count() * 1.5}'
+    result_data += f"\n\nЧасов обучения: {schedules.count() * 1.5}"
 
-    directory = 'report'
-    filename = f'Report_{random.randint(10000, 999999999)}.txt'
+    directory = "report"
+    filename = f"Report_{random.randint(10000, 999999999)}.txt"
     if not os.path.exists(directory):
         os.mkdir(directory)
 
     content = result_data
-    response = HttpResponse(content, content_type='text/plain')
-    response['Content-Disposition'] = 'attachment; filename={0}'.format(filename)
+    response = HttpResponse(content, content_type="text/plain")
+    response["Content-Disposition"] = "attachment; filename={0}".format(filename)
     return response
 
 
 def get_training_program(response):
-    schedules = Schedule.objects.filter(group=LearnGroup.objects.filter(title='Вояджер').first()).order_by(
-        'weekday').all()
+    schedules = (
+        Schedule.objects.filter(
+            group=LearnGroup.objects.filter(title="Вояджер").first()
+        )
+        .order_by("weekday")
+        .all()
+    )
+    destination_document_file = BytesIO()
     doc = docx.Document()
-    doc.add_heading(f'Программа курса Python разработки', 0)
-    paragraph = doc.add_paragraph('Получено: ')
+    doc.add_heading(f"Программа курса Python разработки", 0)
+    paragraph = doc.add_paragraph("Получено: ")
     month_conver = {
-        "Unknown": '-',
-        "January": 'Января',
-        "February": 'Февраля',
-        "March": 'Марта',
-        "April": 'Апреля',
-        "May": 'Мая',
-        "June": 'Июня',
-        "July": 'Июля',
-        "August": 'Августа',
-        "September": 'Сентября',
-        "October": 'Октября',
-        "November": 'Ноября',
-        "December": 'Декабря',
+        "Unknown": "-",
+        "January": "Января",
+        "February": "Февраля",
+        "March": "Марта",
+        "April": "Апреля",
+        "May": "Мая",
+        "June": "Июня",
+        "July": "Июля",
+        "August": "Августа",
+        "September": "Сентября",
+        "October": "Октября",
+        "November": "Ноября",
+        "December": "Декабря",
     }
     date = datetime.date.today().strftime("%d %B %Y").split()
     date[1] = month_conver[date[1]]
@@ -152,7 +162,7 @@ def get_training_program(response):
     new_parser = HtmlToDocx()
 
     table = doc.add_table(rows=schedules.count(), cols=2)
-    table.style = 'Table Grid'
+    table.style = "Table Grid"
 
     for row, schedule in enumerate(schedules):
         cell = table.cell(row, 0)
@@ -160,20 +170,22 @@ def get_training_program(response):
         cell = table.cell(row, 1)
         new_parser.add_html_to_document(schedule.lesson_materials, cell)
 
-    if not os.path.exists('programCoursePython'):
-        os.mkdir('programCoursePython')
+    if not os.path.exists("programCoursePython"):
+        os.mkdir("programCoursePython")
 
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-    response['Content-Disposition'] = 'attachment; filename=programCoursePython.docx'
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+    response["Content-Disposition"] = "attachment; filename=programCoursePython.docx"
     doc.save(response)
     return response
 
 
 @login_required
 def ask_question(request):
-    question = request.GET.get('question')
+    question = request.GET.get("question")
     response = {
-        'is_taken': False,
+        "is_taken": False,
     }
     if not question:
         return JsonResponse(response, status=412)
@@ -183,16 +195,16 @@ def ask_question(request):
     group = student.groups
     student_question = StudentQuestion(group=group, question=question)
     student_question.save()
-    response['is_taken'] = True
+    response["is_taken"] = True
     return JsonResponse(response, status=200)
 
 
 @login_required
 def get_filter_data(request):
     random_data = random.randint(0, 99999999999999999)
-    result = f'{random_data}_Ты нашёл пасхалку, красавчик!!!'
+    result = f"{random_data}_Ты нашёл пасхалку, красавчик!!!"
     result_dict = {
-        'answer': result,
-        'code': 'OK',
+        "answer": result,
+        "code": "OK",
     }
     return JsonResponse(result_dict, status=200)

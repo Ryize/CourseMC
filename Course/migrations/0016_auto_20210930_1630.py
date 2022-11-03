@@ -6,22 +6,31 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Course', '0015_auto_20210929_1928'),
+        ("Course", "0015_auto_20210929_1928"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='schedule',
-            name='key_topic',
+            model_name="schedule",
+            name="key_topic",
         ),
         migrations.AddField(
-            model_name='schedule',
-            name='lesson_type',
-            field=models.CharField(choices=[('Практика', 'Практика'), ('Новая тема', 'Новая тема'), ('Ключевой урок', 'Ключевой урок')], default='Практика', max_length=64, verbose_name='Тип урока'),
+            model_name="schedule",
+            name="lesson_type",
+            field=models.CharField(
+                choices=[
+                    ("Практика", "Практика"),
+                    ("Новая тема", "Новая тема"),
+                    ("Ключевой урок", "Ключевой урок"),
+                ],
+                default="Практика",
+                max_length=64,
+                verbose_name="Тип урока",
+            ),
         ),
         migrations.AlterField(
-            model_name='student',
-            name='password',
-            field=models.CharField(default=4568, max_length=128, verbose_name='Пароль'),
+            model_name="student",
+            name="password",
+            field=models.CharField(default=4568, max_length=128, verbose_name="Пароль"),
         ),
     ]

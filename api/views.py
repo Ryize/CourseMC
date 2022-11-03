@@ -2,9 +2,10 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from Course.models import Schedule, Student, LearnGroup, StudentQuestion
-from .serializers import ScheduleListSerializer, StudentListSerializer, LearnGroupListSerializer, \
-    StudentQuestionListSerializer
+from Course.models import LearnGroup, Schedule, Student, StudentQuestion
+
+from .serializers import (LearnGroupListSerializer, ScheduleListSerializer,
+                          StudentListSerializer, StudentQuestionListSerializer)
 
 
 class ScheduleViewSet(APIView):
@@ -13,7 +14,7 @@ class ScheduleViewSet(APIView):
     """
 
     def get(self, request):
-        schedules = Schedule.objects.all().order_by('weekday')
+        schedules = Schedule.objects.all().order_by("weekday")
         serializer = ScheduleListSerializer(schedules, many=True)
         return Response(serializer.data)
 
@@ -31,10 +32,10 @@ class ScheduleGet(APIView):
     """
 
     def post(self, request):
-        username = request.data['username']
+        username = request.data["username"]
         student = Student.objects.get(name=username)
         group = student.groups
-        sсhedule = Schedule.objects.filter(group=group).order_by('weekday').values()
+        sсhedule = Schedule.objects.filter(group=group).order_by("weekday").values()
         return Response(sсhedule)
 
 
@@ -80,6 +81,6 @@ class StudentQuestionView(APIView):
     """
 
     def get(self, request):
-        student_question = StudentQuestion.objects.all().order_by('-created_at')
+        student_question = StudentQuestion.objects.all().order_by("-created_at")
         serializer = StudentQuestionListSerializer(student_question, many=True)
         return Response(serializer.data)

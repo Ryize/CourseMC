@@ -6,18 +6,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Course', '0017_alter_student_password'),
+        ("Course", "0017_alter_student_password"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='schedule',
-            name='theme',
-            field=models.CharField(default='Тема не задана!', max_length=128, verbose_name='Тема урока'),
+            model_name="schedule",
+            name="theme",
+            field=models.CharField(
+                default="Тема не задана!", max_length=128, verbose_name="Тема урока"
+            ),
         ),
         migrations.AlterField(
-            model_name='student',
-            name='password',
-            field=models.CharField(default=6009, max_length=128, verbose_name='Пароль'),
+            model_name="student",
+            name="password",
+            field=models.CharField(default=6009, max_length=128, verbose_name="Пароль"),
         ),
     ]

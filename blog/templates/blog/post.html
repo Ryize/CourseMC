@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="ru">
+    {% include 'blog/includes/header.html' %}
 <head>
     <title>{{ post.title }} - CourseMC</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,8 +17,7 @@
             integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
             crossorigin="anonymous"></script>
 </head>
-<body>
-{% include 'blog/includes/header.html' %}
+<body style='min-height: 100%;'>
 <link rel="stylesheet" href="{% static 'css/post.css' %}">
 {% if not post.is_displayed and request.user.pk != post.author.pk %}
     <center><h1>Статья находится на модерации!</h1></center>
@@ -44,13 +44,25 @@
             </p>
             <hr>
             <br>
-            <div class="post-content">
-                <p>
+            <div class="post-content" style="max-width: 100%;">
+                <p style="max-width: 100%;">
                     {{ post.content|safe }}
                 </p>
             </div>
         </div>
     </div>
+    
+    <script>
+    function img_width_to_100_percent(){
+        var elems = document.getElementsByTagName('img');
+        for(var i=0; i<elems.length; i++){
+            elems[i].style.width='100%';
+            elems[i].style.height='auto';
+        }
+    }
+    
+    img_width_to_100_percent()
+    </script>
 
     <hr>
     {% if post.is_displayed %}
@@ -80,7 +92,7 @@
 
         <br><br>
         {% for comment in comments %}
-            <div class="row review-block">
+            <div class="row review-block" style='width: 100%;'>
                 <div class="col-lg-1 col-md-1 col-sm-1"></div>
                 <div class="col-lg-9 col-md-9 col-sm-12 review">
                     <div class="panel panel-default">
@@ -104,7 +116,6 @@
             </div>
             <br><br>
         {% endfor %}
-
         <script>
             var textarea = document.querySelector('textarea');
             var counter = 0;
@@ -147,7 +158,7 @@
                     document.getElementById('review_button').style = 'display: none;';
                     location.reload();
                 } else {
-                    alert(data['exception'])
+                    alert(data['error_msg'])
                 }
             }
         </script>
@@ -184,6 +195,9 @@
             #comment_form {
                 margin-top: 25px;
                 margin-left: 25px;
+            }
+            img{
+                max-wudth: 100%;
             }
         </style>
     {% endif %}

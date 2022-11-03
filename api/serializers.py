@@ -1,13 +1,14 @@
 from rest_framework import serializers
-from Course.models import Schedule, Student, LearnGroup, StudentQuestion
+
+from Course.models import LearnGroup, Schedule, Student, StudentQuestion
 
 
 class ScheduleListSerializer(serializers.ModelSerializer):
     """Список всех расписаний"""
 
     def create(self, validated_data):
-        a = validated_data['absent']
-        del validated_data['absent']
+        a = validated_data["absent"]
+        del validated_data["absent"]
         schedule = Schedule.objects.creatd(**validated_data)
         schedule.absent.set(a)
         schedule.save()
@@ -15,7 +16,7 @@ class ScheduleListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Schedule
-        fields = '__all__'
+        fields = "__all__"
 
 
 class StudentListSerializer(serializers.ModelSerializer):
@@ -28,7 +29,7 @@ class StudentListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Student
-        fields = '__all__'
+        fields = "__all__"
 
 
 class LearnGroupListSerializer(serializers.ModelSerializer):
@@ -41,11 +42,12 @@ class LearnGroupListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LearnGroup
-        fields = '__all__'
+        fields = "__all__"
 
 
 class StudentQuestionListSerializer(serializers.ModelSerializer):
     """Список всех вопросов учеников"""
+
     class Meta:
         model = StudentQuestion
-        fields = '__all__'
+        fields = "__all__"
