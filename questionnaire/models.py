@@ -40,7 +40,7 @@ class Question(models.Model):
 
 
 class AnswerQuestion(models.Model):
-    answer = models.CharField(max_length=64, verbose_name="Ответ")
+    answer = models.CharField(max_length=256, verbose_name="Ответ")
     question = models.ForeignKey(
         "Question",
         on_delete=models.CASCADE,

@@ -62,6 +62,7 @@
                     <li><a class="dropdown-item underline-one" href="{% url 'questionnaireIndex' %}">Твой Опросник</a>
                     </li>
                     <li><a class="dropdown-item underline-one" href="{% url 'blog_home' %}">Твои Статьи</a></li>
+                    <li><a class="dropdown-item underline-one" href="{% url 'py_interpreter' %}">Твой Интерпретатор</a></li>
                 </ul>
 
             </label>
@@ -72,9 +73,11 @@
                 </a>
 
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                    <li><a class="dropdown-item underline-one {% if not user.is_authenticated %} disabled {% endif %}"
+                    <li>
+                        <a class="dropdown-item underline-one {% if not user.is_authenticated %} disabled {% endif %}"
                            href="{% url 'schedule' %}">Создать отчёт</a></li>
-                    <li><a class="dropdown-item underline-one {% if not user.is_authenticated %} disabled {% endif %}"
+                    <li>
+                        <a class="dropdown-item underline-one {% if not user.is_authenticated %} disabled {% endif %}"
                            href="{% url 'schedule' %}">Задать анонимный вопрос</a>
                     </li>
                 </ul>
@@ -94,8 +97,8 @@
                            target="_blank">GitHub</a></li>
                 </ul>
             </label>
-        <a class="nav-item nav-link active underline-one"
-                       href="{% url 'review' %}">Отзывы<small>({{ reviews_count }})</small></a>
+            <a class="nav-item nav-link active underline-one"
+               href="{% url 'review' %}">Отзывы<small>({{ reviews_count }})</small></a>
         </div>
         <div class="collapse navbar-collapse justify-content-end" id="navbarCollapse">
             <ul class="navbar-nav">
@@ -115,10 +118,6 @@
         </div>
     </div>
 </nav>
-
-<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
-<script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
-
 
 <script>
     function scrollToDiv() {
@@ -150,14 +149,14 @@
 
                 $('body').attr('id', 'gotop');
                 if (!$('.gototop').length) {
-                    // Создаем ссылку, которая будет работать как кнопка возрата пользователя наверх сайта
+                    // Создаем ссылку, которая будет работать как кнопка возврата пользователя наверх сайта
                     // Наверх можно поменять на кнопку или любое другое название
                     // Так же вместо style="", можно привязаться все атрибуты стилей к классу .gototop
                     $('body').append('<a href="#gotop" class="gototop" style="position: fixed; right: 10px; bottom: 10px; display: block; padding: 5px 10px;"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-arrow-up-short" viewBox="0 0 16 16"> <path fill-rule="evenodd" d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5z"/> </svg></a>');
                     scrollToDiv(); // Вызываем функцию, которая делали между <head></head>
                 }
             } else {
-                // Убираем нашу ссылку и когда анимация заканчивается удалаем ее совсем
+                // Убираем нашу ссылку и когда анимация заканчивается удаляем ее совсем
                 $('.gototop').fadeOut(600, function () {
                     $(this).remove()
                 });

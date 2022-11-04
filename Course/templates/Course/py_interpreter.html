@@ -1,0 +1,79 @@
+<html>
+<head>
+    <link rel="stylesheet"
+          href="https://pyscript.net/alpha/pyscript.css"/>
+    <script defer
+            src="https://pyscript.net/alpha/pyscript.js">
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.1/css/bootstrap.min.css"
+          integrity="sha512-T584yQ/tdRR5QwOpfvDfVQUidzfgc2339Lc8uBDtcp/wYu80d7jwBgAxbyMh0a9YM9F8N3tdErpFI8iaGx6x5g=="
+          crossorigin="anonymous" referrerpolicy="no-referrer">
+    <!-- jQuery (Cloudflare CDN) -->
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+            integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Bootstrap Bundle JS (Cloudflare CDN) -->
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.1/js/bootstrap.min.js"
+            integrity="sha512-UR25UO94eTnCVwjbXozyeVd6ZqpaAE9naiEUBK/A+QDbfSTQFhPGj5lOR6d8tsgbBk84Ggb5A3EkjsOgPRPcKA=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+    <title>Твой Интерпретатор - CourseMC</title>
+</head>
+<body style="margin: 0px; padding: 0px; max-width: 100%; overflow-x: hidden;">
+{% include 'template/header.html' %}
+{% include 'template/flash_message.html' %}
+{% include 'template/base_head.html' %}
+<style type="text/css">
+    .kaesevua {
+        width: 100%;
+        height: 40px;
+        margin-bottom: 15px;
+        position: relative;
+    }
+
+    .sicinga_pesamila {
+        background-color: #15181f;
+    }
+
+    #nasukaola {
+        background-color: #ffffff;
+    }
+</style>
+<div class="row" style="max-width: 100%;">
+    <div class="col-xs-2 col-md-2 col-lg-1">
+    </div>
+    <div class="col-xs-10 col-md-10 col-lg-10" style="background-color: #fff;padding-bottom: 15px;" id="root">
+        <label title="Светлая тема" id="theme" onclick="changeTheme()" style="padding-top: 5px;">
+            <i class="bi bi-lightbulb" id="theme_i"></i>
+        </label>
+        <py-repl auto-generate="true">
+def main():
+    print('Hello World!')
+
+if __name__ == '__main__':
+    main()
+        </py-repl>
+    </div>
+    <div class="col-xs-2 col-md-2 col-lg-2"></div>
+</div>
+<script>
+    function changeTheme(){
+        theme = document.getElementById('theme');
+        el = document.getElementById('theme_i');
+        if (el.classList == 'bi bi-lightbulb') {
+            el.classList = 'bi bi-lightbulb-off'
+            document.getElementsByTagName('body')[0].classList.toggle("sicinga_pesamila");
+            document.getElementById('root').style.backgroundColor = '#DCDCDC'
+        } else{
+            el.classList = 'bi bi-lightbulb'
+            document.getElementsByTagName('body')[0].classList.remove("sicinga_pesamila")
+            document.getElementById('root').style.backgroundColor = '#fff'
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,17 +1,17 @@
 import datetime
 import os
-from io import BytesIO
-
 import docx
+
+from io import BytesIO
 from django.contrib.auth import get_user
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.views.generic import ListView
 from django.views.generic.edit import FormView
-from docx.shared import Pt, RGBColor
+from docx.shared import RGBColor
 from htmldocx import HtmlToDocx
 
 from reviews.models import Review
@@ -208,3 +208,10 @@ def get_filter_data(request):
         "code": "OK",
     }
     return JsonResponse(result_dict, status=200)
+
+
+def py_interpreter(request):
+    data = {
+        'reviews_count': Review.objects.all().count()
+    }
+    return render(request, 'Course/py_interpreter.html', data)
