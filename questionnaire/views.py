@@ -1,18 +1,15 @@
-from lib2to3.fixes.fix_input import context
 from typing import Union
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.forms import ModelForm
-from django.http import (HttpResponse, HttpResponseNotFound,
-                         HttpResponseRedirect)
+from django.http import (HttpResponseNotFound)
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils import timezone
 from django.views.generic import ListView
 
 from .forms import AnswerForm, QuestionForm, QuizForm
 from .models import (AnswerQuestion, PassedPolls, Question, Quiz, Rating,
                      UserAnswer)
+from .service import process_form, _check_poll_lifetime, get_standart_render
 
 
 class QuizListView(ListView):
@@ -137,7 +134,7 @@ def take_poll(request, poll_id):
     answers = request.POST.get("answers")
 
     all_question = poll.questions.all()
-    # Обрабатываем кнопку "Назад", если нажата, возвращаем предыдущий вопрос
+    # Обрабатываем кнопку "Назад". Если нажата, возвращаем предыдущий вопрос
     if request.POST.get("redirect") and number_question:
         question = all_question.filter(pk=int(number_question)).first()
         return get_standart_render(request, poll, question)
@@ -226,41 +223,3 @@ def check_possibility_passing_poll(
         if len(question.answers.all()) > 0:
             return question
     return HttpResponseNotFound("В этом опросе нет вопросов с ответами")
-
-
-def get_standart_render(request, poll: Quiz, question: Question) -> HttpResponse:
-    """Возвращает стандартную страницу для ответа на вопрос в опросе."""
-    context = {
-        "poll": poll,
-        "question": question,
-    }
-    return render(request, "questionnaire/take_poll.html", context)
-
-
-def process_form(
-    request,
-    form: ModelForm,
-    id: Union[None, int] = None,
-    message_success: str = "Вы создали вопрос!",
-    message_error: str = "Хм, что-то не то!",
-    func_redirect: str = "create_question",
-) -> HttpResponseRedirect:
-    if form.is_valid():
-        form.save()
-        messages.info(request, message_success)
-        if not id:
-            return redirect(func_redirect)
-        return redirect(func_redirect, id)
-    messages.error(request, message_error)
-    if not id:
-        return redirect(func_redirect)
-    return redirect(func_redirect, id)
-
-
-def _check_poll_lifetime(poll: Quiz) -> Union[bool, HttpResponseNotFound]:
-    """Проверяем не кончился ли срок жизни опроса."""
-    date_now = timezone.now()
-    date_now.astimezone(timezone.utc).replace(tzinfo=None)
-    if poll.lifetime <= date_now:
-        return HttpResponseNotFound("Срок действия опроса истёк!")
-    return True
