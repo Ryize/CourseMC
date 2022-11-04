@@ -55,7 +55,7 @@
                             Прошли опрос: {{ poll.passed_quiz.all|length }}
                             {% if poll.passed_quiz.all|length > 0 %}
                                 <div class="row">
-                                    {% for passed_quiz in poll.passed_quiz.all %}
+                                    {% for passed_quiz in poll.passed_quiz.all reversed %}
                                         <hr>
                                         <label style="margin-top: 35px;"><strong><big>Имя: {{ passed_quiz.passed_user }}</big></strong></label>
                                         {% for passed_question in passed_quiz.quiz.user_quiz.all %}
@@ -64,7 +64,7 @@
                                                      style="margin-top: 20px;">
                                                     <label>Вопрос: {{ passed_question.question }}</label><br>
 
-                                                    <label style="{% if passed_question.answers.correct %}background-color: LimeGreen;{% else %}background-color: Salmon;{% endif %}">Ответ
+                                                    <label style="background-color: {% if passed_question.answers.correct %}LimeGreen;{% else %}Salmon;{% endif %}">Ответ
                                                         пользователя: {{ passed_question.answers }}</label><br>
                                                     <label>
                                                         <small>Правильный ответ(ы):
