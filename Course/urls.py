@@ -9,5 +9,4 @@ urlpatterns = [
     path("get_training_program/", get_training_program, name="get_training_program"),
     path("ask_question/", ask_question, name="ask_question"),
     path("get_filter_data/", get_filter_data, name="get_filter_data"),
-    path("python/", py_interpreter, name="py_interpreter"),
 ]

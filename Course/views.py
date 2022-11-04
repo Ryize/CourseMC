@@ -208,10 +208,3 @@ def get_filter_data(request):
         "code": "OK",
     }
     return JsonResponse(result_dict, status=200)
-
-
-def py_interpreter(request):
-    data = {
-        'reviews_count': Review.objects.all().count()
-    }
-    return render(request, 'Course/py_interpreter.html', data)

@@ -192,17 +192,18 @@ def rating(request, poll_id: int):
         try:
             rating_quiz = Rating.objects.get(user=request.user, quiz=quiz)
             rating_quiz.delete()
+            rating_quiz = Rating(
+                answer_number=request.POST.get("rating"),
+                comment=request.POST.get("comment"),
+                quiz=quiz,
+                user=request.user,
+            )
+            rating_quiz.save()
+            messages.success(request, "Вы успешно оставили отзыв!")
         except:
             pass
-        rating_quiz = Rating(
-            answer_number=request.POST.get("rating"),
-            comment=request.POST.get("comment"),
-            quiz=quiz,
-            user=request.user,
-        )
-        rating_quiz.save()
-        messages.success(request, "Вы успешно оставили отзыв!")
-        return redirect("questionnaireIndex")
+        finally:
+            return redirect("questionnaireIndex")
     context = {"poll": quiz}
     return render(request, "questionnaire/rating.html", context)
 

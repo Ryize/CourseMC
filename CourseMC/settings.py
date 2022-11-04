@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "Course.apps.AuthConfig",
     "questionnaire.apps.QuestionnaireConfig",
     "blog.apps.BlogConfig",
+    'py_interpreter.apps.PyInterpreterConfig'
 ]
 
 MIDDLEWARE = [
