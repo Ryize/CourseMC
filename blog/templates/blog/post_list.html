@@ -3,20 +3,31 @@
 
 <head>
     <title>Список статей - CourseMC</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'css/style5.css' %}">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css"
+          integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+    <!-- Our Custom CSS -->
+
+    <!-- Font Awesome JS -->
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js"
+            integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ"
+            crossorigin="anonymous"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js"
+            integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY"
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="{% static 'css/post_list.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
 </head>
-<body style='min-height: 100%;'>
-<link rel="stylesheet" href="{% static 'css/post_list.css' %}">
+
+<body>
+
 {% include 'blog/includes/header.html' %}
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
-      integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-<!-- Bootstrap Bundle JS (jsDelivr CDN) -->
-<script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
-        crossorigin="anonymous"></script>
-
-
 <style>
     body {
         min-height: 100%;
@@ -77,12 +88,8 @@
         left: -9999px;
     }
 
-    [value="All"]:checked ~ .container [data-category] {
-        display: block;
-    }
-
     {% for i in Category %}
-        [value="{{i.title}}"]:checked ~ .filters [for="{{i.title}}"],
+        [value="{{i.title}}"]:checked ~ .wrapper .filters [for="{{i.title}}"],
     {% endfor %}
 
     [value="fullPage.js"]:checked ~ .container .post:not([data-category~="fullPage.js"])
@@ -95,66 +102,160 @@
     }
 
     {% for i in Category %}
-        [value="{{i.title}}"]:checked ~ .container .post:not([data-category*="{{i.title}}"]),
+        [value="{{i.title}}"]:checked ~ .wrapper .container .post:not([data-category*="{{i.title}}"]),
     {% endfor %}
 
-    [value="fullPage.js"]:checked ~ .container .post:not([data-category~="fullPage.js"])
+    [value="fullPage.js"]:checked ~ .wrapper .container .post:not([data-category~="fullPage.js"])
 
     {
     display: none
     ;
     }
+
+
+    .search-container {
+        float: right;
+    }
+
+    input[type=text] {
+        padding: 6px;
+        margin-top: 8px;
+        font-size: 17px;
+        border: none;
+    }
+
+    .search-container button {
+        float: right;
+        padding: 6px;
+        margin-top: 8px;
+        margin-right: 16px;
+        background: #8bc34a;
+        font-size: 17px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .search-container button:hover {
+        background: #bdbdbd;
+    }
+
+    @media screen and (max-width: 600px) {
+        nav .search-container {
+            float: none;
+        }
+
+        nav a, nav input[type=text], nav .search-container button {
+            float: none;
+            display: block;
+            text-align: left;
+            width: 100%;
+            margin: 0;
+            padding: 14px;
+        }
+
+        nav input[type=text] {
+            border: 1px solid #689f38;
+        }
+    }
 </style>
+
 <input type="checkbox" id="All" value="All"
        onchange="{% for i in Category %}document.getElementById('{{ i.title }}').checked = false;{% endfor %}">
 {% for i in Category %}
     <input type="checkbox" id="{{ i.title }}" name="categories" value="{{ i.title }}">
 {% endfor %}
-<ol class="filters">
-    <li>
-        <label for="All">All</label>
-    </li>
-    {% for i in Category %}
-        <li>
-            <label for="{{ i.title }}">{{ i.title }}</label>
-        </li>
-    {% endfor %}
-</ol>
 
-<div class="container" style='margin-top: 100px;'>
-    {% for post in posts %}
-        <div class="card post"
-             data-category="{% for category in post.categories.all %}{{ category.title }} {% endfor %}">
-            <div class="card__header cursor-pointer" onclick="document.location=`{% url 'post_view' post.pk %}`">
-                <img src="{{ post.image.url }}"
-                     alt="Фото статьи" class="card__image"
-                     width="600">
-            </div>
-            <div class="card__body" style="cursor: pointer;">
+<div class="wrapper">
+    <!-- Sidebar Holder -->
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <h3>Фильтры</h3>
+        </div>
 
-                <div class="filters">
-                    {% for category in post.categories.all %}
-                        <label class="category"
-                               for="{{ category.title }}"><strong>{{ category.title }}</strong></label>
-                    {% endfor %}
+        <ul class="list-unstyled components">
+
+            <form action="{% url 'blog_home' %}">
+                <center><input type="text" placeholder="Поиск..." name="search"></center>
+            </form>
+        </ul>
+
+        <ul class="list-unstyled components filters">
+            {% for i in Category %}
+                <li>
+                    <label for="{{ i.title }}">{{ i.title }}</label>
+                </li>
+            {% endfor %}
+            <hr>
+            <li>
+
+                <label for="All" onclick="document.location=`{% url 'blog_home' %}`"><big>Сбросить фильтры</big></label>
+            </li>
+        </ul>
+    </nav>
+
+    <button type="button" id="sidebarCollapse" class="navbar-btn">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <div class="container" style='margin-top: 100px;'>
+        {% for post in posts %}
+            <div class="card post"
+                 data-category="{% for category in post.categories.all %}{{ category.title }} {% endfor %}">
+                <div class="card__header cursor-pointer"
+                     onclick="document.location=`{% url 'post_view' post.pk %}`">
+                    <img src="{{ post.image.url }}"
+                         alt="Фото статьи" class="card__image"
+                         width="600">
                 </div>
-                <label onclick="document.location=`{% url 'post_view' post.pk %}`" style="cursor: pointer;">
-                    <h4>{{ post.title }} {% if not post.is_displayed %}
-                        <small><i>(<u>На рассмотрении</u>)</i></small>{% endif %}</h4>
-                    <p>{{ post.description }}</p>
-                </label>
-            </div>
-            <div class="card__footer">
-                <div class="user">
-                    <div class="user__info">
-                        <h5>{{ post.author }}</h5>
-                        <small>{{ post.created_at }}</small>
+                <div class="card__body" style="cursor: pointer;">
+
+                    <div class="filters">
+                        {% for category in post.categories.all %}
+                            <label class="category"
+                                   for="{{ category.title }}"><strong>{{ category.title }}</strong></label>
+                        {% endfor %}
+                    </div>
+                    <label onclick="document.location=`{% url 'post_view' post.pk %}`" style="cursor: pointer;">
+                        <h4>{{ post.title }} {% if not post.is_displayed %}
+                            <small><i>(<u>На рассмотрении</u>)</i></small>{% endif %}</h4>
+                        <p>{{ post.description }}</p>
+                    </label>
+                </div>
+                <div class="card__footer">
+                    <div class="user">
+                        <div class="user__info">
+                            <h5>{{ post.author }}</h5>
+                            <small>{{ post.created_at }}</small>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    {% endfor %}
+        {% endfor %}
+    </div>
 </div>
 
+<!-- jQuery CDN - Slim version (=without AJAX) -->
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<!-- Popper.JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"
+        integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ"
+        crossorigin="anonymous"></script>
+<!-- Bootstrap JS -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"
+        integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm"
+        crossorigin="anonymous"></script>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#sidebarCollapse').on('click', function () {
+            $('#sidebar').toggleClass('active');
+            $(this).toggleClass('active');
+        });
+    });
+</script>
 </body>
 </html>
