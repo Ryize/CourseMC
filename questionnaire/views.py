@@ -35,16 +35,15 @@ class QuizListView(ListView):
         return context
 
     def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            if request.method.lower() in self.http_method_names:
-                handler = getattr(
-                    self, request.method.lower(), self.http_method_not_allowed
-                )
-            else:
-                handler = self.http_method_not_allowed
-            return handler(request, *args, **kwargs)
-        else:
+        if not request.user.is_authenticated:
             return redirect("account_login")
+        if request.method.lower() in self.http_method_names:
+            handler = getattr(
+                self, request.method.lower(), self.http_method_not_allowed
+            )
+        else:
+            handler = self.http_method_not_allowed
+        return handler(request, *args, **kwargs)
 
 
 def index(request):

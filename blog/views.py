@@ -1,9 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
 from django.http import JsonResponse
-from django.shortcuts import redirect
 from django.views.generic import CreateView, DetailView, ListView
-
 from .forms import PostForm
 from .models import *
 
@@ -25,12 +24,31 @@ class PostListView(ListView):
     context_object_name = "posts"
 
     def get_queryset(self):
+        if self.request.GET:
+            try:
+                search_query = self.request.GET.get('search')
+                return (
+                    Post.objects.filter(Q(is_displayed=True) &
+                                        (Q(title__icontains=search_query) | Q(description__icontains=search_query))
+                                        )
+                    .order_by("-created_at")
+                    .prefetch_related("categories")
+                    .all()
+                )
+            except ValueError:
+                pass
         return (
             Post.objects.filter(is_displayed=True)
             .order_by("-created_at")
             .prefetch_related("categories")
             .all()
         )
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["Category"] = Category.objects.all()
+
+        return context
 
 
 class MyPostListView(LoginRequiredMixin, ListView):

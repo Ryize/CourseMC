@@ -1,7 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="ru">
-    {% include 'blog/includes/header.html' %}
 <head>
     <title>{{ post.title }} - CourseMC</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,9 +17,10 @@
             crossorigin="anonymous"></script>
 </head>
 <body style='min-height: 100%;'>
+{% include 'blog/includes/header.html' %}
 <link rel="stylesheet" href="{% static 'css/post.css' %}">
 {% if not post.is_displayed and request.user.pk != post.author.pk %}
-    <center><h1>Статья находится на модерации!</h1></center>
+    <center><h1 class="root_style">Статья находится на модерации!</h1></center>
 {% else %}
     <div class="container">
         <div class="post">
@@ -30,28 +30,28 @@
             <div class="post-header">
                 <h1>{{ post.title }}</h1>
                 <div class="post-meta">
-                    <time datetime="2019-04-01"><small>{{ post.created_at }}</small></time>
-                    <span class="author"><small>{{ post.author }}</small></span>
+                    <time datetime="2019-04-01" class="root_style"><small>{{ post.created_at }}</small></time>
+                    <span class="author root_style"><small>{{ post.author }}</small></span>
                     {% for category in post.categories.all %}
-                        <span class="category"><small>{{ category.title }}{% if not forloop.last %}
+                        <span class="category root_style"><small>{{ category.title }}{% if not forloop.last %}
                             , {% endif %}</small></span>
                     {% endfor %}
                 </div>
             </div>
             <br>
             <p>
-                <i>{{ post.description }}</i>
+                <i class="root_style">{{ post.description }}</i>
             </p>
             <hr>
             <br>
-            <div class="post-content" style="max-width: 100%;">
-                <p style="max-width: 100%;">
+            <div class="post-content root_style"  style="max-width: 100%;">
+                <p style="max-width: 100%;" class="root_style">
                     {{ post.content|safe }}
                 </p>
             </div>
         </div>
     </div>
-    
+
     <script>
     function img_width_to_100_percent(){
         var elems = document.getElementsByTagName('img');
@@ -60,7 +60,7 @@
             elems[i].style.height='auto';
         }
     }
-    
+
     img_width_to_100_percent()
     </script>
 
@@ -163,7 +163,7 @@
             }
         </script>
         <style>
-            * {
+            .root_style {
                 font-family: Verdana, sans-serif;
                 font-size: 103%;
             }
@@ -197,7 +197,7 @@
                 margin-left: 25px;
             }
             img{
-                max-wudth: 100%;
+                max-width: 100%;
             }
         </style>
     {% endif %}

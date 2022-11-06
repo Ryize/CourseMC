@@ -89,6 +89,10 @@ class UserAnswer(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создан")
 
+    class Meta:
+        verbose_name = "Ответ пользователя"
+        verbose_name_plural = "Ответы пользователей"
+
 
 class PassedPolls(models.Model):
     quiz = models.ForeignKey(
