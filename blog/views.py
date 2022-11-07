@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.http import JsonResponse
+from django.shortcuts import redirect, render
 from django.views.generic import CreateView, DetailView, ListView
 from .forms import PostForm
 from .models import *
@@ -83,3 +84,32 @@ def create_comment(request):
         comment = Comment(comment=content, author=request.user, post=post)
         comment.save()
         return JsonResponse({"success": True})
+
+
+@login_required
+def change_post(request, post_id):
+    if request.method == "GET":
+        return _change_post_get(request, post_id)
+    post = Post.objects.get(id=post_id)
+    if post.author != request.user:
+        return redirect(reverse_lazy("blog_home"))
+
+    form = PostForm(request.POST)
+    form.instance.author = request.user
+    form.instance.created_at = post.created_at
+    if form.is_valid():
+        post.delete()
+        form.save()
+    return redirect(reverse_lazy("blog_home"))
+
+
+def _change_post_get(request, post_id):
+    post = Post.objects.get(id=post_id)
+    if post.author != request.user:
+        return redirect(reverse_lazy("blog_home"))
+    form = PostForm()
+    for k, v in form.fields.items():
+        for i in list(post._meta.fields):
+            if k == i.name:
+                form.fields[k].initial = getattr(post, i.name)
+    return render(request, 'blog/post_create.html', {'form': form})

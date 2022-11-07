@@ -157,6 +157,10 @@
             border: 1px solid #689f38;
         }
     }
+
+    .f-r {
+        float: right;
+    }
 </style>
 
 <input type="checkbox" id="All" value="All"
@@ -167,37 +171,40 @@
 
 <div class="wrapper">
     <!-- Sidebar Holder -->
-    <nav id="sidebar">
-        <div class="sidebar-header">
-            <h3>Фильтры</h3>
-        </div>
+    {% if Category %}
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <h3>Фильтры</h3>
+            </div>
 
-        <ul class="list-unstyled components">
+            <ul class="list-unstyled components">
 
-            <form action="{% url 'blog_home' %}">
-                <center><input type="text" placeholder="Поиск..." name="search"></center>
-            </form>
-        </ul>
+                <form action="{% url 'blog_home' %}">
+                    <center><input type="text" placeholder="Поиск..." name="search"></center>
+                </form>
+            </ul>
 
-        <ul class="list-unstyled components filters">
-            {% for i in Category %}
+            <ul class="list-unstyled components filters">
+                {% for i in Category %}
+                    <li>
+                        <label for="{{ i.title }}">{{ i.title }}</label>
+                    </li>
+                {% endfor %}
+                <hr>
                 <li>
-                    <label for="{{ i.title }}">{{ i.title }}</label>
+
+                    <label for="All" onclick="document.location=`{% url 'blog_home' %}`"><big>Сбросить
+                        фильтры</big></label>
                 </li>
-            {% endfor %}
-            <hr>
-            <li>
+            </ul>
+        </nav>
 
-                <label for="All" onclick="document.location=`{% url 'blog_home' %}`"><big>Сбросить фильтры</big></label>
-            </li>
-        </ul>
-    </nav>
-
-    <button type="button" id="sidebarCollapse" class="navbar-btn">
-        <span></span>
-        <span></span>
-        <span></span>
-    </button>
+        <button type="button" id="sidebarCollapse" class="navbar-btn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    {% endif %}
 
     <div class="container" style='margin-top: 100px;'>
         {% for post in posts %}
@@ -226,7 +233,15 @@
                 <div class="card__footer">
                     <div class="user">
                         <div class="user__info">
-                            <h5>{{ post.author }}</h5>
+                            <h5>{{ post.author }}
+                                {% if post.author == user %}
+                                    <svg onclick="document.location=`{% url 'change_post' post.pk %}`"
+                                         xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                         class="bi bi-pencil" viewBox="0 0 16 16">
+                                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                                    </svg>
+                                {% endif %}
+                            </h5>
                             <small>{{ post.created_at }}</small>
                         </div>
                     </div>
