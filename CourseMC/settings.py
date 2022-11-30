@@ -49,12 +49,11 @@ INSTALLED_APPS = [
     "ckeditor",
     "ckeditor_uploader",
     "rest_framework",
-    "colorfield",
     "reviews.apps.ReviewsConfig",
     "Course.apps.AuthConfig",
     "questionnaire.apps.QuestionnaireConfig",
     "blog.apps.BlogConfig",
-    'py_interpreter.apps.PyInterpreterConfig'
+    "py_interpreter.apps.PyInterpreterConfig",
 ]
 
 MIDDLEWARE = [

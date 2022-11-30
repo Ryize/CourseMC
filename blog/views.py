@@ -4,6 +4,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.generic import CreateView, DetailView, ListView
+
 from .forms import PostForm
 from .models import *
 
@@ -18,6 +19,11 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         form.instance.author = self.request.user
         return form
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['descry'] = Post.objects.filter(is_displayed=False).all()
+        return context
+
 
 class PostListView(ListView):
     model = Post
@@ -26,18 +32,32 @@ class PostListView(ListView):
 
     def get_queryset(self):
         if self.request.GET:
-            try:
-                search_query = self.request.GET.get('search')
+            search_query = self.request.GET.get("search")
+            author = self.request.GET.get("author")
+            if author:
                 return (
-                    Post.objects.filter(Q(is_displayed=True) &
-                                        (Q(title__icontains=search_query) | Q(description__icontains=search_query))
-                                        )
-                    .order_by("-created_at")
+                    Post.objects.filter(
+                        Q(is_displayed=True)
+                        & (
+                            Q(author__username__icontains=author)
+                        )
+                    )
                     .prefetch_related("categories")
                     .all()
                 )
-            except ValueError:
-                pass
+            if search_query:
+                return set(
+                    Post.objects.filter(
+                        Q(is_displayed=True)
+                        & (
+                                Q(title__icontains=search_query)
+                                | Q(description__icontains=search_query)
+                                | Q(categories__title__icontains=search_query)
+                        )
+                    )
+                    .prefetch_related("categories")
+                    .all()
+                )
         return (
             Post.objects.filter(is_displayed=True)
             .order_by("-created_at")
@@ -48,6 +68,7 @@ class PostListView(ListView):
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
         context["Category"] = Category.objects.all()
+        context['descry'] = Post.objects.filter(is_displayed=False).all()
 
         return context
 
@@ -61,6 +82,11 @@ class MyPostListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return Post.objects.filter(author=self.request.user).all()
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['descry'] = Post.objects.filter(is_displayed=False).all()
+        return context
+
 
 class PostView(DetailView):
     model = Post
@@ -72,6 +98,7 @@ class PostView(DetailView):
         context["comments"] = (
             Comment.objects.filter(post=self.kwargs["pk"]).order_by("-created_at").all()
         )
+        context['descry'] = Post.objects.filter(is_displayed=False).all()
         return context
 
 
@@ -91,25 +118,31 @@ def change_post(request, post_id):
     if request.method == "GET":
         return _change_post_get(request, post_id)
     post = Post.objects.get(id=post_id)
-    if post.author != request.user:
+    if post.author != request.user and not request.user.is_staff:
         return redirect(reverse_lazy("blog_home"))
 
     form = PostForm(request.POST)
+    if form.fields['image'].initial.split('/')[-1] == 'default.jpeg':
+        form.fields['image'].initial = post.image
     form.instance.author = request.user
     form.instance.created_at = post.created_at
     if form.is_valid():
         post.delete()
-        form.save()
+        new_post = form.save()
+        if request.user.is_staff:
+            new_post.is_displayed = True
+            new_post.save()
     return redirect(reverse_lazy("blog_home"))
 
 
 def _change_post_get(request, post_id):
     post = Post.objects.get(id=post_id)
-    if post.author != request.user:
+    if post.author != request.user and not request.user.is_staff:
         return redirect(reverse_lazy("blog_home"))
     form = PostForm()
     for k, v in form.fields.items():
         for i in list(post._meta.fields):
             if k == i.name:
                 form.fields[k].initial = getattr(post, i.name)
-    return render(request, 'blog/post_create.html', {'form': form})
+                break
+    return render(request, "blog/post_create.html", {"form": form})

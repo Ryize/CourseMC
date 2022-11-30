@@ -2,14 +2,14 @@ from typing import Union
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import (HttpResponseNotFound)
+from django.http import HttpResponseNotFound
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import ListView
 
 from .forms import AnswerForm, QuestionForm, QuizForm
 from .models import (AnswerQuestion, PassedPolls, Question, Quiz, Rating,
                      UserAnswer)
-from .service import process_form, _check_poll_lifetime, get_standart_render
+from .service import _check_poll_lifetime, get_standart_render, process_form
 
 
 class QuizListView(ListView):

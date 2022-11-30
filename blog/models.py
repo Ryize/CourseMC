@@ -1,5 +1,4 @@
 from ckeditor_uploader.fields import RichTextUploadingField
-from colorfield.fields import ColorField
 from django.contrib.auth.models import User
 from django.db import models
 from django.urls import reverse_lazy
@@ -19,7 +18,7 @@ class Post(models.Model):
         upload_to="uploads/blog/%Y/%m/%d",
         default="uploads/blog/default.jpeg",
         verbose_name="Изображение",
-        null=False,
+        null=True,
     )
     is_displayed = models.BooleanField(default=False, verbose_name="Отображается")
     categories = models.ManyToManyField(
@@ -61,7 +60,6 @@ class Comment(models.Model):
 
 class Category(models.Model):
     title = models.CharField(max_length=64, verbose_name="Название категории")
-    color = ColorField(default="#FF0000")
     created_at = models.DateTimeField(
         auto_now_add=True, verbose_name="Создана", null=True
     )

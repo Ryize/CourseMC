@@ -233,8 +233,10 @@
                 <div class="card__footer">
                     <div class="user">
                         <div class="user__info">
-                            <h5>{{ post.author }}
-                                {% if post.author == user %}
+                            <h5 class="cursor-pointer">
+                                <label class="cursor-pointer"
+                                       onclick="document.location=`{% url 'blog_home' %}?author={{ post.author }}`">{{ post.author }}</label>
+                                {% if post.author == user or user.is_staff %}
                                     <svg onclick="document.location=`{% url 'change_post' post.pk %}`"
                                          xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                          class="bi bi-pencil" viewBox="0 0 16 16">

@@ -33,6 +33,7 @@ class PostAdmin(admin.ModelAdmin):
         "created_at",
     )
     list_filter = (
+        "is_displayed",
         "author",
         "created_at",
     )

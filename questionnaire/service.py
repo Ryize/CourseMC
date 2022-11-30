@@ -2,11 +2,12 @@ from typing import Union
 
 from django.contrib import messages
 from django.forms import ModelForm
-from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse
+from django.http import (HttpResponse, HttpResponseNotFound,
+                         HttpResponseRedirect)
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from questionnaire.models import Quiz, Question
+from questionnaire.models import Question, Quiz
 
 
 def process_form(

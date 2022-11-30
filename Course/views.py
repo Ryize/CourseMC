@@ -1,14 +1,14 @@
 import datetime
 import os
-import docx
-
 from io import BytesIO
+
+import docx
 from django.contrib.auth import get_user
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect
 from django.views.generic import ListView
 from django.views.generic.edit import FormView
 from docx.shared import RGBColor

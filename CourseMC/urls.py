@@ -15,7 +15,7 @@ urlpatterns = [
     path("reviews/", include("reviews.urls")),
     path("questionnaire/", include("questionnaire.urls")),
     path("blog/", include("blog.urls")),
-    path('interpreter/', include("py_interpreter.urls")),
+    path("interpreter/", include("py_interpreter.urls")),
     path("<path:url>/", page_not_found_view),
 ]
 

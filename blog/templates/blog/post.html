@@ -33,8 +33,7 @@
                     <time datetime="2019-04-01" class="root_style"><small>{{ post.created_at }}</small></time>
                     <span class="author root_style"><small>{{ post.author }}</small></span>
                     {% for category in post.categories.all %}
-                        <span class="category root_style"><small>{{ category.title }}{% if not forloop.last %}
-                            , {% endif %}</small></span>
+                        <span class="category root_style"><small>{{ category.title }}{% if not forloop.last %},&nbsp; {% endif %}</small></span>
                     {% endfor %}
                 </div>
             </div>
