@@ -3,12 +3,13 @@ import os
 from io import BytesIO
 
 import docx
+from django.conf.urls import url
 from django.contrib.auth import get_user
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.views.generic import ListView
 from django.views.generic.edit import FormView
 from docx.shared import RGBColor
@@ -208,3 +209,20 @@ def get_filter_data(request):
         "code": "OK",
     }
     return JsonResponse(result_dict, status=200)
+
+
+@login_required
+def create_group(request):
+    if not request.user.is_staff:
+        return redirect('/')
+    if request.method == 'GET':
+        return render(request, 'Course/groups.html')
+    title = request.POST.get("title")
+    new_group = LearnGroup(title=title)
+    new_group.save()
+    all_plan_lessons = Schedule.objects.filter(group=LearnGroup.objects.get(id=3)).order_by('weekday')
+    for i in all_plan_lessons:
+        schedule = Schedule(group=new_group, theme=i.theme, weekday=i.weekday, time_lesson=i.time_lesson,
+                            lesson_materials=i.lesson_materials, is_display=False)
+        schedule.save()
+    return redirect('/')

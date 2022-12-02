@@ -100,6 +100,10 @@
             </label>
             <a class="nav-item nav-link active underline-one"
                href="{% url 'review' %}">Отзывы<small>({{ reviews_count }})</small></a>
+            {% if user.is_staff %}
+                <a class="nav-item nav-link active underline-one"
+                   href="{% url 'create_group' %}">Группы</a>
+            {% endif %}
         </div>
         <div class="collapse navbar-collapse justify-content-end" id="navbarCollapse">
             <ul class="navbar-nav">

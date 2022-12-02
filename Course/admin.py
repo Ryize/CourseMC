@@ -110,8 +110,9 @@ class ScheduleAdmin(admin.ModelAdmin):
         "time_lesson",
     )
     list_filter = ("group", "weekday", "time_lesson", "lesson_type", "is_display")
+    list_editable = ('is_display',)
     empty_value_display = "-пустой-"
-    list_per_page = 64
+    list_per_page = 66
     list_max_show_all = 8
     search_fields = (
         "theme",
