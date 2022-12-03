@@ -80,7 +80,7 @@ class MyPostListView(LoginRequiredMixin, ListView):
     redirect_field_name = "redirect_to"
 
     def get_queryset(self):
-        return Post.objects.filter(author=self.request.user).all()
+        return Post.objects.filter(author=self.request.user).order_by('-created_at').all()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -121,17 +121,17 @@ def change_post(request, post_id):
     if post.author != request.user and not request.user.is_staff:
         return redirect(reverse_lazy("blog_home"))
 
-    form = PostForm(request.POST)
-    if form.fields['image'].initial.split('/')[-1] == 'default.jpeg':
-        form.fields['image'].initial = post.image
-    form.instance.author = request.user
-    form.instance.created_at = post.created_at
+    form = PostForm(request.POST, request.FILES)
+    form.instance.author = post.author
     if form.is_valid():
-        post.delete()
         new_post = form.save()
+        if not request.FILES:
+            new_post.image = post.image
+        post.delete()
         if request.user.is_staff:
             new_post.is_displayed = True
-            new_post.save()
+            new_post.created_at = post.created_at
+        new_post.save()
     return redirect(reverse_lazy("blog_home"))
 
 
