@@ -53,10 +53,11 @@ class TimetableView(LoginRequiredMixin, ListView):
     template_name = "Course/timetable.html"
     context_object_name = "schedules"
     paginate_by = 16
+    queryset = Schedule.objects.filter(is_display=True)
 
     def get_queryset(self):
         student = Student.objects.filter(name=get_user(self.request).username).first()
-        student_group = Schedule.objects.filter(group=student.groups).order_by(
+        student_group = Schedule.objects.filter(group=student.groups, is_display=True).order_by(
             "-weekday"
         )
         theme = self.__get_param("theme")
@@ -68,7 +69,6 @@ class TimetableView(LoginRequiredMixin, ListView):
             )
         if self.__get_param("absent"):
             student_group = student_group.filter(absent__name__iexact=f"{student.name}")
-
         return student_group
 
     def get_context_data(self, *, object_list=None, **kwargs):
