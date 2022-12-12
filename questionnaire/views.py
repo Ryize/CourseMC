@@ -205,7 +205,7 @@ def rating(request, poll_id: int):
 
 
 def check_possibility_passing_poll(
-    request, poll: Quiz
+        request, poll: Quiz
 ) -> Union[Question, HttpResponseNotFound]:
     """
     Используется для проверки возможности пройти определённый опрос пользователем.
@@ -222,3 +222,11 @@ def check_possibility_passing_poll(
         if len(question.answers.all()) > 0:
             return question
     return HttpResponseNotFound("В этом опросе нет вопросов с ответами")
+
+
+@login_required
+def delete_quiz(request, poll_id: int):
+    quiz = Quiz.objects.filter(pk=poll_id).first()
+    if not quiz or not PassedPolls.objects.filter(passed_user=request.user).first():
+        return HttpResponseNotFound("Указанный опрос не найден или вы его не прошли!")
+    quiz.delete()
