@@ -2,12 +2,13 @@
 
 <!DOCTYPE html>
 <html lang="ru">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+      integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 {% include 'template/base_head.html' %}
 
 <body class="p-0" id="top">
 {% include 'template/header.html' %}
+
 <!-- Google Tag Manager (noscript) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.1/css/bootstrap.min.css"
       integrity="sha512-T584yQ/tdRR5QwOpfvDfVQUidzfgc2339Lc8uBDtcp/wYu80d7jwBgAxbyMh0a9YM9F8N3tdErpFI8iaGx6x5g=="
@@ -16,6 +17,133 @@
     <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TKT3RK4"
             height="0" width="0" style="display:none;visibility:hidden"></iframe>
 </noscript>
+<style>
+    .brunoyam-accordion .card .card-header .btn-link[aria-expanded=true]:after {
+        color: #000;
+        content: "";
+        position: absolute;
+        background: url(https://brunoyam.com/images/minus.svg?c240e8c7c1659813773ed6983e7e092b) no-repeat 50%;
+        right: 32px;
+        top: 32px;
+        height: 2px;
+        width: 18px;
+        padding: 19px;
+        border: 1px solid #eb5d18;
+        box-sizing: border-box;
+        border-radius: 4px;
+        transition: all .2s ease
+    }
+
+    @media (max-width: 767.98px) {
+        .brunoyam-accordion .card .card-header .btn-link[aria-expanded=true]:after {
+            top: 12px;
+            height: 12px;
+            width: 12px;
+            background: url(https://brunoyam.com/images/minus.svg?c240e8c7c1659813773ed6983e7e092b) no-repeat 50%/12px;
+            padding: 11px;
+            right: 12px
+        }
+    }
+
+    .brunoyam-accordion .card .card-header .btn-link[aria-expanded=false]:after {
+        color: #000;
+        content: "";
+        position: absolute;
+        background: url(https://brunoyam.com/images/plus.svg?c9f5e82e44b65185d787bad37565b540) no-repeat 50%;
+        right: 32px;
+        top: 12px;
+        height: 18px;
+        width: 18px;
+        padding: 19px;
+        border: 1px solid #eb5d18;
+        box-sizing: border-box;
+        border-radius: 4px;
+        transition: all .2s ease
+    }
+
+    @media (max-width: 767.98px) {
+        .brunoyam-accordion .card .card-header .btn-link[aria-expanded=false]:after {
+            top: 12px;
+            height: 12px;
+            width: 12px;
+            background: url(https://brunoyam.com/images/plus.svg?c9f5e82e44b65185d787bad37565b540) no-repeat 50%/12px;
+            padding: 11px;
+            right: 12px
+        }
+    }
+
+    .brunoyam-accordion .card .card-header .btn-link--plan[aria-expanded=false]:after {
+        top: 44px;
+        height: 24px;
+        width: 24px;
+        background: url(https://brunoyam.com/images/plus.svg?c9f5e82e44b65185d787bad37565b540) no-repeat 50%/24px;
+        padding: 27px
+    }
+
+    @media (max-width: 767.98px) {
+        .brunoyam-accordion .card .card-header .btn-link--plan[aria-expanded=false]:after {
+            top: 12px;
+            height: 12px;
+            width: 12px;
+            background: url(https://brunoyam.com/images/plus.svg?c9f5e82e44b65185d787bad37565b540) no-repeat 50%/12px;
+            padding: 11px;
+            right: 12px
+        }
+    }
+
+    .brunoyam-accordion .card .card-header .btn-link--plan[aria-expanded=true]:after {
+        top: 44px;
+        height: 24px;
+        width: 24px;
+        background: url(https://brunoyam.com/images/minus.svg?c240e8c7c1659813773ed6983e7e092b) no-repeat 50%/24px;
+        padding: 27px
+    }
+
+    @media (max-width: 767.98px) {
+        .brunoyam-accordion .card .card-header .btn-link--plan[aria-expanded=true]:after {
+            top: 12px;
+            height: 12px;
+            width: 12px;
+            background: url(https://brunoyam.com/images/minus.svg?c240e8c7c1659813773ed6983e7e092b) no-repeat 50%/12px;
+            padding: 11px;
+            right: 12px
+        }
+    }
+
+    .brunoyam-accordion .card .card-body--plan ul li:before {
+        content: "";
+        display: block;
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background: url(https://brunoyam.com/images/romb_list.svg?016f95429abc0a3c9ed3be3cf690447c) no-repeat 50%/contain;
+        left: 0;
+        top: 5px
+    }
+
+    .check_list li:before {
+        content: "";
+        width: 20px;
+        height: 20px;
+        background: url(https://brunoyam.com/images/check_orange.svg?ba3cd0ac8249c0d6df60e4d22521264d) no-repeat 50%;
+        display: inline-block;
+        vertical-align: text-top;
+        margin-right: 16px
+    }
+
+    @media (max-width: 767.98px) {
+        .check_list li:before {
+            display: block;
+            position: absolute;
+            left: 0;
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            background: url(https://brunoyam.com/images/check_orange.svg?ba3cd0ac8249c0d6df60e4d22521264d) no-repeat 50%/contain;
+            top: 2px
+        }
+    }
+</style>
 <!-- End Google Tag Manager (noscript) -->
 <h2>
     <ul class="messages">
@@ -45,8 +173,10 @@
                         <div class="col-md-7 z-middle d-none d-md-block"><h2 itemprop="name" class="hero_margin_top h2">
                             Онлайн-курс Профессия <span>Python-разработчик</span></h2>
                             <p class="mt-new-3 mb-new-7 medium_p">
-                                Практический онлайн-курс по Python: от Git и алгоритмов до django и unit-тестирования.
-                                Создадите несколько действующих сервисов и получите все необходимые навыки и знания для
+                                Практический онлайн-курс по Python: от основ языка и алгоритмов до django и
+                                unit-тестирования.
+                                Вы создадите несколько действующих сервисов и получите все необходимые навыки и знания
+                                для
                                 старта работы в Python программировании (Junior Python Developer). <br>
                                 Последнее обновление курса - 2 декабря 2022 года
                             </p>
@@ -302,7 +432,7 @@
                     <div class="row z-middle">
                         <div class="form-payment-container col-md-6 col-lg-4">
                             <div itemprop="offers" itemscope="itemscope" itemtype="https://schema.org/Offer">
-                                <div itemprop="price" class="payment_price mb-0">от 12 150 <b>₽</b></div>
+                                <div itemprop="price" class="payment_price mb-0">от 20 000 <b>₽</b></div>
                                 <meta itemprop="priceCurrency" content="RUB">
                                 <div class='payment_price payment_price--old payment_price--noborder mb-0"'>
                                     за <b>весь</b> курс
@@ -415,7 +545,7 @@
                                                     data-target="#collapseCoursePlan102" aria-expanded="true"
                                                     aria-controls="collapseCoursePlan102"
                                                     class="btn btn-link btn-link--plan"
-                                                    style='text-decoration: none;'><span
+                                                    style='text-decoration: none; color: black;'><span
                                                     class="plan_class d-none d-md-block">1 блок</span> <span
                                                     class="plan_title">Основы Python</span></button>
                                         </div>
@@ -453,7 +583,7 @@
                                     <div id="coursePlanHeading108" class="card-header">
                                         <div class="mb-0">
                                             <button type="button" data-toggle="collapse"
-                                                    style='text-decoration: none;'
+                                                    style='text-decoration: none; color: black;'
                                                     data-target="#collapseCoursePlan108" aria-expanded="false"
                                                     aria-controls="collapseCoursePlan108"
                                                     class="btn btn-link btn-link--plan"><span
@@ -492,7 +622,7 @@
                                     <div id="coursePlanHeading107" class="card-header">
                                         <div class="mb-0">
                                             <button type="button" data-toggle="collapse"
-                                                    style='text-decoration: none;'
+                                                    style='text-decoration: none; color: black;'
                                                     data-target="#collapseCoursePlan107" aria-expanded="false"
                                                     aria-controls="collapseCoursePlan107"
                                                     class="btn btn-link btn-link--plan"><span
@@ -531,7 +661,7 @@
                                     <div id="coursePlanHeading103" class="card-header">
                                         <div class="mb-0">
                                             <button type="button" data-toggle="collapse"
-                                                    style='text-decoration: none;'
+                                                    style='text-decoration: none; color: black;'
                                                     data-target="#collapseCoursePlan1031" aria-expanded="false"
                                                     aria-controls="collapseCoursePlan1031"
                                                     class="btn btn-link btn-link--plan"><span
@@ -571,7 +701,7 @@
                                     <div id="coursePlanHeading103" class="card-header">
                                         <div class="mb-0">
                                             <button type="button" data-toggle="collapse"
-                                                    style='text-decoration: none;'
+                                                    style='text-decoration: none; color: black;'
                                                     data-target="#collapseCoursePlan103" aria-expanded="false"
                                                     aria-controls="collapseCoursePlan103"
                                                     class="btn btn-link btn-link--plan"><span
@@ -614,7 +744,7 @@
                                     <div id="coursePlanHeading103" class="card-header">
                                         <div class="mb-0">
                                             <button type="button" data-toggle="collapse"
-                                                    style='text-decoration: none;'
+                                                    style='text-decoration: none; color: black;'
                                                     data-target="#collapseCoursePlan104" aria-expanded="false"
                                                     aria-controls="collapseCoursePlan104"
                                                     class="btn btn-link btn-link--plan"><span
@@ -661,7 +791,7 @@
                                     <div id="coursePlanHeading105" class="card-header">
                                         <div class="mb-0">
                                             <button type="button" data-toggle="collapse"
-                                                    style='text-decoration: none;'
+                                                    style='text-decoration: none; color: black;'
                                                     data-target="#collapseCoursePlan105" aria-expanded="false"
                                                     aria-controls="collapseCoursePlan105"
                                                     class="btn btn-link btn-link--plan"><span
@@ -700,7 +830,7 @@
                                     <div id="coursePlanHeading106" class="card-header">
                                         <div class="mb-0">
                                             <button type="button" data-toggle="collapse"
-                                                    style='text-decoration: none;'
+                                                    style='text-decoration: none; color: black;'
                                                     data-target="#collapseCoursePlan106" aria-expanded="false"
                                                     aria-controls="collapseCoursePlan106"
                                                     class="btn btn-link btn-link--plan"><span
@@ -736,7 +866,7 @@
                                     <div id="coursePlanHeading111" class="card-header">
                                         <div class="mb-0">
                                             <button type="button" data-toggle="collapse"
-                                                    style='text-decoration: none;'
+                                                    style='text-decoration: none; color: black;'
                                                     data-target="#collapseCoursePlan111" aria-expanded="false"
                                                     aria-controls="collapseCoursePlan111"
                                                     class="btn btn-link btn-link--plan"><span
@@ -770,7 +900,7 @@
                                     <div id="coursePlanHeading110" class="card-header">
                                         <div class="mb-0">
                                             <button type="button" data-toggle="collapse"
-                                                    style='text-decoration: none;'
+                                                    style='text-decoration: none; color: black;'
                                                     data-target="#collapseCoursePlan110" aria-expanded="false"
                                                     aria-controls="collapseCoursePlan110"
                                                     class="btn btn-link btn-link--plan"><span
@@ -809,11 +939,11 @@
 
                 </div>
             </div>
-            <div id="emotionProff" class="mt-new-10 pt-new-25 mb-new-10 d-block bg_grey">
+            <div id="emotionProff" class="mt-new-5 pt-new-25 mb-new-10 d-block bg_grey" style="margin-bottom: 0px;">
                 <div class="container new-grid content_course_bg content_course_bg--proff">
                     <div class="row z-middle">
                         <div class="col-12 text-center text-md-left">
-                            <div class="proff_price prog_text">115 000 <b>₽</b></div>
+                            <div class="proff_price prog_text">120 000 <b>₽</b></div>
                             <div class="h3 mb-new-3 proff_text">Средняя зарплата мидл Python-разработчика в России в
                                 2021 году
                             </div>
@@ -826,7 +956,6 @@
         </div>
     </main>
 </div>
-
 <script src="{% static 'indexPage/app.js' %}"></script>
 <script src="{% static 'indexPage/vendor.min.js' %}"></script>
 <script src="{% static 'indexPage/scripts.js' %}"></script>
