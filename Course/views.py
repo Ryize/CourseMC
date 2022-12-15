@@ -1,9 +1,7 @@
 import datetime
 import os
-from io import BytesIO
 
 import docx
-from django.conf.urls import url
 from django.contrib.auth import get_user
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -137,7 +135,6 @@ def get_training_program(response):
         .order_by("weekday")
         .all()
     )
-    destination_document_file = BytesIO()
     doc = docx.Document()
     doc.add_heading(f"Программа курса Python разработки", 0)
     paragraph = doc.add_paragraph("Получено: ")
@@ -216,7 +213,8 @@ def create_group(request):
     if not request.user.is_staff:
         return redirect('/')
     if request.method == 'GET':
-        return render(request, 'Course/groups.html')
+        reviews_count = Review.objects.all().count()
+        return render(request, 'Course/groups.html', {"reviews_count": reviews_count})
     title = request.POST.get("title")
     new_group = LearnGroup(title=title)
     new_group.save()

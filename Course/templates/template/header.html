@@ -48,7 +48,6 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
         <div class="navbar-nav">
-            <a class="nav-item nav-link active underline-one" href="{% url 'home' %}">Главная</a>
             {% if user.is_authenticated %}
                 <a class="nav-item nav-link underline-one active" href="{% url 'schedule' %}">Расписания</a>
             {% endif %}
@@ -107,17 +106,19 @@
         </div>
         <div class="collapse navbar-collapse justify-content-end" id="navbarCollapse">
             <ul class="navbar-nav">
-                <li class="nav-item">
-                    {% if user.is_staff %}
+                {% if user.is_staff %}
+                    <li class="nav-item">
                         <a href="{% url 'admin:index' %}" class="nav-link active">Настройки</a>
-                    {% endif %}
-                </li>
-                <li class="nav-item">
-                    {% if user.is_authenticated %}
+                    </li>
+                    <li class="nav-item">
                         <a href="{% url 'account_logout' %}" class="nav-link">Выйти</a>
-                    {% else %}
-                        <a href="{% url 'account_login' %}" class="nav-link">Авторизоваться</a>
-                    {% endif %}
+                        {% elif user.is_authenticated %}
+                    <li class="nav-item">
+                        <a href="{% url 'account_logout' %}" class="nav-link">Выйти</a>
+                        {% else %}
+                    <li class="nav-item">
+                    <a href="{% url 'account_login' %}" class="nav-link">Авторизоваться</a>
+                {% endif %}
                 </li>
             </ul>
         </div>
