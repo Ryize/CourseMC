@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseNotFound
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.generic import ListView
 
 from .forms import AnswerForm, QuestionForm, QuizForm
@@ -227,6 +228,9 @@ def check_possibility_passing_poll(
 @login_required
 def delete_quiz(request, poll_id: int):
     quiz = Quiz.objects.filter(pk=poll_id).first()
-    if not quiz or not PassedPolls.objects.filter(passed_user=request.user).first():
-        return HttpResponseNotFound("Указанный опрос не найден или вы его не прошли!")
+    if not quiz or quiz.user != request.user:
+        messages.error(request, f'Указанный опрос не найден или вы не его автор!')
+        return redirect(reverse('my_poll'))
     quiz.delete()
+    messages.success(request, f'Вы успешно удалили опрос "{quiz.title}"')
+    return redirect(reverse('my_poll'))

@@ -86,7 +86,7 @@
                             {% endif %}
                         </div>
                         <br>
-                        <label style="float: right"><small>Создан: {{ poll.created_at }}</small></label>
+                        <label style="float: right"><small>Создан: {{ poll.created_at }} <a href="{% url 'delete_quiz' poll.pk %}"> 🗑</a></small></label>
                         <p onclick="copyURL('copy_url-{{ poll.pk }}')">
                             <input type="hidden" value="http://{{ request.get_host }}{% url 'take_poll' poll.pk %}"
                                    id="copy_url-{{ poll.pk }}">

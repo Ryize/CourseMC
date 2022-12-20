@@ -8,24 +8,24 @@ from .models import Student
 class StudentForm(ModelForm):
     class Meta:
         model = Student
-        fields = ("name", "contact", "email", "password")
+        fields = ('name', 'contact', 'email', 'password')
 
     def __init__(self, *args, **kwargs):
         super(StudentForm, self).__init__(*args, **kwargs)
-        self.fields["name"].widget.attrs.update(
-            {"class": "form-control", "placeholder": "Имя*"}
+        self.fields['name'].widget.attrs.update(
+            {'class': 'form-control', 'placeholder': 'Имя*'}
         )
-        self.fields["contact"].widget.attrs.update(
-            {"class": "form-control", "placeholder": "Ссылка на ВК/Телеграм*"}
+        self.fields['contact'].widget.attrs.update(
+            {'class': 'form-control', 'placeholder': 'Ссылка на ВК/Телеграм*'}
         )
-        self.fields["email"].widget.attrs.update(
-            {"class": "form-control", "placeholder": "Почта*"}
+        self.fields['email'].widget.attrs.update(
+            {'class': 'form-control', 'placeholder': 'Почта*'}
         )
-        self.fields["password"].widget.attrs.update(
+        self.fields['password'].widget.attrs.update(
             {
-                "class": "form-control",
-                "placeholder": "Необязательно",
-                "value": random.randint(1111, 9999),
+                'class': 'form-control',
+                'placeholder': 'Необязательно',
+                'value': random.randint(1111, 9999),
             }
         )
 
@@ -33,14 +33,14 @@ class StudentForm(ModelForm):
 class AuthForm(ModelForm):
     class Meta:
         model = Student
-        fields = ("name", "password")
+        fields = ('name', 'password')
 
     def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop("request", None)
+        self.request = kwargs.pop('request', None)
         super(AuthForm, self).__init__(*args, **kwargs)
-        self.fields["name"].widget.attrs.update(
-            {"class": "form-control", "placeholder": "Логин*"}
+        self.fields['name'].widget.attrs.update(
+            {'class': 'form-control', 'placeholder': 'Логин*'}
         )
-        self.fields["password"].widget.attrs.update(
-            {"class": "form-control", "placeholder": "Необязательно"}
+        self.fields['password'].widget.attrs.update(
+            {'class': 'form-control', 'placeholder': 'Необязательно'}
         )
