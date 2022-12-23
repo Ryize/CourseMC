@@ -1,7 +1,10 @@
-import datetime
+"""View для приложения Course.
+
+Обрабатывает гавную страницу сайта,
+расписания.
+"""
 import os
 
-import docx
 from django.contrib.auth import get_user
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -10,21 +13,45 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.views.generic import ListView
 from django.views.generic.edit import FormView
-from docx.shared import RGBColor
-from htmldocx import HtmlToDocx
 
+from Course.forms import StudentForm
+from Course.models import LearnGroup, Schedule, Student, StudentQuestion
+from Course.report import get_content_disposition, get_content_type
+from Course.doc import docx_worker, save_report
 from reviews.models import Review
 
-from .forms import *
-from .models import LearnGroup, Schedule, Student, StudentQuestion
+STATUS_OK = 200
+STATUS_FORBIDDEN = 403
+STATUS_PRECONDITION_FAILED = 412
+LESSON_DURATION = 1.5
 
 
 class StudentRecordView(FormView):
+    """View для авторизации в системе.
+
+    Авторизовываются обычные юзеры и персонал.
+    Для шаблона используется форма StudentForm.
+    """
+
     template_name = 'Course/index.html'
     form_class = StudentForm
     login_url = '/login/'
 
-    def form_valid(self, form):
+    def form_valid(self, form: StudentForm):
+        """Если форма валидна.
+
+        Сохраняем и создаём ещё один класс User.
+        Класс User нужен для авторизации в системе,
+        тк модель Student не используется по умолчанию.
+
+        Args:
+            form: форма авторизации
+                уже хранит все параметры, получение через form.cleaned_data
+                (Course.forms.StudentForm).
+
+        Returns:
+            JsonResponse: Json ответ со статусом успеха.
+        """
         form.save()
         name = form.cleaned_data['name']
         email = form.cleaned_data['email']
@@ -36,17 +63,47 @@ class StudentRecordView(FormView):
         }
         return JsonResponse(response)
 
-    def form_invalid(self, form):
-        response = {'success': False, 'error_message': 'Форма заполнена не верно!'}
+    def form_invalid(self, form: StudentForm):
+        """Если форма не валидна.
+
+        Отправляем JsonResponse с уведомлением о
+        неверно заполненной форме.
+
+        Args:
+            form: форма авторизации (Course.forms.StudentForm).
+
+        Returns:
+            JsonResponse: Json ответ со статусом неудачи и пояснением.
+        """
+        response = {
+            'success': False,
+            'error_message': 'Форма заполнена не верно!',
+        }
         return JsonResponse(response)
 
     def get_context_data(self, *, object_list=None, **kwargs):
+        """Добавляем кол-во отзывов.
+
+        Для вывода кол-ва отзывов в шаблоне, передаём параметр reviews_count.
+
+        Args:
+            object_list: стандартный параметр, не используется.
+            kwargs: передаётся через super() в get_context_data
+
+        Returns:
+            dict: словарь с объектами моделей.
+        """
         context = super().get_context_data(**kwargs)
         context['reviews_count'] = Review.objects.all().count()
         return context
 
 
 class TimetableView(LoginRequiredMixin, ListView):
+    """Выводит расписание курса на сайте.
+
+    Расписания выводятся по модели Schedule, по 16 на странице.
+    """
+
     model = Schedule
     template_name = 'Course/timetable.html'
     context_object_name = 'schedules'
@@ -54,180 +111,257 @@ class TimetableView(LoginRequiredMixin, ListView):
     queryset = Schedule.objects.filter(is_display=True)
 
     def get_queryset(self):
-        student = Student.objects.filter(name=get_user(self.request).username).first()
-        student_group = Schedule.objects.filter(group=student.groups, is_display=True).order_by(
-            '-weekday'
-        )
-        theme = self.__get_param('theme')
+        """Если форма валидна.
+
+        Фильтруем расписания по типу урока, теме.
+
+        Returns:
+            Schedule: Отфильтрованный QuerySet.
+        """
+        student = Student.objects.filter(
+            name=get_user(self.request).username,
+        ).first()
+        student_group = Schedule.objects.filter(
+            group=student.groups, is_display=True,
+        ).order_by('-weekday')
+        theme = self._get_param('theme')
         if theme:
             student_group = student_group.filter(theme__icontains=theme)
-        if self.__get_param('lesson_type'):
+        if self._get_param('lesson_type'):
             student_group = student_group.filter(
-                lesson_type__icontains=self.__get_param('lesson_type')
+                lesson_type__icontains=self._get_param('lesson_type'),
             )
-        if self.__get_param('absent'):
-            student_group = student_group.filter(absent__name__iexact='{}'.format(student.name))
+        if self._get_param('absent'):
+            student_group = student_group.filter(
+                absent__name__iexact='{name}'.format(name=student.name),
+            )
         return student_group
 
     def get_context_data(self, *, object_list=None, **kwargs):
+        """Добавляем кол-во отзывов, расписание.
+
+        Для вывода кол-ва отзывов в шаблоне, передаём параметр reviews_count.
+        Передаём список расписаний, отфильтрованных по дате.
+
+        Args:
+            object_list: стандартный параметр, не используется.
+            kwargs: передаётся через super() в get_context_data
+
+        Returns:
+            dict: словарь с объектами моделей.
+        """
         context = super().get_context_data(**kwargs)
         context['reviews_count'] = Review.objects.all().count()
-        student = Student.objects.filter(name=get_user(self.request).username).first()
+        student = Student.objects.filter(
+            name=get_user(self.request).username,
+        ).first()
         context['create_report'] = Schedule.objects.filter(
-            group=student.groups
+            group=student.groups,
         ).order_by('-weekday')
         return context
 
     def dispatch(self, request, *args, **kwargs):
-        student = Student.objects.filter(name=get_user(self.request).username).first()
+        """Проверяем права на заход.
+
+        Если пользователь не студент или не учиться, перекидываем на home.
+
+        Args:
+            request: объект HTTP запроса.
+            args: передаётся через super() в dispatch
+            kwargs: передаётся через super() в dispatch
+
+        Returns:
+            bool: можно/нет зайти на страницу (через родительский dispatch).
+        """
+        student = Student.objects.filter(
+            name=get_user(self.request).username, is_learned=True,
+        ).first()
         if not student:
             return redirect('home')
         return super().dispatch(request, *args, **kwargs)
 
-    def __get_param(self, name):
+    def _get_param(self, name: str) -> str:
+        """Проверяем права на заход.
+
+        Если пользователь не студент или не учиться, перекидываем на home.
+
+        Args:
+            name: название параметра, который необходимо получить.
+
+        Returns:
+            str: значение из request.GET.
+        """
         return self.request.GET.get(name)
 
 
 @login_required
-def download_report(request, group_id):
+def download_report(request, group_id: int):
+    """Проверяем права на заход.
+
+    Если пользователь не студент или не учиться, перекидываем на home.
+
+    Args:
+        request: параметр HTTP запроса, получается автоматически.
+        group_id: id группы, отчёт которой надо получить.
+
+    Returns:
+        HttpResponse: содержит файл отчёта, загрузка начнётся автоматически.
+    """
     group = LearnGroup.objects.filter(pk=group_id).first()
     if not group:
         return redirect('home')
     schedules = group.schedules.all()
-    students = group.students
-    schedule_count, students_count = schedules.count(), students.count()
-    schedules_primary = schedules.filter(lesson_type='Ключевой урок').count()
-    schedules_new_theme = schedules.filter(lesson_type='Новая тема').count()
-    practice_schedules = schedules.filter(lesson_type='Практика').count()
-
-    result_data = f'''Отчёт о группе {group.title}
-{'-' * 64}
+    number_dash_on_line = 64
+    result_data = """Отчёт о группе {group_title}
+{approximate_string_length}
 Количество расписаний: {schedule_count}
 Ключевых уроков: {schedules_primary}
 Новых тем: {schedules_new_theme}
 Практики: {practice_schedules}
 Участников ({students_count}):
-    '''
-    for student in students.all():
-        result_data += f'''
-    Имя: {student.name}
-    Контакты: {student.contact or 'Не указаны!'}
-    Пропущенных урока: {student.absents.count()}
-        '''
-    result_data += f'\n\nЧасов обучения: {schedules.count() * 1.5}'
+    """.format(
+        group_title=group.title,
+        approximate_string_length='-' * number_dash_on_line,
+        schedule_count=schedules.count(),
+        students_count=group.students.count(),
+        schedules_primary=schedules.filter(
+            lesson_type='Ключевой урок',
+        ).count(),
+        schedules_new_theme=schedules.filter(
+            lesson_type='Новая тема',
+        ).count(),
+        practice_schedules=schedules.filter(
+            lesson_type='Практика',
+        ).count(),
+    )
+    for student in group.students.all():
+        result_data += """
+    Имя: {student_name}
+    Контакты: {student_contact}
+    Пропущенных урока: {student_absents}
+        """.format(
+            student_name=student.name,
+            student_contact=student.contact or 'Не указаны!',
+            student_absents=student.absents.count(),
+        )
+    result_data += '\n\nЧасов обучения: {lesson_hour}'.format(
+        lesson_hour=schedules.count() * LESSON_DURATION,
+    )
 
-    directory = 'report'
-    filename = f'Report_{random.randint(10000, 999999999)}.txt'
-    if not os.path.exists(directory):
-        os.mkdir(directory)
-
-    content = result_data
-    response = HttpResponse(content, content_type='text/plain')
-    response['Content-Disposition'] = 'attachment; filename={0}'.format(filename)
-    return response
+    return save_report(result_data)
 
 
-def get_training_program(response):
+def get_training_program(request):
+    """Для получения программы курса.
+
+    Выводит программу курса группы в виде docx документа.
+    Для работы с docx используется модуль docx.
+
+    Args:
+        request: стандартный параметр, не используется.
+
+    Returns:
+        HttpResponse: с файлом (скачивается автоматически).
+    """
     schedules = (
         Schedule.objects.filter(
             group=LearnGroup.objects.filter(title='Вояджер').first(),
         ).order_by('weekday').all()
     )
-    doc = docx.Document()
-    doc.add_heading(f'Программа курса Python разработки', 0)
-    paragraph = doc.add_paragraph('Получено: ')
-    month_conver = {
-        'Unknown': '-',
-        'January': 'Января',
-        'February': 'Февраля',
-        'March': 'Марта',
-        'April': 'Апреля',
-        'May': 'Мая',
-        'June': 'Июня',
-        'July': 'Июля',
-        'August': 'Августа',
-        'September': 'Сентября',
-        'October': 'Октября',
-        'November': 'Ноября',
-        'December': 'Декабря',
-    }
-    date = datetime.date.today().strftime('%d %B %Y').split()
-    date[1] = month_conver[date[1]]
-    run = paragraph.add_run(f'{" ".join(date)} года')
-    run.font.color.rgb = RGBColor(255, 10, 20)
-    new_parser = HtmlToDocx()
-
-    table = doc.add_table(rows=schedules.count(), cols=2)
-    table.style = 'Table Grid'
-
-    for row, schedule in enumerate(schedules):
-        cell = table.cell(row, 0)
-        new_parser.add_html_to_document(schedule.theme, cell)
-        cell = table.cell(row, 1)
-        new_parser.add_html_to_document(schedule.lesson_materials, cell)
+    doc = docx_worker(schedules)
 
     if not os.path.exists('programCoursePython'):
         os.mkdir('programCoursePython')
 
     response = HttpResponse(
-        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        content_type=get_content_type(),
     )
-    response['Content-Disposition'] = 'attachment; filename=programCoursePython.docx'
+    response['Content-Disposition'] = get_content_disposition()
     doc.save(response)
     return response
 
 
 @login_required
 def ask_question(request):
+    """Задать анонимный вопрос.
+
+    Сохраняет вопрос студента в модель StudentQuestion.
+
+    Args:
+        request: стандартный параметр.
+
+    Returns:
+        JsonResponse: статус, сохранён/нет вопрос.
+    """
     question = request.GET.get('question')
     response = {
         'is_taken': False,
     }
     if not question:
-        return JsonResponse(response, status=412)
+        return JsonResponse(response, status=STATUS_PRECONDITION_FAILED)
     student = Student.objects.filter(name=request.user.username).first()
     if not student:
-        return JsonResponse(response, status=403)
+        return JsonResponse(response, status=STATUS_FORBIDDEN)
     group = student.groups
     student_question = StudentQuestion(group=group, question=question)
     student_question.save()
     response['is_taken'] = True
-    return JsonResponse(response, status=200)
+    return JsonResponse(response, status=STATUS_OK)
 
 
 @login_required
 def get_filter_data(request):
-    random_data = random.randint(0, 99999999999999999)
-    result = f'{random_data}_Ты нашёл пасхалку, красавчик!!!'
+    """Пасхалка.
+
+    Выводит нашедшему подсказку надпись.
+
+    Args:
+        request: стандартный параметр.
+
+    Returns:
+        JsonResponse: статус, текст надписи.
+    """
     result_dict = {
-        'answer': result,
+        'answer': 'Ты нашёл пасхалку, красавчик!!!',
         'code': 'OK',
     }
-    return JsonResponse(result_dict, status=200)
+    return JsonResponse(result_dict, status=STATUS_OK)
 
 
 @login_required
 def create_group(request):
+    """Для создания новой группы.
+
+    Создаёт новую группу и заполняет расписаниями группы Вояджер.
+    У созданных раписаний параметр is_display равен False.
+
+    Args:
+        request: стандартный параметр.
+
+    Returns:
+        redirect/render: перенаправляет при успехе/отсутствии прав, выдаёт
+        страницу при GET запросе.
+    """
     if not request.user.is_staff:
         return redirect('/')
     if request.method == 'GET':
-        reviews_count = Review.objects.all().count()
         context = {
-            'reviews_count': reviews_count
+            'reviews_count': Review.objects.all().count(),
         }
         return render(request, 'Course/groups.html', context)
     title = request.POST.get('title')
     new_group = LearnGroup(title=title)
     new_group.save()
     all_plan_lessons = Schedule.objects.filter(
-        group=LearnGroup.objects.get(id=3)).order_by('weekday')
-    for i in all_plan_lessons:
-        schedule = Schedule(group=new_group,
-                            theme=i.theme,
-                            weekday=i.weekday,
-                            time_lesson=i.time_lesson,
-                            lesson_materials=i.lesson_materials,
-                            is_display=False
-                            )
-        schedule.save()
+        group=LearnGroup.objects.get(id=3),
+    ).order_by('weekday')
+    for plan in all_plan_lessons:
+        Schedule.objects.create(
+            group=new_group,
+            theme=plan.theme,
+            weekday=plan.weekday,
+            time_lesson=plan.time_lesson,
+            lesson_materials=plan.lesson_materials,
+            is_display=False,
+        )
     return redirect('/')
