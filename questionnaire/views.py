@@ -57,14 +57,14 @@ def create_poll(request):
         context = {"form": QuizForm()}
         return render(request, "questionnaire/create_poll.html", context)
     form = QuizForm(request.POST)
-    if form.is_valid():
-        form_with_user = form.save(commit=False)
-        form_with_user.user = request.user
-        form_with_user.save()
-        messages.success(request, "Вы успешно создали опрос!")
-        return redirect("create_question", form_with_user.pk)
-    messages.error(request, "Хм, что-то не то!")
-    return redirect("create_poll")
+    if not form.is_valid():
+        messages.error(request, "Хм, что-то не то!")
+        return redirect("create_poll")
+    form_with_user = form.save(commit=False)
+    form_with_user.user = request.user
+    form_with_user.save()
+    messages.success(request, "Вы успешно создали опрос!")
+    return redirect("create_question", form_with_user.pk)
 
 
 @login_required

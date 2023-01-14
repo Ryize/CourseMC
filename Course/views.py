@@ -1,7 +1,7 @@
-"""View для приложения Course.
+"""
+View для приложения Course.
 
-Обрабатывает гавную страницу сайта,
-расписания.
+Обрабатывает главную страницу сайта, расписания.
 """
 import os
 
@@ -14,10 +14,10 @@ from django.shortcuts import redirect, render
 from django.views.generic import ListView
 from django.views.generic.edit import FormView
 
+from Course.doc import docx_worker, save_report
 from Course.forms import StudentForm
 from Course.models import LearnGroup, Schedule, Student, StudentQuestion
 from Course.report import get_content_disposition, get_content_type
-from Course.doc import docx_worker, save_report
 from reviews.models import Review
 
 STATUS_OK = 200
@@ -27,7 +27,8 @@ LESSON_DURATION = 1.5
 
 
 class StudentRecordView(FormView):
-    """View для авторизации в системе.
+    """
+    View для авторизации в системе.
 
     Авторизовываются обычные юзеры и персонал.
     Для шаблона используется форма StudentForm.
@@ -37,8 +38,9 @@ class StudentRecordView(FormView):
     form_class = StudentForm
     login_url = '/login/'
 
-    def form_valid(self, form: StudentForm):
-        """Если форма валидна.
+    def form_valid(self, form: StudentForm) -> JsonResponse:
+        """
+        Если форма валидна.
 
         Сохраняем и создаём ещё один класс User.
         Класс User нужен для авторизации в системе,
@@ -64,7 +66,8 @@ class StudentRecordView(FormView):
         return JsonResponse(response)
 
     def form_invalid(self, form: StudentForm):
-        """Если форма не валидна.
+        """
+        Если форма не валидна.
 
         Отправляем JsonResponse с уведомлением о
         неверно заполненной форме.
@@ -82,7 +85,8 @@ class StudentRecordView(FormView):
         return JsonResponse(response)
 
     def get_context_data(self, *, object_list=None, **kwargs):
-        """Добавляем кол-во отзывов.
+        """
+        Добавляем кол-во отзывов.
 
         Для вывода кол-ва отзывов в шаблоне, передаём параметр reviews_count.
 
@@ -99,7 +103,8 @@ class StudentRecordView(FormView):
 
 
 class TimetableView(LoginRequiredMixin, ListView):
-    """Выводит расписание курса на сайте.
+    """
+    Выводит расписание курса на сайте.
 
     Расписания выводятся по модели Schedule, по 16 на странице.
     """
@@ -111,7 +116,8 @@ class TimetableView(LoginRequiredMixin, ListView):
     queryset = Schedule.objects.filter(is_display=True)
 
     def get_queryset(self):
-        """Если форма валидна.
+        """
+        Если форма валидна.
 
         Фильтруем расписания по типу урока, теме.
 
@@ -138,7 +144,8 @@ class TimetableView(LoginRequiredMixin, ListView):
         return student_group
 
     def get_context_data(self, *, object_list=None, **kwargs):
-        """Добавляем кол-во отзывов, расписание.
+        """
+        Добавляем кол-во отзывов, расписание.
 
         Для вывода кол-ва отзывов в шаблоне, передаём параметр reviews_count.
         Передаём список расписаний, отфильтрованных по дате.
@@ -161,7 +168,8 @@ class TimetableView(LoginRequiredMixin, ListView):
         return context
 
     def dispatch(self, request, *args, **kwargs):
-        """Проверяем права на заход.
+        """
+        Проверяем права на заход.
 
         Если пользователь не студент или не учиться, перекидываем на home.
 
@@ -181,7 +189,8 @@ class TimetableView(LoginRequiredMixin, ListView):
         return super().dispatch(request, *args, **kwargs)
 
     def _get_param(self, name: str) -> str:
-        """Проверяем права на заход.
+        """
+        Проверяем права на заход.
 
         Если пользователь не студент или не учиться, перекидываем на home.
 
@@ -196,7 +205,8 @@ class TimetableView(LoginRequiredMixin, ListView):
 
 @login_required
 def download_report(request, group_id: int):
-    """Проверяем права на заход.
+    """
+    Проверяем права на заход.
 
     Если пользователь не студент или не учиться, перекидываем на home.
 
@@ -252,7 +262,8 @@ def download_report(request, group_id: int):
 
 
 def get_training_program(request):
-    """Для получения программы курса.
+    """
+    Для получения программы курса.
 
     Выводит программу курса группы в виде docx документа.
     Для работы с docx используется модуль docx.
@@ -283,7 +294,8 @@ def get_training_program(request):
 
 @login_required
 def ask_question(request):
-    """Задать анонимный вопрос.
+    """
+    Задать анонимный вопрос.
 
     Сохраняет вопрос студента в модель StudentQuestion.
 
@@ -311,7 +323,8 @@ def ask_question(request):
 
 @login_required
 def get_filter_data(request):
-    """Пасхалка.
+    """
+    Пасхалка.
 
     Выводит нашедшему подсказку надпись.
 
@@ -330,7 +343,8 @@ def get_filter_data(request):
 
 @login_required
 def create_group(request):
-    """Для создания новой группы.
+    """
+    Для создания новой группы.
 
     Создаёт новую группу и заполняет расписаниями группы Вояджер.
     У созданных раписаний параметр is_display равен False.
