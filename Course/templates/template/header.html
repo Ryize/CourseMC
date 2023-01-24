@@ -98,7 +98,7 @@
                 </ul>
             </label>
             <a class="nav-item nav-link active underline-one"
-               href="{% url 'review' %}">Отзывы<small>({{ reviews_count }})</small></a>
+               href="{% url 'review' %}">Отзывы<small>{% if reviews_count %}({{ reviews_count }}){% endif %}</small></a>
             {% if user.is_staff %}
                 <a class="nav-item nav-link active underline-one"
                    href="{% url 'create_group' %}">Группы</a>

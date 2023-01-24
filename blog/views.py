@@ -5,8 +5,8 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.generic import CreateView, DetailView, ListView
 
-from .forms import PostForm
-from .models import *
+from blog.forms import PostForm
+from blog.models import *
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
@@ -15,7 +15,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     redirect_field_name = "redirect_to"
 
     def get_form(self, *args, **kwargs):
-        form = super().get_form(*args)
+        form = super().get_form(*args, **kwargs)
         form.instance.author = self.request.user
         return form
 

@@ -1,11 +1,10 @@
-from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from Course.models import LearnGroup, Schedule, Student, StudentQuestion
+from Course.models import LearnGroup, Schedule, Student, StudentQuestion, ClassesTimetable
 
 from .serializers import (LearnGroupListSerializer, ScheduleListSerializer,
-                          StudentListSerializer, StudentQuestionListSerializer)
+                          StudentListSerializer, StudentQuestionListSerializer, ClassesTimetableListSerializer)
 
 
 class ScheduleViewSet(APIView):
@@ -35,8 +34,8 @@ class ScheduleGet(APIView):
         username = request.data["username"]
         student = Student.objects.get(name=username)
         group = student.groups
-        sсhedule = Schedule.objects.filter(group=group).order_by("weekday").values()
-        return Response(sсhedule)
+        schedule = Schedule.objects.filter(group=group).order_by("weekday").values()
+        return Response(schedule)
 
 
 class StudentViewSet(APIView):
@@ -83,4 +82,11 @@ class StudentQuestionView(APIView):
     def get(self, request):
         student_question = StudentQuestion.objects.all().order_by("-created_at")
         serializer = StudentQuestionListSerializer(student_question, many=True)
+        return Response(serializer.data)
+
+
+class ClassesTimetableView(APIView):
+    def get(self, request, user_name: str):
+        class_timetable = ClassesTimetable.objects.filter(teacher__username=user_name).all()
+        serializer = ClassesTimetableListSerializer(class_timetable, many=True)
         return Response(serializer.data)

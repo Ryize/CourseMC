@@ -1,6 +1,7 @@
 import random
 
 from ckeditor_uploader.fields import RichTextUploadingField
+from django.contrib.auth.models import User
 from django.db import models
 
 
@@ -45,25 +46,8 @@ class LearnGroup(models.Model):
         return f'{self.title}'
 
 
-class Teacher(models.Model):
-    name = models.CharField(max_length=32, verbose_name='Имя')
-    contact = models.CharField(max_length=128, verbose_name='Контакты')
-    email = models.EmailField(max_length=64, unique=True, verbose_name='Почта')
-    groups = models.ManyToManyField(
-        LearnGroup, verbose_name='Группы', related_name='teachers'
-    )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Зарегестрирован')
-
-    class Meta:
-        verbose_name = 'Учитель'
-        verbose_name_plural = 'Учителя'
-
-    def __str__(self):
-        return f'{self.name}'
-
-
 class Schedule(models.Model):
-    LESSONG_TYPE_CHOICES = (
+    LESSON_TYPE_CHOICES = (
         ('Практика', 'Практика'),
         ('Новая тема', 'Новая тема'),
         ('Ключевой урок', 'Ключевой урок'),
@@ -94,7 +78,7 @@ class Schedule(models.Model):
     )
     lesson_type = models.CharField(
         max_length=64,
-        choices=LESSONG_TYPE_CHOICES,
+        choices=LESSON_TYPE_CHOICES,
         default='Практика',
         verbose_name='Тип урока',
     )
@@ -127,3 +111,42 @@ class StudentQuestion(models.Model):
 
     def __str__(self):
         return f'{self.question}, {self.group}'
+
+
+class ClassesTimetable(models.Model):
+    WEEKDAY = (
+        ('Понедельник', 'Понедельник'),
+        ('Вторник', 'Вторник'),
+        ('Среда', 'Среда'),
+        ('Четверг', 'Четверг'),
+        ('Пятница', 'Пятница'),
+        ('Суббота', 'Суббота'),
+        ('Воскресенье', 'Воскресенье'),
+    )
+    teacher = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Учитель',
+        related_name='timelesson',
+    )
+    group = models.ForeignKey(
+        'LearnGroup',
+        on_delete=models.CASCADE,
+        verbose_name='Группа обучения',
+        related_name='classtime',
+    )
+    weekday = models.CharField(
+        max_length=64,
+        choices=WEEKDAY,
+        default='Понедельник',
+        verbose_name='День недели',
+    )
+    time_lesson = models.TimeField(verbose_name='Время')
+    duration = models.TimeField(verbose_name='Продолжительность', default='1:00:00')
+
+    class Meta:
+        verbose_name = 'Время занятия'
+        verbose_name_plural = 'Время занятий'
+
+    def __str__(self):
+        return f'{self.group}, {self.weekday}-{self.time_lesson}'
