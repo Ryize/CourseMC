@@ -3,11 +3,14 @@ from __future__ import unicode_literals
 
 from django.contrib import admin
 
-# Register your models here.
-from . import models
+from .models import TodoListUser, TodoListGroup, Category
 
 
-class TodoListAdmin(admin.ModelAdmin):
+class TodoListUserAdmin(admin.ModelAdmin):
+    list_display = ("title", "created_at", "due_date",)
+
+
+class TodoListGroupAdmin(admin.ModelAdmin):
     list_display = ("title", "created_at", "due_date",)
 
 
@@ -15,5 +18,6 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ("title",)
 
 
-admin.site.register(models.TodoList, TodoListAdmin)
-admin.site.register(models.Category, CategoryAdmin)
+admin.site.register(TodoListUser, TodoListUserAdmin)
+admin.site.register(TodoListGroup, TodoListGroupAdmin)
+admin.site.register(Category, CategoryAdmin)

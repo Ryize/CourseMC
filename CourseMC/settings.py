@@ -56,9 +56,11 @@ INSTALLED_APPS = [
     "py_interpreter.apps.PyInterpreterConfig",
     'todolist.apps.TodolistConfig',
     'chatgpt.apps.ChatgptConfig',
+    'security.apps.SecurityConfig'
 ]
 
 MIDDLEWARE = [
+    "CourseMC.middleware.FilterIPMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -66,6 +68,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "CourseMC.middleware.LastSessionMiddleware",
+    "CourseMC.middleware.IPVisitorsMiddleware",
 ]
 
 ROOT_URLCONF = "CourseMC.urls"

@@ -23,7 +23,8 @@ class Student(models.Model):
         related_name='students',
     )
     is_learned = models.BooleanField(default=False, verbose_name='Учащийся')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Зарегестрирован')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Зарегистрирован')
+    last_session = models.DateTimeField(auto_now_add=True, verbose_name='Последний сеанс')
 
     class Meta:
         verbose_name = 'Ученик'

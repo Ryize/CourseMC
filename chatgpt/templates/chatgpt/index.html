@@ -565,9 +565,10 @@ def a(num1: float, num2: float):
         if (!event.shiftKey && event.keyCode == 13) {
             textarea = document.getElementsByName('text')[0]
             node = document.getElementById('chat')
+            text = textarea.value.replaceAll(' ', '&nbsp;').replaceAll('\n', '<br>')
             node.innerHTML = `<li class="chat-right">
                                         <div class="chat-hour"><span class="fa fa-check-circle"></span></div>
-                                        <div class="chat-text">${textarea.value}
+                                        <div class="chat-text">${text}
                                         </div>
                                         <div class="chat-avatar">
                                             <img src="https://www.bootdey.com/img/Content/avatar/avatar5.png"

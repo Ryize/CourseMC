@@ -1,8 +1,8 @@
 /* basic reset */
 *, *:before, *:after {
     -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 /* app */
@@ -12,16 +12,17 @@ html {
 
 body {
     background: #b1f6cb;
-    font-family: 'Open Sans',sans-serif;
+    font-family: 'Open Sans', sans-serif;
 }
+
 /* super basic grid structure */
 .container {
     width: 600px;
     margin: 0 auto;
     background: #ffffff;
     padding: 20px 0;
-    -webkit-box-shadow: 0 0 2px rgba(0,0,0,0.2);
-            box-shadow: 0 0 2px rgba(0,0,0,0.2);
+    -webkit-box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
 }
 
 .row {
@@ -48,7 +49,7 @@ h1 {
     color: #666;
     text-align: center;
     font-weight: 400;
-    margin: 0;
+    margin-bottom: 5px;
 }
 
 .tagline {
@@ -58,7 +59,7 @@ h1 {
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
-    color: #777; 
+    color: #777;
 }
 
 /* inputs */
@@ -95,7 +96,7 @@ input[type="date"], input[type="text"], select {
     font-weight: 600;
     letter-spacing: 0.5px;
     -webkit-transition: background 0.3s;
-            transition: background 0.3s;
+    transition: background 0.3s;
 }
 
 input[type="date"] {
@@ -111,18 +112,21 @@ input[type="date"]:focus, input[type="text"]:focus, select:focus {
     color: lightgrey;
     font-weight: normal;
     -webkit-transition: all 0.3s;
-            transition: all 0.3s;
+    transition: all 0.3s;
 }
+
 ::-moz-placeholder {
     color: lightgrey;
     font-weight: normal;
     transition: all 0.3s;
 }
+
 ::-ms-input-placeholder {
     color: lightgrey;
     font-weight: normal;
     transition: all 0.3s;
 }
+
 input:-moz-placeholder {
     color: lightgrey;
     font-weight: normal;
@@ -216,7 +220,7 @@ button {
 }
 
 .complete-true {
-    text-decoration:  line-through;
+    text-decoration: line-through;
     color: #bebebe;
 }
 
@@ -285,12 +289,13 @@ footer {
 footer a {
     color: #f39c12;
 }
+
 /* custom checkboxes */
 .taskCheckbox {
     -webkit-appearance: none;
-            appearance: none;
+    appearance: none;
     -webkit-transition: all 0.3s;
-            transition: all 0.3s;
+    transition: all 0.3s;
     display: inline-block;
     cursor: pointer;
     width: 19px;
@@ -307,7 +312,7 @@ footer a {
     color: #444;
     font-size: 20px;
     -webkit-transition: all 0.3s;
-            transition: all 0.3s;
+    transition: all 0.3s;
 
 }
 
@@ -319,10 +324,11 @@ footer a {
     content: '\f14a';
     color: #16a085;
 }
+
 /* custom select menu */
 .taskCategory {
     -webkit-appearance: none;
-            appearance: none;
+    appearance: none;
     cursor: pointer;
     padding-left: 16.5px; /*specific positioning due to difficult behavior of select element*/
     background: #fff;
