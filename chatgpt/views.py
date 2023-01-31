@@ -47,12 +47,6 @@ def send_request_api(request):
 
 class ChatGPT:
     __api_keys = (
-        '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',
-        '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',
-        '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',
-        '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',
-        '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',
-        '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',
     )
 
     def __init__(self):
