@@ -56,7 +56,8 @@ INSTALLED_APPS = [
     "py_interpreter.apps.PyInterpreterConfig",
     'todolist.apps.TodolistConfig',
     'chatgpt.apps.ChatgptConfig',
-    'security.apps.SecurityConfig'
+    'security.apps.SecurityConfig',
+    'billing.apps.BillingConfig',
 ]
 
 MIDDLEWARE = [

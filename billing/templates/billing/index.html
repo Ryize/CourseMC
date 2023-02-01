@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>M&C - Оплата занятий</title>
+    <!-- Bootstrap CSS (jsDelivr CDN) -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<body class='p-0'>
+{% include 'template/header.html' %}
+{% include 'template/flash_message.html' %}
+{% include 'template/base_head.html' %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.1/css/bootstrap.min.css"
+      integrity="sha512-T584yQ/tdRR5QwOpfvDfVQUidzfgc2339Lc8uBDtcp/wYu80d7jwBgAxbyMh0a9YM9F8N3tdErpFI8iaGx6x5g=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<!-- jQuery (Cloudflare CDN) -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+        integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!-- Bootstrap Bundle JS (Cloudflare CDN) -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.1/js/bootstrap.min.js"
+        integrity="sha512-UR25UO94eTnCVwjbXozyeVd6ZqpaAE9naiEUBK/A+QDbfSTQFhPGj5lOR6d8tsgbBk84Ggb5A3EkjsOgPRPcKA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<style>
+    #myInput {
+        background-image: url('https://free-png.ru/wp-content/uploads/2021/07/free-png.ru-44-700x700.png');
+        background-size: 6%;
+        background-position: 10px 12px;
+        background-repeat: no-repeat;
+        width: 100%;
+        font-size: 16px;
+        padding: 12px 20px 12px 50px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        margin-bottom: 12px;
+    }
+
+    td {
+        margin-left: 8px;
+        font-weight: normal;
+        font-size: 110%;
+        text-align: justify;
+        margin-right: 3px;
+        margin-top: 0px;
+        text-indent: 6px;
+        margin: 0px;
+        padding-bottom: 1px;
+        padding-left: 4px;
+        padding-right: 4px;
+        padding-top: 1px;
+        color: #003300
+    }
+
+    a {
+        cursor: pointer;
+        font-size: 115%;
+    }
+
+    #filter-text:hover {
+        text-decoration: underline;
+        font-size: 122%;
+    }
+
+    #filter-form {
+        display: none;
+        padding: 50px;
+    }
+
+    .checkbox.style-e {
+        display: inline-block;
+        position: relative;
+        padding-left: 50px;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    .checkbox.style-e input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+
+    .checkbox.style-e input:checked ~ .checkbox__checkmark {
+        background-color: #f7cb15;
+    }
+
+    .checkbox.style-e input:checked ~ .checkbox__checkmark:after {
+        left: 21px;
+    }
+
+    .checkbox.style-e:hover input ~ .checkbox__checkmark {
+        background-color: #eee;
+    }
+
+    .checkbox.style-e:hover input:checked ~ .checkbox__checkmark {
+        background-color: #f7cb15;
+    }
+
+    .checkbox.style-e .checkbox__checkmark {
+        position: absolute;
+        top: 1px;
+        left: 0;
+        height: 22px;
+        width: 40px;
+        background-color: #eee;
+        transition: background-color 0.25s ease;
+        border-radius: 11px;
+    }
+
+    .checkbox.style-e .checkbox__checkmark:after {
+        content: "";
+        position: absolute;
+        left: 3px;
+        top: 3px;
+        width: 16px;
+        height: 16px;
+        display: block;
+        background-color: #fff;
+        border-radius: 50%;
+        transition: left 0.25s ease;
+    }
+
+    .checkbox.style-e .checkbox__body {
+        color: #333;
+        line-height: 1.4;
+        font-size: 16px;
+        transition: color 0.25s ease;
+    }
+
+    .underline-one {
+    {#color: #00bfff; /* Цвет обычной ссылки */#} position: relative;
+        cursor: pointer;
+        text-decoration: none; /* Убираем подчеркивание */
+    }
+
+    .underline-one:after {
+        content: "";
+        display: block;
+        position: absolute;
+        right: 0;
+        bottom: -3px;
+        width: 0;
+        height: 2px; /* Высота линии */
+        background-color: black; /* Цвет подчеркивания при исчезании линии*/
+        transition: width 0.5s; /* Время эффекта */
+    }
+
+    .underline-one:hover:after {
+        content: "";
+        width: 100%;
+        display: block;
+        position: absolute;
+        left: 0;
+        bottom: -3px;
+        height: 2px; /* Высота линии */
+        background-color: red; /* Цвет подчеркивания при появлении линии*/
+        transition: width 0.5s; /* Время эффекта */
+    }
+
+    a:hover {
+        text-decoration: none;
+    }
+
+</style>
+
+<center>
+    <h1>
+        Оплатить занятия
+    </h1>
+    <h5>
+        *Сумма к оплате генерируется автоматически. Если вы с ней не согласны, сообщите учителю.
+    </h5>
+    <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3"></div>
+        <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
+            <table class="table table-hover table-bordered" style="margin-top: 1%;">
+                <tbody>
+                <tr>
+                    <th scope="row">Кол-во уроков</th>
+                    <td>{{ amount_classes }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Стоимость урока</th>
+                    <td>{{ lesson_price }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Итого</th>
+                    <td>
+                        <b>{{ oa }}</b>
+                        <br>
+                        <form method='get' action='https://pay.freekassa.ru/'>
+                            <input type='hidden' name='m' value={{ m }}>
+                            <input type='hidden' name='oa' value={{ oa }}>
+                            <input type='hidden' name='o' value={{ o }}>
+                            <input type='hidden' name='s' value={{ s }}>
+                            <input type='hidden' name='currency' value={{ currency }}>
+                            <input type='hidden' name='lang' value='ru'>
+                                <input type='submit' name='pay' value='Оплатить'>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</center>
+<br>
+<hr>
+<br>
+<center><h2>Предыдущие оплаты</h2></center>
+<table class="table table-hover table-bordered" style="margin-top: 1%;">
+    <thead>
+    <tr>
+        <th scope="col">#</th>
+        <th scope="col">Сумма</th>
+        <th scope="col">Дата и время</th>
+        <th scope="col">Причина</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for billing in billings %}
+        <tr>
+            <th scope="row">{{ forloop.counter }}</th>
+            <td>{{ billing.amount }}</td>
+            <td style="width: 20%;">{{ billing.datetime }}</td>
+            <td style="width: 50%;">{{ billing.reason }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<nav aria-label="Page navigation example">
+    {% if is_paginated %}
+        {% if page_obj.has_other_pages %}
+            <style>
+                #pag {
+                    margin-top: 75px;
+                    height: 100%;
+                }
+            </style>
+            <nav aria-label="Navigation panel" id="pag">
+                <ul class="pagination justify-content-center">
+
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" tabindex="-1">Предыдущая
+                                страница</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1">Предыдущая страница</a>
+                        </li>
+                    {% endif %}
+                    {% for p in page_obj.paginator.page_range %}
+
+                        {% if forloop.first and p < page_obj.number|add:-3 %}
+                            <li class="page-item"><a class="page-link" href="?page=1">1</a>
+                            <li class="page-item"><a class="page-link">...</a></li>
+                        {% endif %}
+
+                        {% if p >= page_obj.number|add:-3 and p <= page_obj.number|add:3 %}
+                            <li class="page-item{% if p != page_obj.number %}{% else %} active{% endif %}"><a
+                                    class="page-link"
+                                    href="?page={{ p }}">{{ p }}</a>
+                            </li>
+
+                        {% endif %}
+
+                        {% if forloop.last and p > page_obj.number|add:3 %}
+                            <li class="page-item"><a class="page-link">...</a></li>
+                            <li class="page-item">
+                            <a class="page-link" href="?page={{ paginator.num_pages }}">{{ paginator.num_pages }}</a>
+                        {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Следующая страница</a>
+
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#">Следующая страница</a>
+                        </li>
+                    {% endif %}
+
+                </ul>
+            </nav>
+        {% endif %}
+    {% endif %}
+</nav>
+<script>
+    function changeFilterVisible() {
+        filter = document.getElementById('filter-form');
+        if (getComputedStyle(filter).display === 'none') {
+            filter.style.display = 'block';
+        } else {
+            filter.style.display = 'none';
+        }
+    }
+</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<script>
+    function ask_question() {
+        $.ajax({
+            data:
+                {
+                    question: document.getElementById('message-text').value
+                },
+            url: "{% url 'ask_question' %}",
+
+            success: function (response) {
+                $('#exampleModal').modal('hide');
+                if (response.is_taken === true) {
+                    showMessage('Ваш вопрос успешно сохранён!', 'info')
+                } else {
+                    showMessage('Вы не ввели вопрос!', 'error')
+                }
+            },
+
+            error: function (response) {
+                showMessage('Вы не ввели вопрос!', 'error')
+            }
+        });
+        return false;
+    }
+
+    function showMessage(text, code) {
+        const ul = document.getElementById('messages-list')
+        const li = document.createElement('li')
+        const div = document.createElement('div')
+        div.textContent = text
+        div.classList = 'alert alert-' + code + ' msg fade show'
+        div.role = 'alert'
+        li.appendChild(div)
+        ul.appendChild(li)
+        fade_alerts()
+    }
+
+    function superButtonMagic() {
+        // создаем AJAX-вызов
+        $.ajax({
+            data: $(this).serialize(), // получаяем данные формы
+            url: "{% url 'get_filter_data' %}",
+            // если успешно, то
+            success: function (response) {
+                if (response.code === 'OK') {
+                    element = document.getElementById('super-button')
+                    element.innerText = response.answer
+                } else {
+                    alert('Произошла ошибка!')
+                }
+            },
+            // если ошибка, то
+            error: function (response) {
+                // предупредим об ошибке
+                console.log(response.responseJSON.errors)
+            }
+        });
+        return false;
+    }
+</script>
+</body>
+</html>

@@ -18,6 +18,7 @@ urlpatterns = [
     path("interpreter/", include("py_interpreter.urls")),
     path('todo/', include("todolist.urls"), name="TodoList"),
     path('chatgpt/', include("chatgpt.urls")),
+    path("billing/", include("billing.urls")),
     path("<path:url>/", page_not_found_view),
     path("<path:url>", page_not_found_view),
 ]
