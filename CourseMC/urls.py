@@ -15,15 +15,15 @@ urlpatterns = [
     path("reviews/", include("reviews.urls")),
     path("questionnaire/", include("questionnaire.urls")),
     path("blog/", include("blog.urls")),
-    path("interpreter/", include("py_interpreter.urls")),
-    path('todo/', include("todolist.urls"), name="TodoList"),
+    path('interpreter/', include("py_interpreter.urls")),
     path('chatgpt/', include("chatgpt.urls")),
     path("billing/", include("billing.urls")),
     path("<path:url>/", page_not_found_view),
-    path("<path:url>", page_not_found_view),
+    # path("<path:url>", page_not_found_view),
 ]
 
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns += staticfiles_urlpatterns()
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns.append(path("<path:url>", page_not_found_view))

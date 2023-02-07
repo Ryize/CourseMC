@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
-from django.db.models import F, Count
 
 from chatgpt.models import RequestsGPT
 

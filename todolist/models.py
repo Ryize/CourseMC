@@ -48,5 +48,5 @@ class TodoListGroup(TodoList):
 categories = ['работа', 'активность', 'сроки', 'события', 'платежи',
               'проекты', 'дела', 'встречи', 'учёба', 'проект']
 
-for category in categories:
-    Category.objects.get_or_create(title=category.title())
+# for category in categories:
+#     Category.objects.get_or_create(title=category.title())

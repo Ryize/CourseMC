@@ -15,7 +15,7 @@ class PersonAdmin(admin.ModelAdmin):
         'password',
         'groups',
         'is_learned',
-        'last_session',
+        # 'last_session',
         'created_at',
     )
     list_display = (
@@ -24,20 +24,20 @@ class PersonAdmin(admin.ModelAdmin):
         'contact',
         'groups',
         'is_learned',
-        'last_session',
+        # 'last_session',
     )
     list_display_links = (
         'id',
         'name',
         'groups',
         'contact',
-        'last_session',
+        # 'last_session',
     )
     list_filter = (
         'groups',
         'is_learned',
     )
-    readonly_fields = ('created_at', 'last_session',)
+    readonly_fields = ('created_at',)
     empty_value_display = '-пустой-'
     list_per_page = 64
     list_max_show_all = 8

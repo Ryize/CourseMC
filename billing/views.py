@@ -1,14 +1,14 @@
-import calendar
-import datetime
 import hashlib
 
 from django.contrib.auth import get_user
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import redirect
+from django.shortcuts import render
 from django.views.generic import ListView
 
-from Course.models import Student, LearnGroup, ClassesTimetable
-from billing.models import InformationPayments, EducationCost
+from Course.models import Student
+from billing.count_bill_logic import get_lesson_data
+from billing.models import InformationPayments
 
 
 class BillingView(LoginRequiredMixin, ListView):
@@ -41,10 +41,10 @@ class BillingView(LoginRequiredMixin, ListView):
         student = Student.objects.filter(name=get_user(self.request).username).first()
         billings = InformationPayments.objects.filter(
             user=student,
-        ).all()
+        ).order_by('-datetime').all()
         context['billings'] = billings
-        merchant_id = ''
-        secret_word = ''
+        merchant_id = '28649'
+        secret_word = '.d36f=0&s7?QX-a'
         order_id = f'{get_user(self.request).pk}'
 
         lesson_price, amount_classes, cost_classes = get_lesson_data(self.request)
@@ -60,6 +60,7 @@ class BillingView(LoginRequiredMixin, ListView):
         context['currency'] = currency
         context['lesson_price'] = lesson_price
         context['amount_classes'] = amount_classes
+        print(self.request.META.get('HTTP_HOST'))
         return context
 
     def dispatch(self, request, *args, **kwargs):
@@ -76,11 +77,11 @@ class BillingView(LoginRequiredMixin, ListView):
         Returns:
             bool: можно/нет зайти на страницу (через родительский dispatch).
         """
-        student = Student.objects.filter(
-            name=get_user(self.request).username, is_learned=True,
-        ).first()
-        if not student:
-            return redirect('home')
+        # student = Student.objects.filter(
+        #     name=get_user(self.request).username, is_learned=True,
+        # ).first()
+        # if not student:
+        #     return redirect('home')
         return super().dispatch(request, *args, **kwargs)
 
     def _get_param(self, name: str) -> str:
@@ -98,47 +99,14 @@ class BillingView(LoginRequiredMixin, ListView):
         return self.request.GET.get(name)
 
 
-def weekday_count(start, end):
-    start_date = datetime.datetime.strptime(start, '%Y-%m-%d')
-    end_date = datetime.datetime.strptime(end, '%Y-%m-%d')
-    week = {}
-    weekdays_russian = ('Понедельник',
-                        'Вторник',
-                        'Среда',
-                        'Четверг',
-                        'Пятница',
-                        'Суббота',
-                        'Воскресенье',
-                        )
-    weekdays_english = ('Monday',
-                        'Tuesday',
-                        'Wednesday',
-                        'Thursday',
-                        'Friday',
-                        'Saturday',
-                        'Sunday',
-                        )
-    week_russian = {en: rus for en, rus in zip(weekdays_english, weekdays_russian)}
-    for i in range((end_date - start_date).days):
-        day = calendar.day_name[(start_date + datetime.timedelta(days=i + 1)).weekday()]
-        week[week_russian[day]] = week[day] + 1 if day in week else 1
-    return week
+@login_required
+def billing_success(request):
+    _, _, amount = get_lesson_data(request)
+    student = Student.objects.filter(name=request.user.username).first()
+    InformationPayments.objects.create(user=student, amount=amount)
+    return render(request, 'billing/success.html')
 
 
-def get_lesson_data(request):
-    lesson_price = EducationCost.objects.filter(user__name=get_user(request).username).first().amount
-    last_pay = str(InformationPayments.objects.filter(
-        user__name=get_user(request).username
-    ).last().datetime).split()[0]
-    current_date = str(datetime.datetime.now()).split()[0]
-    dates = weekday_count(last_pay, current_date)
-    student = Student.objects.filter(name=get_user(request).username).first()
-    timetable = ClassesTimetable.objects.filter(group=student.groups).values('weekday').all()
-    weekdays = set(map(lambda i: i['weekday'], timetable))
-    cost_classes = 0
-    amount_occupations = 0
-    for weekday in weekdays:
-        if dates.get(weekday):
-            cost_classes += dates[weekday] * lesson_price
-            amount_occupations += dates[weekday]
-    return lesson_price, amount_occupations, cost_classes
+@login_required
+def billing_fail(request):
+    return render(request, 'billing/fail.html')

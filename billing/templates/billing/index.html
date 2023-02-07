@@ -174,7 +174,7 @@
         Оплатить занятия
     </h1>
     <h5>
-        *Сумма к оплате генерируется автоматически. Если вы с ней не согласны, сообщите учителю.
+        *Сумма к оплате генерируется автоматически. Если вы с ней не согласны сообщите учителю.
     </h5>
     <div class="row">
         <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3"></div>
@@ -193,16 +193,18 @@
                     <th scope="row">Итого</th>
                     <td>
                         <b>{{ oa }}</b>
-                        <br>
-                        <form method='get' action='https://pay.freekassa.ru/'>
-                            <input type='hidden' name='m' value={{ m }}>
-                            <input type='hidden' name='oa' value={{ oa }}>
-                            <input type='hidden' name='o' value={{ o }}>
-                            <input type='hidden' name='s' value={{ s }}>
-                            <input type='hidden' name='currency' value={{ currency }}>
-                            <input type='hidden' name='lang' value='ru'>
+                        {% if oa > '0' %}
+                            <br>
+                            <form method='get' action='https://pay.freekassa.ru/'>
+                                <input type='hidden' name='m' value={{ m }}>
+                                <input type='hidden' name='oa' value={{ oa }}>
+                                <input type='hidden' name='o' value={{ o }}>
+                                <input type='hidden' name='s' value={{ s }}>
+                                <input type='hidden' name='currency' value={{ currency }}>
+                                <input type='hidden' name='lang' value='ru'>
                                 <input type='submit' name='pay' value='Оплатить'>
-                        </form>
+                            </form>
+                        {% endif %}
                     </td>
                 </tr>
                 </tbody>
@@ -220,7 +222,6 @@
         <th scope="col">#</th>
         <th scope="col">Сумма</th>
         <th scope="col">Дата и время</th>
-        <th scope="col">Причина</th>
     </tr>
     </thead>
     <tbody>
@@ -229,7 +230,6 @@
             <th scope="row">{{ forloop.counter }}</th>
             <td>{{ billing.amount }}</td>
             <td style="width: 20%;">{{ billing.datetime }}</td>
-            <td style="width: 50%;">{{ billing.reason }}</td>
         </tr>
     {% endfor %}
     </tbody>

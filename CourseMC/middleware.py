@@ -9,16 +9,16 @@ class LastSessionMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
-    def __call__(self, request):
-
-        response = self.get_response(request)
-        if request.user.is_authenticated:
-            student = Student.objects.filter(name=request.user.username).first()
-            if student:
-                student.last_session = timezone.now()
-                student.save()
-
-        return response
+    # def __call__(self, request):
+    #
+    #     response = self.get_response(request)
+    #     # if request.user.is_authenticated:
+    #     #     student = Student.objects.filter(name=request.user.username).first()
+    #     #     if student:
+    #     #         student.last_session = timezone.now()
+    #     #         student.save()
+    #
+    #     return response
 
 
 class IPVisitorsMiddleware:
