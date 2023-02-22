@@ -1,14 +1,17 @@
+import calendar
+import datetime
 import hashlib
 
 from django.contrib.auth import get_user
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic import ListView
+from django.http import HttpRequest
 
-from Course.models import Student
+from Course.models import Student, LearnGroup, ClassesTimetable
+from billing.models import InformationPayments, EducationCost
 from billing.count_bill_logic import get_lesson_data
-from billing.models import InformationPayments
 
 
 class BillingView(LoginRequiredMixin, ListView):
@@ -60,7 +63,7 @@ class BillingView(LoginRequiredMixin, ListView):
         context['currency'] = currency
         context['lesson_price'] = lesson_price
         context['amount_classes'] = amount_classes
-        print(self.request.META.get('HTTP_HOST'))
+        context['us_pk'] = get_user(self.request).pk
         return context
 
     def dispatch(self, request, *args, **kwargs):
@@ -102,6 +105,8 @@ class BillingView(LoginRequiredMixin, ListView):
 @login_required
 def billing_success(request):
     _, _, amount = get_lesson_data(request)
+    if amount == 0:
+        return redirect('home')
     student = Student.objects.filter(name=request.user.username).first()
     InformationPayments.objects.create(user=student, amount=amount)
     return render(request, 'billing/success.html')

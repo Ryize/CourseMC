@@ -30,7 +30,7 @@ LOGIN_REDIRECT_URL = "/"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["coursemc.space", "www.coursemc.space", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["coursemc.ru", "www.coursemc.ru", "localhost", "127.0.0.1"]
 
 # Application definition
 
@@ -53,15 +53,15 @@ INSTALLED_APPS = [
     "Course.apps.AuthConfig",
     "questionnaire.apps.QuestionnaireConfig",
     "blog.apps.BlogConfig",
-    "py_interpreter.apps.PyInterpreterConfig",
-    # 'todolist.apps.TodolistConfig',
+    'py_interpreter.apps.PyInterpreterConfig',
     'chatgpt.apps.ChatgptConfig',
     'security.apps.SecurityConfig',
     'billing.apps.BillingConfig',
+    'todolist.apps.TodolistConfig',
 ]
 
 MIDDLEWARE = [
-    # "CourseMC.middleware.FilterIPMiddleware",
+    "CourseMC.middleware.FilterIPMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -69,8 +69,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    # "CourseMC.middleware.LastSessionMiddleware",
-    # "CourseMC.middleware.IPVisitorsMiddleware",
+    "CourseMC.middleware.LastSessionMiddleware",
+    "CourseMC.middleware.IPVisitorsMiddleware",
 ]
 
 ROOT_URLCONF = "CourseMC.urls"

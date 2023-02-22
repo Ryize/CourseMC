@@ -23,8 +23,7 @@ class Student(models.Model):
         related_name='students',
     )
     is_learned = models.BooleanField(default=False, verbose_name='Учащийся')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Зарегистрирован')
-    # last_session = models.DateTimeField(auto_now_add=True, verbose_name='Последний сеанс', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Зарегестрирован')
 
     class Meta:
         verbose_name = 'Ученик'
@@ -151,3 +150,25 @@ class ClassesTimetable(models.Model):
 
     def __str__(self):
         return f'{self.group}, {self.weekday}-{self.time_lesson}'
+
+
+class ApplicationsForTraining(models.Model):
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,
+        verbose_name='Ученик',
+        related_name='app_training',
+    )
+    ip = models.GenericIPAddressField(verbose_name='IP')
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name='Оставлена',
+    )
+    descry = models.BooleanField(default=False, verbose_name='Рассмотрена')
+
+    class Meta:
+        verbose_name = 'Заявка на обучение'
+        verbose_name_plural = 'Заявки на обучение'
+        ordering = ('descry',)
+
+    def __str__(self):
+        return f'{self.student}, {self.descry}'

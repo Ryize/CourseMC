@@ -4,6 +4,7 @@ from .views import *
 
 urlpatterns = [
     path("", BillingView.as_view(), name="billing_index"),
-    path("success/", BillingView.as_view(), name="billing_success"),
-    path("fail/", BillingView.as_view(), name="billing_fail"),
+    # path("check_billing/", check_billing, name="check_billing"),
+    path("success/", billing_success, name="billing_success"),
+    path("fail/", billing_success, name="billing_fail"),
 ]

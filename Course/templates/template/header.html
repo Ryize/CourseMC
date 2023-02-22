@@ -59,9 +59,12 @@
 
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
                     <li><a class="dropdown-item underline-one" href="{% url 'blog_home' %}">Твои Статьи</a></li>
+                    <li><a class="dropdown-item underline-one" href="{% url 'todo' %}">Твои Напоминания</a></li>
                     <li><a class="dropdown-item underline-one" href="{% url 'questionnaireIndex' %}">Твой Опросник</a>
                     </li>
+                    <li><a class="dropdown-item underline-one" href="{% url 'gpt_home' %}">Твой Помощник</a>
                     <li><a class="dropdown-item underline-one" href="{% url 'py_interpreter' %}">Твой Интерпретатор</a>
+                    </li>
                     </li>
                 </ul>
 
@@ -95,6 +98,10 @@
                            target="_blank">Телеграм</a></li>
                     <li><a class="dropdown-item underline-one" href="https://github.com/Ryize"
                            target="_blank">GitHub</a></li>
+                           {% if user.is_staff %}
+<li><a class="dropdown-item underline-one" href="{% url 'admin:index' %}"
+                           target="_blank">Настройки</a></li>
+            {% endif %}
                 </ul>
             </label>
             <a class="nav-item nav-link active underline-one"
@@ -102,6 +109,7 @@
             {% if user.is_staff %}
                 <a class="nav-item nav-link active underline-one"
                    href="{% url 'create_group' %}">Группы</a>
+                   <a href="{% url 'admin:index' %}" class="nav-link active nav-item underline-one">Настройки</a>
             {% endif %}
         </div>
         <div class="collapse navbar-collapse justify-content-end" id="navbarCollapse">

@@ -47,11 +47,10 @@ class QuestionForm(ModelForm):
 
 
 class AnswerForm(ModelForm):
-    def __init__(self, request, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        poll = Quiz.objects.filter(user=request.user).last()
         self.fields["question"].empty_label = "Не выбрано!"
-        self.fields["question"].queryset = self.fields["question"].queryset.filter(quiz=poll).order_by(
+        self.fields["question"].queryset = self.fields["question"].queryset.order_by(
             "-pk"
         )
 

@@ -18,7 +18,7 @@ class Post(models.Model):
         upload_to="uploads/blog/%Y/%m/%d",
         default="uploads/blog/default.jpeg",
         verbose_name="Изображение",
-        null=True,
+        null=False,
     )
     is_displayed = models.BooleanField(default=False, verbose_name="Отображается")
     categories = models.ManyToManyField(

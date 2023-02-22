@@ -15,7 +15,6 @@ class PersonAdmin(admin.ModelAdmin):
         'password',
         'groups',
         'is_learned',
-        # 'last_session',
         'created_at',
     )
     list_display = (
@@ -24,14 +23,12 @@ class PersonAdmin(admin.ModelAdmin):
         'contact',
         'groups',
         'is_learned',
-        # 'last_session',
     )
     list_display_links = (
         'id',
         'name',
         'groups',
         'contact',
-        # 'last_session',
     )
     list_filter = (
         'groups',
@@ -180,19 +177,7 @@ class ClassesTimetableAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         if request.user.is_superuser:
             return ClassesTimetable.objects.all()
-        return ClassesTimetable.objects.filter(teacher__username=request.user.username).all()
-
-    def _order_func(self, i):
-        date = {
-            'Понедельник': 1,
-            'Вторник': 2,
-            'Среда': 3,
-            'Четверг': 4,
-            'Пятница': 5,
-            'Суббота': 6,
-            'Воскресенье': 7,
-        }
-        return date[i.weekday]
+        return ClassesTimetable.objects.filter(teacher__username=request.user.username)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "teacher":
@@ -213,3 +198,29 @@ class ClassesTimetableAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return ('teacher',) + list_display
         return list_display
+
+
+@admin.register(ApplicationsForTraining)
+class ApplicationsForTrainingAdmin(admin.ModelAdmin):
+    fields = (
+        'student',
+        'created_at',
+        'descry',
+    )
+    list_display = (
+        'student',
+        'created_at',
+        'descry',
+    )
+    list_display_links = (
+        'student',
+        'created_at',
+    )
+    list_filter = (
+        'descry',
+    )
+    readonly_fields = ('created_at',)
+    empty_value_display = 'не указанно'
+    list_editable = ('descry',)
+    list_per_page = 64
+    list_max_show_all = 8

@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 
-from billing.count_bill_logic import get_lesson_data
 from billing.models import InformationPayments, EducationCost
+from billing.count_bill_logic import get_lesson_data
 
 
 class UserListFilter(admin.SimpleListFilter):
@@ -59,7 +59,7 @@ class EducationCostAdmin(admin.ModelAdmin):
     empty_value_display = '-пустой-'
     list_per_page = 64
     list_max_show_all = 8
-
+    
     def should(self, obj):
         user = User.objects.filter(username=obj.user.name).first()
         if user:
@@ -68,7 +68,8 @@ class EducationCostAdmin(admin.ModelAdmin):
             ).first()
             if last_pay:
                 _, _, cost_classes = get_lesson_data(None, user=user)
-                return cost_classes
+                if cost_classes > 0:
+                    return cost_classes
 
     should.short_description = 'Должен'
     should.empty_value_display = 'Оплатил'

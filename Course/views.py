@@ -16,7 +16,7 @@ from django.views.generic.edit import FormView
 
 from Course.doc import docx_worker, save_report
 from Course.forms import StudentForm
-from Course.models import LearnGroup, Schedule, Student, StudentQuestion
+from Course.models import LearnGroup, Schedule, Student, StudentQuestion, ApplicationsForTraining
 from Course.report import get_content_disposition, get_content_type
 from reviews.models import Review
 
@@ -38,7 +38,7 @@ class StudentRecordView(FormView):
     form_class = StudentForm
     login_url = '/login/'
 
-    def form_valid(self, form: StudentForm) -> JsonResponse:
+    def form_valid(self, form: StudentForm):
         """
         Если форма валидна.
 
@@ -54,11 +54,19 @@ class StudentRecordView(FormView):
         Returns:
             JsonResponse: Json ответ со статусом успеха.
         """
-        form.save()
+        ip = self.request.META.get('REMOTE_ADDR')
+        if ApplicationsForTraining.objects.filter(ip=ip).first():
+            response = {
+                'success': False,
+                'error_message': 'Вы уже заполняли форму!',
+            }
+            return JsonResponse(response)
+        student = form.save()
         name = form.cleaned_data['name']
         email = form.cleaned_data['email']
         password = form.cleaned_data['password']
         user = User.objects.create_user(name, email, password)
+        ApplicationsForTraining.objects.create(student=student, ip=ip)
         user.save()
         response = {
             'success': True,
@@ -98,7 +106,9 @@ class StudentRecordView(FormView):
             dict: словарь с объектами моделей.
         """
         context = super().get_context_data(**kwargs)
+        ip = self.request.META.get('REMOTE_ADDR')
         context['reviews_count'] = Review.objects.all().count()
+        context['can_send_train'] = bool(ApplicationsForTraining.objects.filter(ip=ip).first())
         return context
 
 
@@ -347,7 +357,7 @@ def create_group(request):
     Для создания новой группы.
 
     Создаёт новую группу и заполняет расписаниями группы Вояджер.
-    У созданных раписаний параметр is_display равен False.
+    У созданных расписаний параметр is_display равен False.
 
     Args:
         request: стандартный параметр.

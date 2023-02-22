@@ -8,7 +8,7 @@
           integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 <body class='p-0'>
 {% include 'template/header.html' %}
-{% include 'template/flash_message.html' %}
+{% include 'template/flash_message.html'%}
 {% include 'template/base_head.html' %}
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.1/css/bootstrap.min.css"
@@ -408,7 +408,7 @@
         });
         return false;
     }
-
+    
     function showMessage(text, code) {
         const ul = document.getElementById('messages-list')
         const li = document.createElement('li')

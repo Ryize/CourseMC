@@ -234,7 +234,7 @@
                                     <div class="h5 d-inline-block"> месяцев обучения</div>
                                 </div>
                                 <div class="about_dop_info_line">
-                                    <div class="h2 d-inline-block about_dop_info_num">4 000 <b>₽</b></div>
+                                    <div class="h2 d-inline-block about_dop_info_num">6 000 <b>₽</b></div>
                                     <div class="h5 d-inline-block">в месяц</div>
                                 </div>
                             </div>
@@ -429,7 +429,7 @@
                     <div class="row z-middle">
                         <div class="form-payment-container col-md-6 col-lg-4">
                             <div itemprop="offers" itemscope="itemscope" itemtype="https://schema.org/Offer">
-                                <div itemprop="price" class="payment_price mb-0">от 20 000 <b>₽</b></div>
+                                <div itemprop="price" class="payment_price mb-0">от 30 000 <b>₽</b></div>
                                 <meta itemprop="priceCurrency" content="RUB">
                                 <div class='payment_price payment_price--old payment_price--noborder mb-0"'>
                                     за <b>весь</b> курс
@@ -438,7 +438,7 @@
                             <div class="clearfix"></div>
                             <div class="payment_price payment_price--confirm"></div>
                             <div class="clearfix"></div>
-                            <div class="payment_price mb-0">от 4 000 <b>₽</b></div>
+                            <div class="payment_price mb-0">от 6 000 <b>₽</b></div>
                             <div class="payment_price payment_price--old payment_price--noborder mb-0">
                                 /мес
                             </div>
@@ -450,13 +450,19 @@
                         <div class="payment-info col-md-6 col-lg-4">
                             <form data-type="online" method="post" class="form-enroll-course form-base"
                                   id="contactForm">
-                                <fieldset>
+                                <fieldset {% if can_send_train %}
+                                    disabled
+                                {% endif %}>
                                     {% csrf_token %}
                                     {{ form.as_p }}
                                     <div class="text-center"><input type="hidden" name="utm_source" value="yandex">
                                         <input type="button" name="signupSubmit" id="signupSubmit"
                                                class="btn btn-success btn-lg" value="Записаться"
-                                               onclick="sendUserdata()"/>
+                                               onclick="sendUserdata()"
+                                                {% if can_send_train %}
+                                               disabled
+                                                {% endif %}
+                                        />
                                     </div>
                                 </fieldset>
                             </form>
@@ -492,7 +498,13 @@
                                         // if not valid user, alert the user
                                         if (response["success"]) {
                                             alert("Спасибо за обращение, мы свяжемся с вами в ближайшее время!");
-                                            document.getElementById("signupSubmit").classList.add('disabled');
+                                            document.getElementById("id_name").disabled = "disabled";
+                                            document.getElementById("id_contact").disabled = "disabled";
+                                            document.getElementById("id_email").disabled = "disabled";
+                                            document.getElementById("id_password").disabled = "disabled";
+                                            el = document.getElementById("signupSubmit");
+                                            el.classList.add('disabled');
+                                            el.disabled = "disabled";
                                         } else {
                                             alert(response["error_message"]);
                                         }
@@ -500,7 +512,13 @@
                                     error: function (response) {
                                         if (response["success"]) {
                                             alert("Спасибо за обращение, мы свяжемся с вами в ближайшее время!");
-                                            document.getElementById("signupSubmit").classList.add('disabled');
+                                            document.getElementById("id_name").disabled = "disabled";
+                                            document.getElementById("id_contact").disabled = "disabled";
+                                            document.getElementById("id_email").disabled = "disabled";
+                                            document.getElementById("id_password").disabled = "disabled";
+                                            el = document.getElementById("signupSubmit");
+                                            el.classList.add('disabled');
+                                            el.disabled = "disabled";
                                         } else {
                                             alert(response["error_message"]);
                                         }
@@ -933,6 +951,7 @@
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
             <div id="emotionProff" class="mt-new-5 pt-new-25 mb-new-10 d-block bg_grey"

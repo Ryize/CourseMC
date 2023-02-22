@@ -2,15 +2,14 @@ from typing import Union
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseNotFound
+from django.http import (HttpResponseNotFound)
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 from django.views.generic import ListView
 
 from .forms import AnswerForm, QuestionForm, QuizForm
 from .models import (AnswerQuestion, PassedPolls, Question, Quiz, Rating,
                      UserAnswer)
-from .service import _check_poll_lifetime, get_standart_render, process_form
+from .service import process_form, _check_poll_lifetime, get_standart_render
 
 
 class QuizListView(ListView):
@@ -57,14 +56,14 @@ def create_poll(request):
         context = {"form": QuizForm()}
         return render(request, "questionnaire/create_poll.html", context)
     form = QuizForm(request.POST)
-    if not form.is_valid():
-        messages.error(request, "Хм, что-то не то!")
-        return redirect("create_poll")
-    form_with_user = form.save(commit=False)
-    form_with_user.user = request.user
-    form_with_user.save()
-    messages.success(request, "Вы успешно создали опрос!")
-    return redirect("create_question", form_with_user.pk)
+    if form.is_valid():
+        form_with_user = form.save(commit=False)
+        form_with_user.user = request.user
+        form_with_user.save()
+        messages.success(request, "Вы успешно создали опрос!")
+        return redirect("create_question", form_with_user.pk)
+    messages.error(request, "Хм, что-то не то!")
+    return redirect("create_poll")
 
 
 @login_required
@@ -82,7 +81,7 @@ def create_question(request, quiz_id):
 @login_required
 def create_answer(request):
     if request.method == "GET":
-        context = {"form": AnswerForm(request)}
+        context = {"form": AnswerForm()}
         return render(request, "questionnaire/create_answer.html", context)
     form = AnswerForm(request.POST)
     return process_form(
@@ -206,7 +205,7 @@ def rating(request, poll_id: int):
 
 
 def check_possibility_passing_poll(
-        request, poll: Quiz
+    request, poll: Quiz
 ) -> Union[Question, HttpResponseNotFound]:
     """
     Используется для проверки возможности пройти определённый опрос пользователем.
@@ -223,14 +222,3 @@ def check_possibility_passing_poll(
         if len(question.answers.all()) > 0:
             return question
     return HttpResponseNotFound("В этом опросе нет вопросов с ответами")
-
-
-@login_required
-def delete_quiz(request, poll_id: int):
-    quiz = Quiz.objects.filter(pk=poll_id).first()
-    if not quiz or quiz.user != request.user:
-        messages.error(request, f'Указанный опрос не найден или вы не его автор!')
-        return redirect(reverse('my_poll'))
-    quiz.delete()
-    messages.success(request, f'Вы успешно удалили опрос "{quiz.title}"')
-    return redirect(reverse('my_poll'))

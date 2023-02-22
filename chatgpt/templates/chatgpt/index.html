@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>M&C - ChatGPT</title>
+    <title>M&C - Твой Помощник</title>
     <!-- Bootstrap CSS (jsDelivr CDN) -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
           integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
@@ -409,7 +409,7 @@
         <div class="row gutters">
             <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
                 <br>
-                <h5 class="title">CourseMC - ChatGPT</h5>
+                <h5 class="title">Твой Помощник</h5>
             </div>
             <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12"></div>
         </div>
@@ -448,7 +448,7 @@
                                             <span class="status online"></span>
                                         </div>
                                         <p class="name-time">
-                                            <span class="name">ChatGPT</span>
+                                            <span class="name">Твой Помощник</span>
                                             <span class="time">30/11/2022</span>
                                         </p>
                                     </li>
@@ -457,7 +457,7 @@
                         </div>
                         <div class="col-xl-8 col-lg-8 col-md-8 col-sm-9 col-9">
                             <div class="selected-user">
-                                <span>To: <span class="name">ChatGPT</span></span>
+                                <span>To: <span class="name">YourHelper</span></span>
                             </div>
                             <div class="chat-container">
                                 <ul class="chat-box chatContainerScroll" id="chat">
@@ -538,7 +538,7 @@ def a(num1: float, num2: float):
                                                 data = JSON.parse(data)
                                                 if (data['success'] === true) {
                                                     alert('Ошибка!')
-                                                } else {
+                                                } else{
                                                     alert("Ошибка!")
                                                 }
                                             }
@@ -565,7 +565,7 @@ def a(num1: float, num2: float):
         if (!event.shiftKey && event.keyCode == 13) {
             textarea = document.getElementsByName('text')[0]
             node = document.getElementById('chat')
-            text = textarea.value.replaceAll(' ', '&nbsp;').replaceAll('\n', '<br>')
+            text = textarea.value.replaceAll(' ', '&nbsp;').replaceAll('\n', '<br>').replaceAll('\t', '    ')
             node.innerHTML = `<li class="chat-right">
                                         <div class="chat-hour"><span class="fa fa-check-circle"></span></div>
                                         <div class="chat-text">${text}

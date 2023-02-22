@@ -1,10 +1,10 @@
 from rest_framework import serializers
 
-from Course.models import LearnGroup, Schedule, Student, StudentQuestion, ClassesTimetable
+from Course.models import LearnGroup, Schedule, Student, StudentQuestion, ClassesTimetable, ApplicationsForTraining
 
 
 class ScheduleListSerializer(serializers.ModelSerializer):
-    """Список всех расписаний"""
+    """ Список всех расписаний. """
 
     def create(self, validated_data):
         a = validated_data["absent"]
@@ -20,7 +20,7 @@ class ScheduleListSerializer(serializers.ModelSerializer):
 
 
 class StudentListSerializer(serializers.ModelSerializer):
-    """Список всех студентов"""
+    """ Список всех студентов. """
 
     def create(self, validated_data):
         student = Student.objects.create(**validated_data)
@@ -33,7 +33,7 @@ class StudentListSerializer(serializers.ModelSerializer):
 
 
 class LearnGroupListSerializer(serializers.ModelSerializer):
-    """Список всех учебных групп"""
+    """ Список всех учебных групп. """
 
     def create(self, validated_data):
         group = LearnGroup.objects.create(**validated_data)
@@ -46,7 +46,7 @@ class LearnGroupListSerializer(serializers.ModelSerializer):
 
 
 class StudentQuestionListSerializer(serializers.ModelSerializer):
-    """Список всех вопросов учеников"""
+    """Список всех вопросов учеников."""
 
     class Meta:
         model = StudentQuestion
@@ -54,8 +54,19 @@ class StudentQuestionListSerializer(serializers.ModelSerializer):
 
 
 class ClassesTimetableListSerializer(serializers.ModelSerializer):
-    """Список всех расписаний занятий """
+    """Список всех расписаний занятий. """
 
     class Meta:
         model = ClassesTimetable
         fields = "__all__"
+
+
+class ApplicationsForTrainingSerializer(serializers.ModelSerializer):
+    """ Список всех заявок на обучение. """
+    name = serializers.ReadOnlyField(source='student.name')
+    contact = serializers.ReadOnlyField(source='student.contact')
+    email = serializers.ReadOnlyField(source='student.email')
+
+    class Meta:
+        model = ApplicationsForTraining
+        fields = '__all__'

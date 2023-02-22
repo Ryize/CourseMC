@@ -74,7 +74,10 @@ def task_delete(request, model):
 
 def request_GET(request, todos, group_title: Optional[str] = None):
     categories = Category.objects.all()
-    group = Student.objects.filter(name=request.user.username).first().groups
+    student = Student.objects.filter(name=request.user.username).first()
+    if not student:
+        return redirect('home')
+    group = student.groups
     context = {
         "todos": todos.order_by('due_date'),
         "categories": categories,
@@ -84,4 +87,4 @@ def request_GET(request, todos, group_title: Optional[str] = None):
         context['group_title'] = group_title
         context['text_todo'] = 'личные'
 
-    return render(request, "index.html", context)
+    return render(request, "todolist/index.html", context)

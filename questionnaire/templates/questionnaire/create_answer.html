@@ -19,7 +19,7 @@
             {% csrf_token %}
             {{ form.as_p }}
             <input type="submit" value="Добавить">
-            <center><a href="#" onclick="if (confirm('Вы точно хотите закончить добавлять ответы?')) {document.location = `{% url 'questionnaireIndex' %}`}"><small>Завершить добавление ответов</small></a></center>
+            <center><a href="{% url 'questionnaireIndex' %}"><small>Завершить добавление ответов</small></a></center>
         </div>
     </form>
 
