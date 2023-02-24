@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 
-from billing.models import InformationPayments, EducationCost
+from billing.models import InformationPayments, EducationCost, Absences, Adjustment
 from billing.count_bill_logic import get_lesson_data
 
 
@@ -59,7 +59,7 @@ class EducationCostAdmin(admin.ModelAdmin):
     empty_value_display = '-пустой-'
     list_per_page = 64
     list_max_show_all = 8
-    
+
     def should(self, obj):
         user = User.objects.filter(username=obj.user.name).first()
         if user:
@@ -80,19 +80,63 @@ class InformationPaymentsAdmin(admin.ModelAdmin):
     fields = (
         'user',
         'amount',
-        'datetime',
+        'date',
     )
     list_display = (
         'user',
         'amount',
-        'datetime',
+        'date',
     )
     list_display_links = (
         'user',
         'amount',
-        'datetime',
+        'date',
     )
     list_filter = (UserListFilter,)
+    empty_value_display = '-пустой-'
+    list_per_page = 64
+    list_max_show_all = 8
+
+
+@admin.register(Absences)
+class AbsencesAdmin(admin.ModelAdmin):
+    fields = (
+        'user',
+        'date',
+    )
+    list_display = (
+        'user',
+        'date',
+    )
+    list_display_links = (
+        'user',
+        'date',
+    )
+    empty_value_display = '-пустой-'
+    list_per_page = 64
+    list_max_show_all = 8
+
+
+@admin.register(Adjustment)
+class AdjustmentAdmin(admin.ModelAdmin):
+    fields = (
+        'user',
+        'reason',
+        'amount',
+        'date',
+    )
+    list_display = (
+        'user',
+        'reason',
+        'amount',
+        'date',
+    )
+    list_display_links = (
+        'user',
+        'reason',
+        'amount',
+        'date',
+    )
     empty_value_display = '-пустой-'
     list_per_page = 64
     list_max_show_all = 8

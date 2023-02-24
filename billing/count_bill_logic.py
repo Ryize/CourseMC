@@ -39,7 +39,7 @@ def get_lesson_data(request, user=None):
     lesson_price = EducationCost.objects.filter(user__name=user.username).first().amount
     last_pay = str(InformationPayments.objects.filter(
         user__name=user.username
-    ).last().datetime).split()[0]
+    ).last().date).split()[0]
     current_date = str(datetime.datetime.now()).split()[0]
     dates = weekday_count(last_pay, current_date)
     student = Student.objects.filter(name=user.username).first()

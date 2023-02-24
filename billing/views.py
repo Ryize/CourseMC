@@ -1,5 +1,3 @@
-import calendar
-import datetime
 import hashlib
 
 from django.contrib.auth import get_user
@@ -7,10 +5,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.views.generic import ListView
-from django.http import HttpRequest
 
-from Course.models import Student, LearnGroup, ClassesTimetable
-from billing.models import InformationPayments, EducationCost
+from Course.models import Student
+from billing.models import InformationPayments, Absences, Adjustment
 from billing.count_bill_logic import get_lesson_data
 
 
@@ -40,20 +37,38 @@ class BillingView(LoginRequiredMixin, ListView):
         Returns:
             dict: словарь с объектами моделей.
         """
-        context = super().get_context_data(**kwargs)
         student = Student.objects.filter(name=get_user(self.request).username).first()
         billings = InformationPayments.objects.filter(
             user=student,
-        ).order_by('-datetime').all()
-        context['billings'] = billings
-        merchant_id = '28649'
-        secret_word = '.d36f=0&s7?QX-a'
-        order_id = f'{get_user(self.request).pk}'
+        ).order_by('-date').all()
+        number_passes, sum_adjustments = 0, 0
+        if billings:
+            last_billing = billings.first()
+            number_passes = Absences.objects.filter(date__gte=last_billing.date, user=student).count()
+            adjustments = Adjustment.objects.filter(date__gte=last_billing.date, user=student).all()
+            sum_adjustments = sum([i.amount for i in adjustments])
 
         lesson_price, amount_classes, cost_classes = get_lesson_data(self.request)
 
+        cost_classes += -(number_passes * lesson_price) + sum_adjustments
+
         order_amount = f'{cost_classes}'
+        return self._get_context(
+            amount_classes,
+            billings,
+            lesson_price,
+            number_passes,
+            order_amount,
+            **kwargs,
+        )
+
+    def _get_context(self, amount_classes, billings, lesson_price, number_passes,
+                     order_amount, **kwargs):
+        context = super().get_context_data(**kwargs)
+        merchant_id = '28649'
+        secret_word = '.d36f=0&s7?QX-a'
         currency = 'RUB'
+        order_id = f'{get_user(self.request).pk}'
         sign = hashlib.md5(
             f'{merchant_id}:{order_amount}:{secret_word}:{currency}:{order_id}'.encode('utf-8')).hexdigest()
         context['m'] = merchant_id
@@ -64,6 +79,8 @@ class BillingView(LoginRequiredMixin, ListView):
         context['lesson_price'] = lesson_price
         context['amount_classes'] = amount_classes
         context['us_pk'] = get_user(self.request).pk
+        context['billings'] = billings
+        context['number_passes'] = number_passes
         return context
 
     def dispatch(self, request, *args, **kwargs):

@@ -78,6 +78,10 @@
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
                     <li>
                         <a class="dropdown-item underline-one {% if not user.is_authenticated %} disabled {% endif %}"
+                           href="{% url 'billing_index' %}">Оплатить занятия</a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item underline-one {% if not user.is_authenticated %} disabled {% endif %}"
                            href="{% url 'schedule' %}">Создать отчёт</a></li>
                     <li>
                         <a class="dropdown-item underline-one {% if not user.is_authenticated %} disabled {% endif %}"
@@ -98,10 +102,10 @@
                            target="_blank">Телеграм</a></li>
                     <li><a class="dropdown-item underline-one" href="https://github.com/Ryize"
                            target="_blank">GitHub</a></li>
-                           {% if user.is_staff %}
-<li><a class="dropdown-item underline-one" href="{% url 'admin:index' %}"
-                           target="_blank">Настройки</a></li>
-            {% endif %}
+                    {% if user.is_staff %}
+                        <li><a class="dropdown-item underline-one" href="{% url 'admin:index' %}"
+                               target="_blank">Настройки</a></li>
+                    {% endif %}
                 </ul>
             </label>
             <a class="nav-item nav-link active underline-one"
@@ -109,7 +113,7 @@
             {% if user.is_staff %}
                 <a class="nav-item nav-link active underline-one"
                    href="{% url 'create_group' %}">Группы</a>
-                   <a href="{% url 'admin:index' %}" class="nav-link active nav-item underline-one">Настройки</a>
+                <a href="{% url 'admin:index' %}" class="nav-link active nav-item underline-one">Настройки</a>
             {% endif %}
         </div>
         <div class="collapse navbar-collapse justify-content-end" id="navbarCollapse">

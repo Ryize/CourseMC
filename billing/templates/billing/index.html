@@ -186,6 +186,10 @@
                     <td>{{ amount_classes }}</td>
                 </tr>
                 <tr>
+                    <th scope="row">Кол-во пропусков</th>
+                    <td>{{ number_passes }}</td>
+                </tr>
+                <tr>
                     <th scope="row">Стоимость урока</th>
                     <td>{{ lesson_price }}</td>
                 </tr>
@@ -194,17 +198,17 @@
                     <td>
                         <b>{{ oa }}</b>
                         {% if oa > '0' %}
-                        <br>
-                        <form method='get' action='https://pay.freekassa.ru/'>
-                            <input type='hidden' name='m' value={{ m }}>
-                            <input type='hidden' name='oa' value={{ oa }}>
-                            <input type='hidden' name='o' value={{ o }}>
-                            <input type='hidden' name='s' value={{ s }}>
-                            <input type='hidden' name='currency' value={{ currency }}>
-                            <input type='hidden' name='us_ok' value='ok'>
-                            <input type='hidden' name='lang' value='ru'>
+                            <br>
+                            <form method='get' action='https://pay.freekassa.ru/'>
+                                <input type='hidden' name='m' value={{ m }}>
+                                <input type='hidden' name='oa' value={{ oa }}>
+                                <input type='hidden' name='o' value={{ o }}>
+                                <input type='hidden' name='s' value={{ s }}>
+                                <input type='hidden' name='currency' value={{ currency }}>
+                                <input type='hidden' name='us_ok' value='ok'>
+                                <input type='hidden' name='lang' value='ru'>
                                 <input type='submit' name='pay' value='Оплатить'>
-                        </form>
+                            </form>
                         {% endif %}
                     </td>
                 </tr>
@@ -223,7 +227,7 @@
         <th scope="col">#</th>
         <th scope="col">Сумма</th>
         <th scope="col">Дата и время</th>
-        
+
     </tr>
     </thead>
     <tbody>
@@ -231,8 +235,7 @@
         <tr>
             <th scope="row">{{ forloop.counter }}</th>
             <td>{{ billing.amount }}</td>
-            <td style="width: 20%;">{{ billing.datetime }}</td>
-            
+            <td style="width: 20%;">{{ billing.date }}</td>
         </tr>
     {% endfor %}
     </tbody>
