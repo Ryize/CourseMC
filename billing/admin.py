@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 
+from Course.models import Student, LearnGroup, ClassesTimetable
 from billing.models import InformationPayments, EducationCost, Absences, Adjustment
 from billing.count_bill_logic import get_lesson_data
 
@@ -45,17 +46,20 @@ class EducationCostAdmin(admin.ModelAdmin):
     list_display = (
         'user',
         'amount',
+        'per_month',
         'should',
     )
     list_display_links = (
         'user',
         'amount',
+        'per_month',
         'should',
     )
     list_filter = (
         'user',
         'amount',
     )
+    actions = ('calculate_amount', 'calculate_taking_account_risks',)
     empty_value_display = '-пустой-'
     list_per_page = 64
     list_max_show_all = 8
@@ -71,8 +75,40 @@ class EducationCostAdmin(admin.ModelAdmin):
                 if cost_classes > 0:
                     return cost_classes
 
+    def per_month(self, obj):
+        student = Student.objects.filter(name=obj.user.name).first()
+        group = student.groups
+        if student:
+            cost_one_lesson = EducationCost.objects.filter(user=student).first()
+            number_classes = ClassesTimetable.objects.filter(group=group).count()
+            return cost_one_lesson.amount * number_classes * 4
+
+    def calculate_amount(self, request, queryset):
+        costs = self._calculate_amount_month(queryset)
+        self.message_user(request, f'Итоговая сумма: {costs} рублей')
+
+    def calculate_taking_account_risks(self, request, queryset):
+        costs = self._calculate_amount_month(queryset)
+        self.message_user(request, f'Сумма с учётом рисков: {int(costs * 0.85)} рублей')
+
+    @staticmethod
+    def _calculate_amount_month(queryset):
+        costs = 0
+        for cost in queryset.all():
+            student = cost.user
+            group = student.groups
+            number_classes = ClassesTimetable.objects.filter(group=group).count()
+            costs += cost.amount * number_classes * 4
+        return costs
+
+    calculate_amount.short_description = "Посчитать"
+    calculate_taking_account_risks.short_description = "Посчитать с учётом рисков"
+
     should.short_description = 'Должен'
     should.empty_value_display = 'Оплатил'
+
+    per_month.short_description = 'За месяц'
+    per_month.empty_value_display = 'Нет информации'
 
 
 @admin.register(InformationPayments)

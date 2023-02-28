@@ -9,6 +9,7 @@ from django.contrib.auth import get_user
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
+from django.db import IntegrityError
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.views.generic import ListView
@@ -65,7 +66,14 @@ class StudentRecordView(FormView):
         name = form.cleaned_data['name']
         email = form.cleaned_data['email']
         password = form.cleaned_data['password']
-        user = User.objects.create_user(name, email, password)
+        try:
+            user = User.objects.create_user(name, email, password)
+        except IntegrityError:
+            response = {
+                'success': False,
+                'error_message': 'Пользователь с таким именем уже сузествует!!',
+            }
+            return JsonResponse(response)
         ApplicationsForTraining.objects.create(student=student, ip=ip)
         user.save()
         response = {
