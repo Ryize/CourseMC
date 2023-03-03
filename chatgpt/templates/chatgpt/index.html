@@ -409,7 +409,7 @@
         <div class="row gutters">
             <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
                 <br>
-                <h5 class="title">Твой Помощник</h5>
+                <h5 class="title">CourseMC - ChatGPT</h5>
             </div>
             <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12"></div>
         </div>
@@ -448,7 +448,7 @@
                                             <span class="status online"></span>
                                         </div>
                                         <p class="name-time">
-                                            <span class="name">Твой Помощник</span>
+                                            <span class="name">ChatGPT</span>
                                             <span class="time">30/11/2022</span>
                                         </p>
                                     </li>
@@ -457,7 +457,7 @@
                         </div>
                         <div class="col-xl-8 col-lg-8 col-md-8 col-sm-9 col-9">
                             <div class="selected-user">
-                                <span>To: <span class="name">YourHelper</span></span>
+                                <span>To: <span class="name">ChatGPT</span></span>
                             </div>
                             <div class="chat-container">
                                 <ul class="chat-box chatContainerScroll" id="chat">
@@ -520,7 +520,7 @@ def a(num1: float, num2: float):
                                                 data = JSON.parse(data)
                                                 if (data['success'] === true) {
                                                     node = document.getElementById('chat')
-                                                    node.innerHTML = `<li class="chat-left">
+                                                    node.innerHTML += `<li class="chat-left">
                                         <div class="chat-avatar">
                                             <img src="https://www.bootdey.com/img/Content/avatar/avatar2.png"
                                                  alt="Retail Admin">
@@ -561,12 +561,14 @@ def a(num1: float, num2: float):
 
 </div>
 <script>
+    var first_send = true
     function pressed(e) {
         if (!event.shiftKey && event.keyCode == 13) {
             textarea = document.getElementsByName('text')[0]
             node = document.getElementById('chat')
             text = textarea.value.replaceAll(' ', '&nbsp;').replaceAll('\n', '<br>').replaceAll('\t', '    ')
-            node.innerHTML = `<li class="chat-right">
+
+            var text = `<li class="chat-right">
                                         <div class="chat-hour"><span class="fa fa-check-circle"></span></div>
                                         <div class="chat-text">${text}
                                         </div>
@@ -576,6 +578,12 @@ def a(num1: float, num2: float):
                                             <div class="chat-name">{{ user.username }}</div>
                                         </div>
                                     </li>`
+            if (first_send === true){
+                node.innerHTML = text
+                first_send = false
+            } else{
+                node.innerHTML += text
+            }
             send_data()
             textarea.value = ''
         }

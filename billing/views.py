@@ -38,49 +38,33 @@ class BillingView(LoginRequiredMixin, ListView):
             dict: словарь с объектами моделей.
         """
         student = Student.objects.filter(name=get_user(self.request).username).first()
+        student_email = get_student_email(self.request)
         billings = InformationPayments.objects.filter(
             user=student,
         ).order_by('-date').all()
-        number_passes, sum_adjustments = 0, 0
+        number_passes = 0
         if billings:
             last_billing = billings.first()
             number_passes = Absences.objects.filter(date__gte=last_billing.date, user=student).count()
-            adjustments = Adjustment.objects.filter(date__gte=last_billing.date, user=student).all()
-            sum_adjustments = sum([i.amount for i in adjustments])
 
-        lesson_price, amount_classes, cost_classes = get_lesson_data(self.request)
+        lesson_price, amount_classes, _ = get_lesson_data(self.request)
 
-        cost_classes += -(number_passes * lesson_price) + sum_adjustments
+        cost_classes = get_cost_classes(self.request)
 
-        order_amount = f'{cost_classes}'
-        return self._get_context(
-            amount_classes,
-            billings,
-            lesson_price,
-            number_passes,
-            order_amount,
-            **kwargs,
-        )
+        return self._get_context(cost_classes, student_email, billings, amount_classes, number_passes, lesson_price,
+                                 **kwargs)
 
-    def _get_context(self, amount_classes, billings, lesson_price, number_passes,
-                     order_amount, **kwargs):
+    def _get_context(self, cost_classes, student_email, billings, amount_classes, number_passes, lesson_price,
+                     **kwargs):
         context = super().get_context_data(**kwargs)
-        merchant_id = '28649'
-        secret_word = '.d36f=0&s7?QX-a'
-        currency = 'RUB'
-        order_id = f'{get_user(self.request).pk}'
-        sign = hashlib.md5(
-            f'{merchant_id}:{order_amount}:{secret_word}:{currency}:{order_id}'.encode('utf-8')).hexdigest()
-        context['m'] = merchant_id
-        context['oa'] = order_amount
-        context['o'] = order_id
-        context['s'] = sign
-        context['currency'] = currency
-        context['lesson_price'] = lesson_price
-        context['amount_classes'] = amount_classes
-        context['us_pk'] = get_user(self.request).pk
+        context['cost_classes'] = cost_classes
+        context['student_email'] = student_email
+        context['amount_15_lesson'] = cost_classes // 50
+        context['student_email'] = student_email
         context['billings'] = billings
+        context['amount_classes'] = amount_classes
         context['number_passes'] = number_passes
+        context['lesson_price'] = lesson_price
         return context
 
     def dispatch(self, request, *args, **kwargs):
@@ -97,11 +81,11 @@ class BillingView(LoginRequiredMixin, ListView):
         Returns:
             bool: можно/нет зайти на страницу (через родительский dispatch).
         """
-        # student = Student.objects.filter(
-        #     name=get_user(self.request).username, is_learned=True,
-        # ).first()
-        # if not student:
-        #     return redirect('home')
+        student = Student.objects.filter(
+            name=get_user(self.request).username, is_learned=True,
+        ).first()
+        if not student:
+            return redirect('home')
         return super().dispatch(request, *args, **kwargs)
 
     def _get_param(self, name: str) -> str:
@@ -119,9 +103,32 @@ class BillingView(LoginRequiredMixin, ListView):
         return self.request.GET.get(name)
 
 
+def get_cost_classes(request):
+    student = Student.objects.filter(name=get_user(request).username).first()
+    billings = InformationPayments.objects.filter(
+        user=student,
+    ).order_by('-date').all()
+    number_passes, sum_adjustments = 0, 0
+    if billings:
+        last_billing = billings.first()
+        number_passes = Absences.objects.filter(date__gte=last_billing.date, user=student).count()
+        adjustments = Adjustment.objects.filter(date__gte=last_billing.date, user=student).all()
+        sum_adjustments = sum([i.amount for i in adjustments])
+
+    lesson_price, amount_classes, cost_classes = get_lesson_data(request)
+
+    cost_classes += -(number_passes * lesson_price) + sum_adjustments
+    return cost_classes
+
+
+def get_student_email(request):
+    student = Student.objects.filter(name=get_user(request).username).first()
+    return student.email
+
+
 @login_required
 def billing_success(request):
-    _, _, amount = get_lesson_data(request)
+    amount = get_cost_classes(request)
     if amount == 0:
         return redirect('home')
     student = Student.objects.filter(name=request.user.username).first()
