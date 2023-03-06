@@ -70,10 +70,17 @@ class EducationCostAdmin(admin.ModelAdmin):
             last_pay = InformationPayments.objects.filter(
                 user__name=user.username
             ).first()
-            if last_pay:
-                _, _, cost_classes = get_lesson_data(None, user=user)
-                if cost_classes > 0:
-                    return cost_classes
+            if not last_pay:
+                return
+            student = Student.objects.filter(name=user.username).first()
+            number_passes = Absences.objects.filter(date__gte=last_pay.date, user=student).count()
+            adjustments = Adjustment.objects.filter(date__gte=last_pay.date, user=student).all()
+            sum_adjustments = sum([i.amount for i in adjustments])
+
+            lesson_price, _, cost_classes = get_lesson_data(None, user=user)
+            cost_classes += -(number_passes * lesson_price) + sum_adjustments
+            if cost_classes > 0:
+                return cost_classes
 
     def per_month(self, obj):
         student = Student.objects.filter(name=obj.user.name).first()
