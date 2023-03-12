@@ -21,7 +21,6 @@ class BillingView(LoginRequiredMixin, ListView):
     model = InformationPayments
     template_name = 'billing/index.html'
     context_object_name = 'schedules'
-    paginate_by = 16
 
     def get_context_data(self, *, object_list=None, **kwargs):
         """
