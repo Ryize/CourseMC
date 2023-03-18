@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from Course.models import Student, LearnGroup, ClassesTimetable
 from billing.models import InformationPayments, EducationCost, Absences, Adjustment
 from billing.count_bill_logic import get_lesson_data
+from billing.views import get_cost_classes
 
 
 class UserListFilter(admin.SimpleListFilter):
@@ -72,13 +73,8 @@ class EducationCostAdmin(admin.ModelAdmin):
             ).first()
             if not last_pay:
                 return
-            student = Student.objects.filter(name=user.username).first()
-            number_passes = Absences.objects.filter(date__gte=last_pay.date, user=student).count()
-            adjustments = Adjustment.objects.filter(date__gte=last_pay.date, user=student).all()
-            sum_adjustments = sum([i.amount for i in adjustments])
 
-            lesson_price, _, cost_classes = get_lesson_data(None, user=user)
-            cost_classes += -(number_passes * lesson_price) + sum_adjustments
+            cost_classes = get_cost_classes(user)
             if cost_classes > 0:
                 return cost_classes
 

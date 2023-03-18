@@ -1,5 +1,3 @@
-import hashlib
-
 from django.contrib.auth import get_user
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -7,7 +5,7 @@ from django.shortcuts import render, redirect
 from django.views.generic import ListView
 
 from Course.models import Student
-from billing.models import InformationPayments, Absences, Adjustment
+from billing.models import InformationPayments, Absences, Adjustment, EducationCost
 from billing.count_bill_logic import get_lesson_data
 
 
@@ -46,9 +44,9 @@ class BillingView(LoginRequiredMixin, ListView):
             last_billing = billings.first()
             number_passes = Absences.objects.filter(date__gte=last_billing.date, user=student).count()
 
-        lesson_price, amount_classes, _ = get_lesson_data(self.request)
+        lesson_price, amount_classes, _ = get_lesson_data(get_user(self.request))
 
-        cost_classes = get_cost_classes(self.request)
+        cost_classes = get_cost_classes(get_user(self.request))
 
         return self._get_context(cost_classes, student_email, billings, amount_classes, number_passes, lesson_price,
                                  **kwargs)
@@ -85,6 +83,8 @@ class BillingView(LoginRequiredMixin, ListView):
         ).first()
         if not student:
             return redirect('home')
+        if not EducationCost.objects.filter(user__name=request.user.username).first():
+            return redirect('home')
         return super().dispatch(request, *args, **kwargs)
 
     def _get_param(self, name: str) -> str:
@@ -102,8 +102,8 @@ class BillingView(LoginRequiredMixin, ListView):
         return self.request.GET.get(name)
 
 
-def get_cost_classes(request):
-    student = Student.objects.filter(name=get_user(request).username).first()
+def get_cost_classes(user):
+    student = Student.objects.filter(name=user.username).first()
     billings = InformationPayments.objects.filter(
         user=student,
     ).order_by('-date').all()
@@ -114,7 +114,7 @@ def get_cost_classes(request):
         adjustments = Adjustment.objects.filter(date__gte=last_billing.date, user=student).all()
         sum_adjustments = sum([i.amount for i in adjustments])
 
-    lesson_price, amount_classes, cost_classes = get_lesson_data(request)
+    lesson_price, amount_classes, cost_classes = get_lesson_data(user=user)
 
     cost_classes += -(number_passes * lesson_price) + sum_adjustments
     return cost_classes
@@ -127,7 +127,7 @@ def get_student_email(request):
 
 @login_required
 def billing_success(request):
-    amount = get_cost_classes(request)
+    amount = get_cost_classes(get_user(request))
     if amount == 0:
         return redirect('home')
     student = Student.objects.filter(name=request.user.username).first()

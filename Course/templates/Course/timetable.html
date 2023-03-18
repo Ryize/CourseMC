@@ -8,7 +8,7 @@
           integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 <body class='p-0'>
 {% include 'template/header.html' %}
-{% include 'template/flash_message.html'%}
+{% include 'template/flash_message.html' %}
 {% include 'template/base_head.html' %}
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.1/css/bootstrap.min.css"
@@ -194,18 +194,13 @@
             <div class="checkbox__body">Новая тема</div>
         </label>
         <hr>
-        <label class="checkbox style-e">
-            <input type="checkbox" name="absent" value="absent"/>
-            <div class="checkbox__checkmark"></div>
-            <div class="checkbox__body">Урок который я пропустил</div>
-        </label>
         <center style="padding-top: 25px;">
             <input type="submit" value="Найти" class="btn btn-outline-dark" style="width: 50%; margin-top: 5%;"><br>
             <small><a href='{% url 'schedule' %}' style="color: blue;">Сбросить фильтры</a></small>
         </center>
         <br>
         <center>
-            <label><a class="underline-one" href="{% url 'download_report' create_report.first.group.pk %}">Создать
+            <label><a class="underline-one" href="{% url 'download_report' %}">Создать
                 отчёт</a></label>
         </center>
         {% if request.user.is_staff %}
@@ -288,28 +283,23 @@
     <tr>
         <th scope="col">#</th>
         <th scope="col">Тема урока</th>
-        <th scope="col">Время занятия</th>
         <th scope="col">Материалы к уроку</th>
     </tr>
     </thead>
     <tbody>
     {% for schedule in schedules %}
-        {% if schedule.is_display %}
-            <tr>
-                <th scope="row">{{ forloop.counter }}</th>
-                <td
-                        {% for i in schedule.absent.all %}{% if user.get_username == i.name %}class='alert-danger'
-                        title="Вы не присутствовали на этом уроке"{% endif %}{% endfor %}{% if schedule.key_topic %}
+        <tr>
+            <th scope="row">{{ forloop.counter }}</th>
+            <td
+                    {% if schedule.key_topic %}
                         class="alert-primary" style="font-size: 115%; font-weight: bold;"{% endif %}
-                        {% if schedule.lesson_type == 'Новая тема' %} class="alert-warning"
-                        {% elif schedule.lesson_type == 'Ключевой урок' %} class="alert-primary"
-                        {% endif %}
+                    {% if schedule.lesson_type == 'Новая тема' %} class="alert-warning"
+                    {% elif schedule.lesson_type == 'Ключевой урок' %} class="alert-primary"
+                    {% endif %}
                         title="Это {{ schedule.lesson_type }}"
-                >{{ schedule.theme | safe }}</td>
-                <td style="width: 20%;">{{ schedule.weekday }} {{ schedule.time_lesson }}</td>
-                <td style="width: 50%;">{{ schedule.lesson_materials | safe }}</td>
-            </tr>
-        {% endif %}
+            >{{ schedule.theme | safe }}</td>
+            <td style="width: 50%;">{{ schedule.lesson_materials | safe }}</td>
+        </tr>
     {% endfor %}
     </tbody>
 </table>
@@ -408,7 +398,7 @@
         });
         return false;
     }
-    
+
     function showMessage(text, code) {
         const ul = document.getElementById('messages-list')
         const li = document.createElement('li')

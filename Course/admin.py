@@ -74,23 +74,19 @@ class ScheduleAdmin(admin.ModelAdmin):
     content = forms.CharField(widget=CKEditorUploadingWidget())
     fields = (
         'theme',
-        'group',
-        'weekday',
-        'time_lesson',
         'lesson_materials',
-        'absent',
         'lesson_type',
-        'is_display',
     )
-    list_display = ('id', 'theme', 'group', 'weekday', 'time_lesson', 'is_display')
+    list_display = (
+        'pk',
+        'theme',
+    )
     list_display_links = (
         'theme',
-        'group',
-        'weekday',
-        'time_lesson',
     )
-    list_filter = ('group', 'weekday', 'time_lesson', 'lesson_type', 'is_display')
-    list_editable = ('is_display',)
+    list_filter = (
+        'lesson_type',
+    )
     empty_value_display = '-пустой-'
     list_per_page = 66
     list_max_show_all = 8
@@ -98,7 +94,6 @@ class ScheduleAdmin(admin.ModelAdmin):
         'theme',
         'lesson_materials',
     )
-    date_hierarchy = 'weekday'
 
 
 @admin.register(StudentQuestion)

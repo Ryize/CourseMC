@@ -3,6 +3,7 @@ View для приложения Course.
 
 Обрабатывает главную страницу сайта, расписания.
 """
+import datetime
 import os
 
 from django.contrib.auth import get_user
@@ -19,6 +20,7 @@ from Course.doc import docx_worker, save_report
 from Course.forms import StudentForm
 from Course.models import LearnGroup, Schedule, Student, StudentQuestion, ApplicationsForTraining
 from Course.report import get_content_disposition, get_content_type
+from billing.models import Absences
 from reviews.models import Review
 
 STATUS_OK = 200
@@ -131,7 +133,7 @@ class TimetableView(LoginRequiredMixin, ListView):
     template_name = 'Course/timetable.html'
     context_object_name = 'schedules'
     paginate_by = 16
-    queryset = Schedule.objects.filter(is_display=True)
+    queryset = Schedule.objects.all()
 
     def get_queryset(self):
         """
@@ -142,24 +144,24 @@ class TimetableView(LoginRequiredMixin, ListView):
         Returns:
             Schedule: Отфильтрованный QuerySet.
         """
-        student = Student.objects.filter(
-            name=get_user(self.request).username,
-        ).first()
-        student_group = Schedule.objects.filter(
-            group=student.groups, is_display=True,
-        ).order_by('-weekday')
+        group = Student.objects.filter(name=self.request.user.username).first().groups
+
+        d1 = datetime.datetime.now()
+        d2 = group.created_at
+
+        months = self._months(d1, d2)
+        if months <= 0:
+            months = 1
+        schedules = Schedule.objects.all()[:months*22:-1]
+
         theme = self._get_param('theme')
         if theme:
-            student_group = student_group.filter(theme__icontains=theme)
+            schedules = schedules.filter(theme__icontains=theme)
         if self._get_param('lesson_type'):
-            student_group = student_group.filter(
+            schedules = schedules.filter(
                 lesson_type__icontains=self._get_param('lesson_type'),
             )
-        if self._get_param('absent'):
-            student_group = student_group.filter(
-                absent__name__iexact='{name}'.format(name=student.name),
-            )
-        return student_group
+        return schedules
 
     def get_context_data(self, *, object_list=None, **kwargs):
         """
@@ -177,12 +179,7 @@ class TimetableView(LoginRequiredMixin, ListView):
         """
         context = super().get_context_data(**kwargs)
         context['reviews_count'] = Review.objects.all().count()
-        student = Student.objects.filter(
-            name=get_user(self.request).username,
-        ).first()
-        context['create_report'] = Schedule.objects.filter(
-            group=student.groups,
-        ).order_by('-weekday')
+        context['create_report'] = Schedule.objects.all()
         return context
 
     def dispatch(self, request, *args, **kwargs):
@@ -220,9 +217,13 @@ class TimetableView(LoginRequiredMixin, ListView):
         """
         return self.request.GET.get(name)
 
+    @staticmethod
+    def _months(d1, d2):
+        return d1.month - d2.month + 12 * (d1.year - d2.year)
+
 
 @login_required
-def download_report(request, group_id: int):
+def download_report(request):
     """
     Проверяем права на заход.
 
@@ -235,10 +236,8 @@ def download_report(request, group_id: int):
     Returns:
         HttpResponse: содержит файл отчёта, загрузка начнётся автоматически.
     """
-    group = LearnGroup.objects.filter(pk=group_id).first()
-    if not group:
-        return redirect('home')
-    schedules = group.schedules.all()
+    schedules = Schedule.objects.all()
+    group = Student.objects.filter(name=request.user.username).first().groups
     number_dash_on_line = 64
     result_data = """Отчёт о группе {group_title}
 {approximate_string_length}
@@ -270,7 +269,7 @@ def download_report(request, group_id: int):
         """.format(
             student_name=student.name,
             student_contact=student.contact or 'Не указаны!',
-            student_absents=student.absents.count(),
+            student_absents=Absences.objects.filter(user=student).count(),
         )
     result_data += '\n\nЧасов обучения: {lesson_hour}'.format(
         lesson_hour=schedules.count() * LESSON_DURATION,
@@ -292,11 +291,7 @@ def get_training_program(request):
     Returns:
         HttpResponse: с файлом (скачивается автоматически).
     """
-    schedules = (
-        Schedule.objects.filter(
-            group=LearnGroup.objects.filter(title='Вояджер').first(),
-        ).order_by('weekday').all()
-    )
+    schedules = Schedule.objects.all()
     doc = docx_worker(schedules)
 
     if not os.path.exists('programCoursePython'):

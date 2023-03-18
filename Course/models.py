@@ -32,7 +32,7 @@ class Student(models.Model):
     def __str__(self):
         return f'{self.name}'
 
-
+# Schedule.objects.exclude(group=LearnGroup.objects.filter(title='Вояджер').first()).delete()
 class LearnGroup(models.Model):
     title = models.CharField(max_length=32, verbose_name='Название')
     is_studies = models.BooleanField(default=False, verbose_name='Идут занятия')
@@ -52,29 +52,13 @@ class Schedule(models.Model):
         ('Новая тема', 'Новая тема'),
         ('Ключевой урок', 'Ключевой урок'),
     )
-
-    group = models.ForeignKey(
-        'LearnGroup',
-        on_delete=models.CASCADE,
-        verbose_name='Группа обучения',
-        related_name='schedules',
-    )
     theme = models.CharField(
         max_length=128, verbose_name='Тема урока', default='Тема не задана!'
     )
-    weekday = models.DateField(verbose_name='День недели')
-    time_lesson = models.TimeField(verbose_name='Время')
     lesson_materials = RichTextUploadingField(
         verbose_name='Материалы к уроку',
         unique=False,
         default='Дополнительных материалов нету!',
-    )
-    absent = models.ManyToManyField(
-        'Student',
-        verbose_name='Отсутствующие',
-        null=True,
-        blank=True,
-        related_name='absents',
     )
     lesson_type = models.CharField(
         max_length=64,
@@ -82,14 +66,13 @@ class Schedule(models.Model):
         default='Практика',
         verbose_name='Тип урока',
     )
-    is_display = models.BooleanField(default=True, verbose_name='Отображать')
 
     class Meta:
         verbose_name = 'Расписание'
         verbose_name_plural = 'Расписания'
 
     def __str__(self):
-        return f'{self.group}: {self.weekday}'
+        return f'{self.theme}'
 
 
 class StudentQuestion(models.Model):

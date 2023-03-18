@@ -33,9 +33,7 @@ def weekday_count(start, end):
     return week
 
 
-def get_lesson_data(request, user=None):
-    if not user:
-        user = get_user(request)
+def get_lesson_data(user):
     lesson_price = EducationCost.objects.filter(user__name=user.username).first().amount
     last_pay = str(InformationPayments.objects.filter(
         user__name=user.username
