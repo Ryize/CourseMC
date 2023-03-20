@@ -32,6 +32,7 @@ class Student(models.Model):
     def __str__(self):
         return f'{self.name}'
 
+
 # Schedule.objects.exclude(group=LearnGroup.objects.filter(title='Вояджер').first()).delete()
 class LearnGroup(models.Model):
     title = models.CharField(max_length=32, verbose_name='Название')

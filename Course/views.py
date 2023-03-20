@@ -73,7 +73,7 @@ class StudentRecordView(FormView):
         except IntegrityError:
             response = {
                 'success': False,
-                'error_message': 'Пользователь с таким именем уже сузествует!!',
+                'error_message': 'Пользователь с таким именем уже существует!',
             }
             return JsonResponse(response)
         ApplicationsForTraining.objects.create(student=student, ip=ip)
@@ -118,7 +118,7 @@ class StudentRecordView(FormView):
         context = super().get_context_data(**kwargs)
         ip = self.request.META.get('REMOTE_ADDR')
         context['reviews_count'] = Review.objects.all().count()
-        context['can_send_train'] = bool(ApplicationsForTraining.objects.filter(ip=ip).first())
+        context['can_send_train'] = False
         return context
 
 
