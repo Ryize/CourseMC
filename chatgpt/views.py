@@ -53,14 +53,27 @@ class ChatGPT:
         self.model_engine = "text-davinci-003"
 
     def send(self, data) -> str:
-        completion = openai.Completion.create(
-            engine=self.model_engine,
-            prompt=data,
-            max_tokens=2048,
-            temperature=1,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0
-        )
+        try:
+            completion = openai.Completion.create(
+                engine=self.model_engine,
+                prompt=data,
+                max_tokens=2048,
+                temperature=1,
+                top_p=1,
+                frequency_penalty=0,
+                presence_penalty=0
+            )
 
-        return completion.choices[0].text
+            return completion.choices[0].text
+        except:
+            completion = openai.Completion.create(
+                engine=self.model_engine,
+                prompt=data,
+                max_tokens=2048,
+                temperature=1,
+                top_p=1,
+                frequency_penalty=0,
+                presence_penalty=0
+            )
+
+            return completion.choices[0].text

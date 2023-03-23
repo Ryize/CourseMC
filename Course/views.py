@@ -118,7 +118,7 @@ class StudentRecordView(FormView):
         context = super().get_context_data(**kwargs)
         ip = self.request.META.get('REMOTE_ADDR')
         context['reviews_count'] = Review.objects.all().count()
-        context['can_send_train'] = False
+        context['can_send_train'] = bool(ApplicationsForTraining.objects.filter(ip=ip).first())
         return context
 
 
@@ -219,6 +219,13 @@ class TimetableView(LoginRequiredMixin, ListView):
 
     @staticmethod
     def _months(d1, d2):
+        """
+        Получаем кол-во месяцев между двумя датами (
+        для формирования расписаний
+        ).
+        Первая дата - начало обучения.
+        Вторая дата - текущая дата.
+        """
         return d1.month - d2.month + 12 * (d1.year - d2.year)
 
 
