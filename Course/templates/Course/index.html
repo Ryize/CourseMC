@@ -25,6 +25,9 @@
 
         <div class="right" id="headerRight">
             <ul>
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'schedule' %}">Расписания</a></li>
+                {% endif %}
                 <li onclick="activeDropDownNav(0)">Сервисы
                     <ion-icon name="chevron-down-outline"></ion-icon>
                 </li>
@@ -48,37 +51,36 @@
             <ion-icon name="menu-outline"></ion-icon>
             <ion-icon name="close-outline"></ion-icon>
         </div>
-    </div>
 
-    <div class="drop drop1">
-        <ul>
-            <li style="--var: 55%;"><a href="{% url 'blog_home' %}">Твои Статьи</a></li>
-            <li style="--var: 95%;"><a href="{% url 'todo' %}">Твои Напоминания</a></li>
-            <li style="--var: 75%;"><a href="{% url 'questionnaireIndex' %}">Твой Опросник</a></li>
-            <li style="--var: 80%;"><a href="{% url 'gpt_home' %}">Твой Помощник</a></li>
-            <li style="--var: 100%;"><a href="{% url 'py_interpreter' %}">Твой Интерпретатор</a></li>
-        </ul>
-    </div>
+        <div class="drop drop1">
+            <ul>
+                <li style="--var: 55%;"><a href="{% url 'blog_home' %}">Твои Статьи</a></li>
+                <li style="--var: 95%;"><a href="{% url 'todo' %}">Твои Напоминания</a></li>
+                <li style="--var: 75%;"><a href="{% url 'questionnaireIndex' %}">Твой Опросник</a></li>
+                <li style="--var: 80%;"><a href="{% url 'gpt_home' %}">Твой Помощник</a></li>
+                <li style="--var: 100%;"><a href="{% url 'py_interpreter' %}">Твой Интерпретатор</a></li>
+            </ul>
+        </div>
 
-    <div class="drop drop2">
-        <ul>
-            <li style="--var: 67%;"><a href="{% url 'billing_index' %}">Оплатить занятия</a></li>
-            <li style="--var: 50%;"><a href="{% url 'schedule' %}">Создать отчёт</a></li>
-            <li style="--var: 100%;"><a href="{% url 'schedule' %}">Задать анонимный вопрос</a></li>
-        </ul>
-    </div>
+        <div class="drop drop2">
+            <ul>
+                <li style="--var: 67%;"><a href="{% url 'billing_index' %}">Оплатить занятия</a></li>
+                <li style="--var: 50%;"><a href="{% url 'schedule' %}">Создать отчёт</a></li>
+            </ul>
+        </div>
 
-    <div class="drop drop3">
-        <ul>
-            <li style="--var: 30%;"><a href="https://vk.com/matvey.chekashov">ВК</a></li>
-            <li style="--var: 100%;"><a href="https://t.me/mchekashov">Телеграм</a></li>
-            <li style="--var: 75%;"><a href="https://github.com/Ryize">GitHub</a></li>
-        </ul>
+        <div class="drop drop3">
+            <ul>
+                <li style="--var: 30%;"><a href="https://vk.com/matvey.chekashov">ВК</a></li>
+                <li style="--var: 100%;"><a href="https://t.me/mchekashov">Телеграм</a></li>
+                <li style="--var: 75%;"><a href="https://github.com/Ryize">GitHub</a></li>
+            </ul>
+        </div>
     </div>
 </header>
 
 <!-- Block 1 -->
-<section>
+<section class="homeSection">
     <div class="container">
         <div>
             <h1>Онлайн-курс Профессия <span>Python-разработчик</span></h1>
@@ -94,7 +96,7 @@
 </section>
 
 <!-- Block 2 -->
-<section>
+<section class="homeSection">
     <div class="left">
         <h2>О курсе</h2>
         <p>Курс составлялся на основе вакансий и требований компаний к Python-разработчикам. Всё необходимое
@@ -131,7 +133,7 @@
 </section>
 
 <!-- Block 3 -->
-<section>
+<section class="homeSection">
     <div class="container">
         <div class="left">
             <h2><span>Python</span>-разработчиков не хватает</h2>
@@ -147,7 +149,7 @@
 </section>
 
 <!-- Block 4 -->
-<section>
+<section class="homeSection">
     <h2><span>Для кого</span> этот курс</h2>
 
     <div class="box">
@@ -174,7 +176,7 @@
 </section>
 
 <!-- Block 5 -->
-<section>
+<section class="homeSection">
     <div class="container">
         <img src="{% static 'Course/assets/4.png' %}" alt="">
 
@@ -208,7 +210,7 @@
 </section>
 
 <!-- Block 6 -->
-<section>
+<section class="homeSection">
     <div class="container">
         <h2>Мы <span>не</span> удаляем вас из бесед после прохождения курса</h2>
         <ion-icon name="close-outline"></ion-icon>
@@ -216,7 +218,7 @@
 </section>
 
 <!-- Block 7 -->
-<section>
+<section class="homeSection">
     <div class="left">
         <h3>Вы научитесь</h3>
 
@@ -271,7 +273,7 @@
 </section>
 
 <!-- Block 8 -->
-<section>
+<section class="homeSection">
     <div class="container">
         <img src="{% static 'Course/assets/8.svg' %}" alt="">
 
@@ -284,7 +286,7 @@
 </section>
 
 <!-- Block 9 -->
-<section>
+<section class="homeSection">
     <h2><span>Программа</span> курса</h2>
 
     <div class="list">
@@ -796,8 +798,7 @@
     </div>
 </section>
 
-<!-- Block 10 -->
-<section>
+<section class="homeSection">
     <div class="container">
         <h2>Получите консультацию</h2>
 
@@ -849,47 +850,47 @@
 
 <div class="navigation">
     <ul>
+        {% if user.is_authenticated %}
+            <li><a href="{% url 'schedule' %}">Расписания</a></li>
+        {% endif %}
         <li onclick="activeDropDownNavMob(0)" class="action">Сервисы
             <ion-icon
                     name="chevron-down-outline"></ion-icon>
         </li>
         <ul>
-            <li><a href="http://hh.ru">Твои статьи</a></li>
-            <li>Твои Напоминания</li>
-            <li>Твой Опросник</li>
-            <li>Твой Помощник</li>
-            <li>Твой Интерпретатор</li>
+            <li><a href="{% url 'blog_home' %}">Твои Статьи</a></li>
+            <li><a href="{% url 'todo' %}">Твои Напоминания</a></li>
+            <li><a href="{% url 'questionnaireIndex' %}">Твой Опросник</a></li>
+            <li><a href="{% url 'gpt_home' %}">Твой Помощник</a></li>
+            <li><a href="{% url 'py_interpreter' %}">Твой Интерпретатор</a></li>
         </ul>
         <li onclick="activeDropDownNavMob(1)" class="action">Действия
             <ion-icon
                     name="chevron-down-outline"></ion-icon>
         </li>
         <ul>
-            <li>Оплатить занятия</li>
-            <li>Создать отчёт</li>
-            <li>Задать анонимный вопрос</li>
+            <li><a href="{% url 'billing_index' %}">Оплатить занятия</a></li>
+            <li><a href="{% url 'schedule' %}">Создать отчёт</a></li>
         </ul>
         <li onclick="activeDropDownNavMob(2)" class="action">Контакты
             <ion-icon
                     name="chevron-down-outline"></ion-icon>
         </li>
         <ul>
-            <li>ВК</li>
-            <li>Телеграм</li>
-            <li>GitHub</li>
+            <li><a href="https://vk.com/matvey.chekashov">ВК</a></li>
+            <li><a href="https://t.me/mchekashov">Телеграм</a></li>
+            <li><a href="https://github.com/Ryize">GitHub</a></li>
         </ul>
-        <li>Отзывы</li>
+        <li><a href="{% url 'review' %}">Отзывы</a></li>
     </ul>
 
-    <button>Авторизоваться</button>
+    {% if not user.is_authenticated %}
+        <button><a href="{% url 'account_login' %}">Авторизоваться</a></button>
+    {% elif user.is_staff %}
+        <li><a href="{% url 'create_group' %}">Группы</a></li>
+        <li><a href="{% url 'admin:index' %}">Настройки</a></li>
+    {% endif %}
 </div>
-
-<script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
-<script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.3/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.3/ScrollTrigger.min.js"></script>
-<script src="{% static 'Course/js/main.js' %}"></script>
-</body>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
@@ -904,9 +905,6 @@
             contact: contact,
             email: email,
             password: password
-        }
-        if ('{{ can_send_train }}' === 'True'){
-            return null
         }
         // GET AJAX request
         $.ajax({
@@ -924,13 +922,7 @@
                 // if not valid user, alert the user
                 if (response["success"]) {
                     alert("Спасибо за обращение, мы свяжемся с вами в ближайшее время!");
-                    document.getElementById("id_name").disabled = "disabled";
-                    document.getElementById("id_contact").disabled = "disabled";
-                    document.getElementById("id_email").disabled = "disabled";
-                    document.getElementById("id_password").disabled = "disabled";
-                    el = document.getElementById("signupSubmit");
-                    el.classList.add('disabled');
-                    el.disabled = "disabled";
+                    document.getElementById("signupSubmit").classList.add('disabled');
                 } else {
                     alert(response["error_message"]);
                 }
@@ -938,13 +930,7 @@
             error: function (response) {
                 if (response["success"]) {
                     alert("Спасибо за обращение, мы свяжемся с вами в ближайшее время!");
-                    document.getElementById("id_name").disabled = "disabled";
-                    document.getElementById("id_contact").disabled = "disabled";
-                    document.getElementById("id_email").disabled = "disabled";
-                    document.getElementById("id_password").disabled = "disabled";
-                    el = document.getElementById("signupSubmit");
-                    el.classList.add('disabled');
-                    el.disabled = "disabled";
+                    document.getElementById("signupSubmit").classList.add('disabled');
                 } else {
                     alert(response["error_message"]);
                 }
@@ -952,5 +938,12 @@
         })
     }
 </script>
+
+<script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.3/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.3/ScrollTrigger.min.js"></script>
+<script src="{% static 'Course/js/main.js' %}"></script>
+</body>
 
 </html>

@@ -132,7 +132,6 @@ class TimetableView(LoginRequiredMixin, ListView):
     model = Schedule
     template_name = 'Course/timetable.html'
     context_object_name = 'schedules'
-    paginate_by = 16
     queryset = Schedule.objects.all()
 
     def get_queryset(self):
@@ -152,7 +151,7 @@ class TimetableView(LoginRequiredMixin, ListView):
         months = self._months(d1, d2)
         if months <= 0:
             months = 1
-        schedules = Schedule.objects.all()[:months*22:-1]
+        schedules = Schedule.objects.all()[:months*22]
 
         theme = self._get_param('theme')
         if theme:

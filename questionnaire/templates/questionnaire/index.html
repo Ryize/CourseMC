@@ -1,103 +1,210 @@
-{% extends 'questionnaire/template/base.html' %}
-{% block content %}
-    <!DOCTYPE html>
-    <html lang="ru">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
-              integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
-              crossorigin="anonymous">
-              <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-        <title>Главная страница - YourQuestionnaire</title>
-    </head>
-    <body>
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
 
-    <style>
-        input[type="submit"] {
-            width: 33%;
-        }
-    </style>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CourseMC</title>
+    <link rel="stylesheet" href="{% static 'Course/css/style.css' %}">
+    <link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}" type="image/x-icon">
+</head>
+<style>
+    html,
+    body {
+        max-width: 100%;
+        /* overflow-x: hidden; */
+    }
+</style>
 
-    <div class="container text-center">
-        <div class="row content">
-            <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1"></div>
-            <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9 nomargin">
-                <br>
-                <br>
-                <br>
-                <br>
-                <h1 class="p-2 text-center">Твой Опросник</h1>
-                <br>
-                <br>
-                <center><img
-                        src="https://www.univ-silkroad.uz/media/k2/items/cache/69b5f85da08d181d48515c6d41e3e0a5_L.jpg"
-                        alt="Фото опросник" width="500" style="max-width: 80%;"></center>
-                <br>
-                <h2>Как создать опрос</h2>
-                Составить интересную анкету, заполнить которую будет не в тягость, а в радость, довольно просто. Но
-                нужно
-                знать несколько основных правил:
-                <ol><br>
-                    <li>Определитесь с целью анкеты. Сфокусируйтесь на одной конкретной цели. Так вы сможете собрать
-                        релевантную
-                        информацию и не запутать пользователя.
-                    </li>
-                    <br>
-                    <li>Поймите, какую информацию собирать. Как только станет понятна цель, выберете, какие именно
-                        данные и
-                        в
-                        каком формате собирать.
-                    </li>
-                    <br>
-                    <li>Будьте объективны. Убедитесь, что задаёте только прямые вопросы, избегая наводящих конструкций.
-                        Некоторые
-                        слова — такие, как «запретить» могут повлиять на результат вопроса.
-                        К примеру, вопрос «Мы получаем множество положительных отзывов от наших счастливых клиентов. Как
-                        вы
-                        считаете, на сколько хорош наш сервис?» — пример того, как вопрос подталкивает отвечающего быть
-                        более
-                        благосклонным к вашей компании. Попробуйте попросить «Оцените удобство нашего сервиса по
-                        5-балльной
-                        шкале»
-                        и
-                        предложите эту шкалу.
-                        И ещё. Не позволяйте себе строить догадки и включать их в вопросы.
-                    </li>
-                    <br>
-                    <li>Следите за порядком вопросов. Логичная последовательность вопросов важна, как для вас, так и для
-                        проходящего опрос. Самый оптимальный вариант — «от общего к частному».
-                    </li>
-                    <br>
-                    <li>Избегайте двойных вопросов. Один блок — один вопрос. Иначе вы получите искажённую информацию.
-                    </li>
-                    <br>
-                    <li>Пишите простым языком. В опросниках не стоит использовать жаргон и сложные обороты. Сделайте
-                        свою
-                        анкету
-                        простой и понятной и тогда каждый респондент наверняка дойдёт до финального вопроса.
-                    </li>
-                    <br>
-                    <li>Протестируйте опросник. Пришлите готовую анкету друзьям и коллегам, чтобы ещё раз проверить
-                        логику
-                        опроса
-                        и разглядеть возможные ошибки.
-                    </li>
-                    <br>
-                </ol>
+<body onclick="closeAll()" class="black">
+<header>
+    <div class="container">
+        <h3><a href="{% url 'home' %}">CourseMC</a></h3>
+
+        <div class="right black" id="headerRight">
+            <ul>
                 {% if user.is_authenticated %}
-                    <form action="{% url 'create_poll' %}">
-                        <center><input class="btn btn-primary p-2" type="submit" value="Создать опрос"></center>
-                    </form>
-                {% else %}
-                    <center>Для создания опроса вам необходимо <a href="{% url 'account_login' %}">авторизоваться</a>
-                    </center>
+                    <li><a href="{% url 'schedule' %}">Расписания</a></li>
                 {% endif %}
-                <br><br>
+                <li onclick="activeDropDownNav(0)">Сервисы
+                    <ion-icon name="chevron-down-outline"></ion-icon>
+                </li>
+                <li onclick="activeDropDownNav(1)">Действия
+                    <ion-icon name="chevron-down-outline"></ion-icon>
+                </li>
+                <li onclick="activeDropDownNav(2)">Контакты
+                    <ion-icon name="chevron-down-outline"></ion-icon>
+                </li>
+                <li><a href="{% url 'review' %}">Отзывы</a></li>
+            </ul>
+            {% if not user.is_authenticated %}
+                <button><a href="{% url 'account_login' %}">Авторизоваться</a></button>
+            {% elif user.is_staff %}
+                <li><a href="{% url 'create_group' %}">Группы</a></li>
+                <li><a href="{% url 'admin:index' %}">Настройки</a></li>
+            {% endif %}
+        </div>
+
+        <div class="menu">
+            <ion-icon name="menu-outline" class="white"></ion-icon>
+            <ion-icon name="close-outline"></ion-icon>
+        </div>
+
+        <div class="drop drop1">
+            <ul>
+                <li style="--var: 55%;"><a href="{% url 'blog_home' %}">Твои Статьи</a></li>
+                <li style="--var: 95%;"><a href="{% url 'todo' %}">Твои Напоминания</a></li>
+                <li style="--var: 75%;"><a href="{% url 'questionnaireIndex' %}">Твой Опросник</a></li>
+                <li style="--var: 80%;"><a href="{% url 'gpt_home' %}">Твой Помощник</a></li>
+                <li style="--var: 100%;"><a href="{% url 'py_interpreter' %}">Твой Интерпретатор</a></li>
+            </ul>
+        </div>
+
+        <div class="drop drop2">
+            <ul>
+                <li style="--var: 67%;"><a href="{% url 'billing_index' %}">Оплатить занятия</a></li>
+                <li style="--var: 50%;"><a href="{% url 'schedule' %}">Создать отчёт</a></li>
+                <li style="--var: 100%;"><a href="{% url 'schedule' %}">Задать анонимный вопрос</a></li>
+            </ul>
+        </div>
+
+        <div class="drop drop3">
+            <ul>
+                <li style="--var: 30%;"><a href="https://vk.com/matvey.chekashov">ВК</a></li>
+                <li style="--var: 100%;"><a href="https://t.me/mchekashov">Телеграм</a></li>
+                <li style="--var: 75%;"><a href="https://github.com/Ryize">GitHub</a></li>
+            </ul>
+        </div>
+    </div>
+</header>
+
+<section class="scheduleSection">
+    <h2><span>Твой</span> опросник</h2>
+
+    <div class="box">
+        <div class="imageBox">
+            <img src="{% static 'Course/assets/6.png' %}" alt="">
+            <img src="{% static 'Course/assets/7.png' %}" alt="">
+        </div>
+
+        <div class="contentBox">
+            <div class="top">
+                <h3>Как создать опрос</h3>
+                <p>Составить интересную анкету, заполнить которую будет не в тягость, а в радость, довольно просто.
+                    Но нужно знать несколько основных правил:</p>
+            </div>
+
+            <div class="stepline">
+                <div class="line"></div>
+
+                <div class="step">
+                    <div>1</div>
+                    <p>Определитесь с целью анкеты. Сфокусируйтесь на одной конкретной цели. Так вы сможете собрать
+                        релевантную информацию и не запутать пользователя.</p>
+                </div>
+                <div class="step">
+                    <div>2</div>
+                    <p>Поймите, какую информацию собирать. Как только станет понятна цель, выберете, какие именно
+                        данные и в каком формате собирать.</p>
+                </div>
+                <div class="step">
+                    <div>3</div>
+                    <p>Будьте объективны. Убедитесь, что задаёте только прямые вопросы, избегая наводящих
+                        конструкций. Некоторые слова — такие, как «запретить» могут повлиять на результат вопроса. К
+                        примеру, вопрос «Мы получаем множество положительных отзывов от наших счастливых клиентов.
+                        Как вы считаете, на сколько хорош наш сервис?» — пример того, как вопрос подталкивает
+                        отвечающего быть более благосклонным к вашей компании. Попробуйте попросить «Оцените
+                        удобство нашего сервиса по 5-балльной шкале» и предложите эту шкалу. И ещё. Не позволяйте
+                        себе строить догадки и включать их в вопросы.</p>
+                </div>
+                <div class="step">
+                    <div>4</div>
+                    <p>Следите за порядком вопросов. Логичная последовательность вопросов важна, как для вас, так и
+                        для проходящего опрос. Самый оптимальный вариант — «от общего к частному».</p>
+                </div>
+                <div class="step">
+                    <div>5</div>
+                    <p>Избегайте двойных вопросов. Один блок — один вопрос. Иначе вы получите искажённую информацию.
+                    </p>
+                </div>
+                <div class="step">
+                    <div>6</div>
+                    <p>Пишите простым языком. В опросниках не стоит использовать жаргон и сложные обороты. Сделайте
+                        свою анкету простой и понятной и тогда каждый респондент наверняка дойдёт до финального
+                        вопроса.</p>
+                </div>
+                <div class="step">
+                    <div>7</div>
+                    <p>Протестируйте опросник. Пришлите готовую анкету друзьям и коллегам, чтобы ещё раз проверить
+                        логику опроса и разглядеть возможные ошибки.</p>
+                </div>
             </div>
         </div>
     </div>
-    </body>
-    </html>
+    {% if user.is_authenticated %}
+        <button class="quizButton" onclick="document.location=`{% url 'create_poll' %}`">Создать опрос</button>
+    {% endif %}
+</section>
 
-{% endblock %}
+<footer class="change">
+    <p>© 2022 CourseMC – Обучение Python разработке</p>
+
+    <div onclick="changeTheme()">
+        <ion-icon name="sunny"></ion-icon>
+        <ion-icon name="moon"></ion-icon>
+    </div>
+</footer>
+
+<div class="navigation">
+    <ul>
+        {% if user.is_authenticated %}
+            <li><a href="{% url 'schedule' %}">Расписания</a></li>
+        {% endif %}
+        <li onclick="activeDropDownNavMob(0)" class="action">Сервисы
+            <ion-icon
+                    name="chevron-down-outline"></ion-icon>
+        </li>
+        <ul>
+            <li><a href="{% url 'blog_home' %}">Твои Статьи</a></li>
+            <li><a href="{% url 'todo' %}">Твои Напоминания</a></li>
+            <li><a href="{% url 'questionnaireIndex' %}">Твой Опросник</a></li>
+            <li><a href="{% url 'gpt_home' %}">Твой Помощник</a></li>
+            <li><a href="{% url 'py_interpreter' %}">Твой Интерпретатор</a></li>
+        </ul>
+        <li onclick="activeDropDownNavMob(1)" class="action">Действия
+            <ion-icon
+                    name="chevron-down-outline"></ion-icon>
+        </li>
+        <ul>
+            <li><a href="{% url 'billing_index' %}">Оплатить занятия</a></li>
+            <li><a href="{% url 'schedule' %}">Создать отчёт</a></li>
+        </ul>
+        <li onclick="activeDropDownNavMob(2)" class="action">Контакты
+            <ion-icon
+                    name="chevron-down-outline"></ion-icon>
+        </li>
+        <ul>
+            <li><a href="https://vk.com/matvey.chekashov">ВК</a></li>
+            <li><a href="https://t.me/mchekashov">Телеграм</a></li>
+            <li><a href="https://github.com/Ryize">GitHub</a></li>
+        </ul>
+        <li><a href="{% url 'review' %}">Отзывы</a></li>
+    </ul>
+
+    {% if not user.is_authenticated %}
+        <button><a href="{% url 'account_login' %}">Авторизоваться</a></button>
+    {% elif user.is_staff %}
+        <li><a href="{% url 'admin:index' %}">Настройки</a></li>
+    {% endif %}
+</div>
+
+<script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.3/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.3/ScrollTrigger.min.js"></script>
+<script src="{% static 'Course/js/main.js' %}"></script>
+</body>
+
+</html>

@@ -80,7 +80,7 @@ class BillingView(LoginRequiredMixin, ListView):
         context['student_email'] = student_email
         context['amount_15_lesson'] = cost_classes // 50
         context['student_email'] = student_email
-        context['billings'] = billings
+        context['billings'] = billings[::-1]
         context['amount_classes'] = amount_classes
         context['number_passes'] = number_passes
         context['lesson_price'] = lesson_price

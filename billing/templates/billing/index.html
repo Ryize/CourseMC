@@ -1,444 +1,248 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>M&C - Оплата занятий</title>
-    <!-- Bootstrap CSS (jsDelivr CDN) -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-<body class='p-0'>
-{% include 'template/header.html' %}
-{% include 'template/flash_message.html' %}
-{% include 'template/base_head.html' %}
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.1/css/bootstrap.min.css"
-      integrity="sha512-T584yQ/tdRR5QwOpfvDfVQUidzfgc2339Lc8uBDtcp/wYu80d7jwBgAxbyMh0a9YM9F8N3tdErpFI8iaGx6x5g=="
-      crossorigin="anonymous" referrerpolicy="no-referrer">
-<!-- jQuery (Cloudflare CDN) -->
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
-        integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
-        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<!-- Bootstrap Bundle JS (Cloudflare CDN) -->
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.1/js/bootstrap.min.js"
-        integrity="sha512-UR25UO94eTnCVwjbXozyeVd6ZqpaAE9naiEUBK/A+QDbfSTQFhPGj5lOR6d8tsgbBk84Ggb5A3EkjsOgPRPcKA=="
-        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Расписания - CourseMC</title>
+    <link rel="stylesheet" href="{% static 'Course/css/style.css' %}">
+    <link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}" type="image/x-icon">
+</head>
 <style>
-    #myInput {
-        background-image: url('https://free-png.ru/wp-content/uploads/2021/07/free-png.ru-44-700x700.png');
-        background-size: 6%;
-        background-position: 10px 12px;
-        background-repeat: no-repeat;
-        width: 100%;
-        font-size: 16px;
-        padding: 12px 20px 12px 50px;
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        margin-bottom: 12px;
+    html,
+    body {
+        max-width: 100%;
+        overflow-x: hidden;
     }
-
-    td {
-        margin-left: 8px;
-        font-weight: normal;
-        font-size: 110%;
-        text-align: justify;
-        margin-right: 3px;
-        margin-top: 0px;
-        text-indent: 6px;
-        margin: 0px;
-        padding-bottom: 1px;
-        padding-left: 4px;
-        padding-right: 4px;
-        padding-top: 1px;
-        color: #003300
-    }
-
-    a {
-        cursor: pointer;
-        font-size: 115%;
-    }
-
-    #filter-text:hover {
-        text-decoration: underline;
-        font-size: 122%;
-    }
-
-    #filter-form {
-        display: none;
-        padding: 50px;
-    }
-
-    .checkbox.style-e {
-        display: inline-block;
-        position: relative;
-        padding-left: 50px;
-        cursor: pointer;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-    }
-
-    .checkbox.style-e input {
-        position: absolute;
-        opacity: 0;
-        cursor: pointer;
-        height: 0;
-        width: 0;
-    }
-
-    .checkbox.style-e input:checked ~ .checkbox__checkmark {
-        background-color: #f7cb15;
-    }
-
-    .checkbox.style-e input:checked ~ .checkbox__checkmark:after {
-        left: 21px;
-    }
-
-    .checkbox.style-e:hover input ~ .checkbox__checkmark {
-        background-color: #eee;
-    }
-
-    .checkbox.style-e:hover input:checked ~ .checkbox__checkmark {
-        background-color: #f7cb15;
-    }
-
-    .checkbox.style-e .checkbox__checkmark {
-        position: absolute;
-        top: 1px;
-        left: 0;
-        height: 22px;
-        width: 40px;
-        background-color: #eee;
-        transition: background-color 0.25s ease;
-        border-radius: 11px;
-    }
-
-    .checkbox.style-e .checkbox__checkmark:after {
-        content: "";
-        position: absolute;
-        left: 3px;
-        top: 3px;
-        width: 16px;
-        height: 16px;
-        display: block;
-        background-color: #fff;
-        border-radius: 50%;
-        transition: left 0.25s ease;
-    }
-
-    .checkbox.style-e .checkbox__body {
-        color: #333;
-        line-height: 1.4;
-        font-size: 16px;
-        transition: color 0.25s ease;
-    }
-
-    .underline-one {
-    {#color: #00bfff; /* Цвет обычной ссылки */#} position: relative;
-        cursor: pointer;
-        text-decoration: none; /* Убираем подчеркивание */
-    }
-
-    .underline-one:after {
-        content: "";
-        display: block;
-        position: absolute;
-        right: 0;
-        bottom: -3px;
-        width: 0;
-        height: 2px; /* Высота линии */
-        background-color: black; /* Цвет подчеркивания при исчезании линии*/
-        transition: width 0.5s; /* Время эффекта */
-    }
-
-    .underline-one:hover:after {
-        content: "";
-        width: 100%;
-        display: block;
-        position: absolute;
-        left: 0;
-        bottom: -3px;
-        height: 2px; /* Высота линии */
-        background-color: red; /* Цвет подчеркивания при появлении линии*/
-        transition: width 0.5s; /* Время эффекта */
-    }
-
-    a:hover {
-        text-decoration: none;
-    }
-
 </style>
 
-<center>
-    <h1>
-        Оплатить занятия
-    </h1>
-    <h5>
-        *Сумма к оплате генерируется автоматически. Если вы с ней не согласны сообщите учителю.
-    </h5>
-    <div class="row">
-        <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3"></div>
-        <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
-            <table class="table table-hover table-bordered" style="margin-top: 1%;">
-                <tbody>
-                <tr>
-                    <th scope="row">Кол-во уроков</th>
-                    <td>{{ amount_classes }}</td>
-                </tr>
-                <tr>
-                    <th scope="row">Кол-во пропусков</th>
-                    <td>{{ number_passes }}</td>
-                </tr>
-                <tr>
-                    <th scope="row">Стоимость урока</th>
-                    <td>{{ lesson_price }}</td>
-                </tr>
-                <tr>
-                    <th scope="row">Итого</th>
-                    <td>
-                        {% if cost_classes > 0 %}
-                            <link rel="stylesheet"
-                                  href="https://yookassa.ru/integration/simplepay/css/yookassa_construct_form.css">
-                            <form class="yoomoney-payment-form" style="height: 30px;"
-                                  action="https://yookassa.ru/integration/simplepay/payment" method="post"
-                                  accept-charset="utf-8">
+<body onclick="closeAll()">
+<header>
+    <div class="container">
+        <h3><a href="{% url 'home' %}">CourseMC</a></h3>
 
-                                <div class="ym-hidden-inputs">
-                                <input name="shopSuccessURL" type="hidden" value="http://coursemc.ru/billing/success/">
-                                </div>
+        <div class="right black" id="headerRight">
+            <ul>
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'schedule' %}">Расписания</a></li>
+                {% endif %}
+                <li onclick="activeDropDownNav(0)">Сервисы
+                    <ion-icon name="chevron-down-outline"></ion-icon>
+                </li>
+                <li onclick="activeDropDownNav(1)">Действия
+                    <ion-icon name="chevron-down-outline"></ion-icon>
+                </li>
+                <li onclick="activeDropDownNav(2)">Контакты
+                    <ion-icon name="chevron-down-outline"></ion-icon>
+                </li>
+                <li><a href="{% url 'review' %}">Отзывы</a></li>
+            </ul>
+            {% if not user.is_authenticated %}
+                <button><a href="{% url 'account_login' %}">Авторизоваться</a></button>
+            {% elif user.is_staff %}
+                <li><a href="{% url 'create_group' %}">Группы</a></li>
+                <li><a href="{% url 'admin:index' %}">Настройки</a></li>
+            {% endif %}
+        </div>
 
-                                <button style="" data-text="Заплатить"><span
-                                        class="ym-text-crop">Оплатить</span> <span
-                                        class="ym-price-output">{{ cost_classes }}&nbsp;₽</span>
-                                </button>
+        <div class="menu">
+            <ion-icon name="menu-outline" class="white"></ion-icon>
+            <ion-icon name="close-outline"></ion-icon>
+        </div>
 
-                                <div class="ym-products ym-display-none">
-                                    <div class="ym-block-title ym-products-title">Товары</div>
+        <div class="drop drop1">
+            <ul>
+                <li style="--var: 55%;"><a href="{% url 'blog_home' %}">Твои Статьи</a></li>
+                <li style="--var: 95%;"><a href="{% url 'todo' %}">Твои Напоминания</a></li>
+                <li style="--var: 75%;"><a href="{% url 'questionnaireIndex' %}">Твой Опросник</a></li>
+                <li style="--var: 80%;"><a href="{% url 'gpt_home' %}">Твой Помощник</a></li>
+                <li style="--var: 100%;"><a href="{% url 'py_interpreter' %}">Твой Интерпретатор</a></li>
+            </ul>
+        </div>
 
-                                    <div class="ym-product">
-                                        <div class="ym-product-line">
-                                            <span class="ym-product-description">Урок</span>
-                                            <span class="ym-product-price" data-price="50"
-                                                  data-id="904">50,00&nbsp;₽</span>
-                                        </div>
-                                        <div class="ym-product-line ym-align-items-center">
-                                            <div class="ym-count-input">
-                                                <input class="ym-input" value="{{ amount_15_lesson }}" type="number"
-                                                       step="any">
-                                                <span class="ym-count-control ym-count-plus"></span>
-                                                <span class="ym-count-control ym-count-minus"></span>
-                                            </div>
-                                        </div>
-                                        <input disabled="" type="hidden" name="text" value="Урок"><input disabled=""
-                                                                                                             type="hidden"
-                                                                                                             name="price"
-                                                                                                             value="50"><input
-                                            disabled="" type="hidden" name="quantity" value="1"><input disabled=""
-                                                                                                       type="hidden"
-                                                                                                       name="paymentSubjectType"
-                                                                                                       value="service"><input
-                                            disabled="" type="hidden" name="paymentMethodType"
-                                            value="full_payment"><input disabled="" type="hidden" name="tax" value="1">
-                                    </div>
-                                </div>
-                                <input value="" type="hidden" name="ym_merchant_receipt">
+        <div class="drop drop2">
+            <ul>
+                <li style="--var: 67%;"><a href="{% url 'billing_index' %}">Оплатить занятия</a></li>
+                <li style="--var: 50%;"><a href="{% url 'schedule' %}">Создать отчёт</a></li>
+                <li style="--var: 100%;"><a href="{% url 'schedule' %}">Задать анонимный вопрос</a></li>
+            </ul>
+        </div>
 
-                                <div class="ym-customer-info">
-                                    <input name="cps_email" class="ym-input ym-display-none" placeholder="Email"
-                                           type="text" value="{{ student_email }}">
-
-
-                                </div>
-
-                                <div class="ym-hidden-inputs">
-
-
-                                </div>
-
-
-                                <div class="ym-payment-btn-block ym-align-space-between">
-                                    <div class="ym-input-icon-rub ym-display-none">
-                                        <input name="sum" placeholder="0.00"
-                                               class="ym-input ym-sum-input ym-required-input" type="number" step="any"
-                                               value="250">
-                                    </div>
-                                    <lineargradient id="paint0_linear" x1="57.3564" y1="0" x2="57.3564" y2="63"
-                                                    gradientunits="userSpaceOnUse">
-                                        <stop stop-color="#0160D1">
-                                            <stop offset="1" stop-color="#00479C"></stop>
-                                        </stop>
-                                    </lineargradient>
-                                    <lineargradient id="paint1_linear" x1="12.8472" y1="9.35889" x2="12.8472"
-                                                    y2="55.2393" gradientunits="userSpaceOnUse">
-                                        <stop stop-color="#0160D1">
-                                            <stop offset="1" stop-color="#00479C"></stop>
-                                        </stop>
-                                    </lineargradient>
-
-                                </div>
-                                <input name="shopId" type="hidden" value="986660"></form>
-                            <script src="https://yookassa.ru/integration/simplepay/js/yookassa_construct_form.js"></script>
-                        {% endif %}
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+        <div class="drop drop3">
+            <ul>
+                <li style="--var: 30%;"><a href="https://vk.com/matvey.chekashov">ВК</a></li>
+                <li style="--var: 100%;"><a href="https://t.me/mchekashov">Телеграм</a></li>
+                <li style="--var: 75%;"><a href="https://github.com/Ryize">GitHub</a></li>
+            </ul>
         </div>
     </div>
-</center>
-<br>
-<hr>
-<br>
-<center><h2>Предыдущие оплаты</h2></center>
-<table class="table table-hover table-bordered" style="margin-top: 1%;">
-    <thead>
-    <tr>
-        <th scope="col">#</th>
-        <th scope="col">Сумма</th>
-        <th scope="col">Дата и время</th>
+</header>
 
-    </tr>
-    </thead>
-    <tbody>
-    {% for billing in billings %}
-        <tr>
-            <th scope="row">{{ forloop.counter }}</th>
-            <td>{{ billing.amount }}</td>
-            <td style="width: 20%;">{{ billing.date }}</td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
-<nav aria-label="Page navigation example">
-    {% if is_paginated %}
-        {% if page_obj.has_other_pages %}
-            <style>
-                #pag {
-                    margin-top: 75px;
-                    height: 100%;
-                }
-            </style>
-            <nav aria-label="Navigation panel" id="pag">
-                <ul class="pagination justify-content-center">
+<section class="scheduleSection">
+    <div class="title">
+        <h2>Оплата занятий</h2>
+        <p>*Сумма к оплате генерируется автоматически. Если вы с ней не согласны сообщите учителю.</p>
+    </div>
 
-                    {% if page_obj.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" tabindex="-1">Предыдущая
-                                страница</a>
-                        </li>
-                    {% else %}
-                        <li class="page-item disabled">
-                            <a class="page-link" href="#" tabindex="-1">Предыдущая страница</a>
-                        </li>
-                    {% endif %}
-                    {% for p in page_obj.paginator.page_range %}
+    <div class="actions">
+        <div>
+            <h3>Количество уроков: <span>{{ amount_classes }}</span></h3>
+            <h3>Количество пропусков: <span>{{ number_passes }}</span></h3>
+            <h3>Стоимость урока: <span>{{ lesson_price }}₽</span></h3>
+        </div>
 
-                        {% if forloop.first and p < page_obj.number|add:-3 %}
-                            <li class="page-item"><a class="page-link" href="?page=1">1</a>
-                            <li class="page-item"><a class="page-link">...</a></li>
-                        {% endif %}
+        <form class="yoomoney-payment-form" style="height: 30px;"
+              action="https://yookassa.ru/integration/simplepay/payment" method="post"
+              accept-charset="utf-8">
 
-                        {% if p >= page_obj.number|add:-3 and p <= page_obj.number|add:3 %}
-                            <li class="page-item{% if p != page_obj.number %}{% else %} active{% endif %}"><a
-                                    class="page-link"
-                                    href="?page={{ p }}">{{ p }}</a>
-                            </li>
+            <div class="ym-hidden-inputs">
+                <input name="shopSuccessURL" type="hidden" value="http://coursemc.ru/billing/success/">
+            </div>
 
-                        {% endif %}
+            <button data-text="Заплатить">Оплатить {{ cost_classes }}&nbsp;₽</button>
+            <div class="ym-products ym-display-none">
+                <div class="ym-product">
+                    <input disabled="" type="hidden" name="text" value="Урок"><input disabled=""
+                                                                                     type="hidden"
+                                                                                     name="price"
+                                                                                     value="50"><input
+                        disabled="" type="hidden" name="quantity" value="1"><input disabled=""
+                                                                                   type="hidden"
+                                                                                   name="paymentSubjectType"
+                                                                                   value="service"><input
+                        disabled="" type="hidden" name="paymentMethodType"
+                        value="full_payment"><input disabled="" type="hidden" name="tax" value="1">
+                </div>
+            </div>
+            <input value="" type="hidden" name="ym_merchant_receipt">
 
-                        {% if forloop.last and p > page_obj.number|add:3 %}
-                            <li class="page-item"><a class="page-link">...</a></li>
-                            <li class="page-item">
-                            <a class="page-link" href="?page={{ paginator.num_pages }}">{{ paginator.num_pages }}</a>
-                        {% endif %}
-                    {% endfor %}
-                    {% if page_obj.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Следующая страница</a>
+            <div class="ym-customer-info">
+                <input name="cps_email" class="ym-input ym-display-none" placeholder="Email"
+                       type="hidden" value="{{ student_email }}">
 
-                        </li>
-                    {% else %}
-                        <li class="page-item disabled">
-                            <a class="page-link" href="#">Следующая страница</a>
-                        </li>
-                    {% endif %}
 
-                </ul>
-            </nav>
+            </div>
+
+            <div class="ym-hidden-inputs">
+
+
+            </div>
+
+            <div class="ym-payment-btn-block ym-align-space-between">
+                <div class="ym-input-icon-rub ym-display-none">
+                    <input name="sum" placeholder="0.00"
+                           class="ym-input ym-sum-input ym-required-input" type="hidden" step="any"
+                           value="{{ cost_classes }}">
+                </div>
+                <lineargradient id="paint0_linear" x1="57.3564" y1="0" x2="57.3564" y2="63"
+                                gradientunits="userSpaceOnUse">
+                    <stop stop-color="#0160D1">
+                        <stop offset="1" stop-color="#00479C"></stop>
+                    </stop>
+                </lineargradient>
+                <lineargradient id="paint1_linear" x1="12.8472" y1="9.35889" x2="12.8472"
+                                y2="55.2393" gradientunits="userSpaceOnUse">
+                    <stop stop-color="#0160D1">
+                        <stop offset="1" stop-color="#00479C"></stop>
+                    </stop>
+                </lineargradient>
+
+            </div>
+            <input name="shopId" type="hidden" value="986660"></form>
+        <script src="https://yookassa.ru/integration/simplepay/js/yookassa_construct_form.js"></script>
+    </div>
+
+    <h3 class="previosPayments">Предыдущие оплаты</h3>
+    <div class="list billing"></div>
+
+    <nav class="pagination-container">
+        <button class="back">
+            <ion-icon name="chevron-back-outline"></ion-icon>
+        </button>
+        <div id="pagination-numbers"></div>
+        <button class="next">
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+        </button>
+    </nav>
+</section>
+
+<footer>
+    <p>© 2022 CourseMC – Обучение Python разработке</p>
+</footer>
+
+<div class="navigation">
+    <ul>
+        {% if user.is_authenticated %}
+            <li><a href="{% url 'schedule' %}">Расписания</a></li>
         {% endif %}
+        <li onclick="activeDropDownNavMob(0)" class="action">Сервисы
+            <ion-icon
+                    name="chevron-down-outline"></ion-icon>
+        </li>
+        <ul>
+            <li><a href="{% url 'blog_home' %}">Твои Статьи</a></li>
+            <li><a href="{% url 'todo' %}">Твои Напоминания</a></li>
+            <li><a href="{% url 'questionnaireIndex' %}">Твой Опросник</a></li>
+            <li><a href="{% url 'gpt_home' %}">Твой Помощник</a></li>
+            <li><a href="{% url 'py_interpreter' %}">Твой Интерпретатор</a></li>
+        </ul>
+        <li onclick="activeDropDownNavMob(1)" class="action">Действия
+            <ion-icon
+                    name="chevron-down-outline"></ion-icon>
+        </li>
+        <ul>
+            <li><a href="{% url 'billing_index' %}">Оплатить занятия</a></li>
+            <li><a href="{% url 'schedule' %}">Создать отчёт</a></li>
+        </ul>
+        <li onclick="activeDropDownNavMob(2)" class="action">Контакты
+            <ion-icon
+                    name="chevron-down-outline"></ion-icon>
+        </li>
+        <ul>
+            <li><a href="https://vk.com/matvey.chekashov">ВК</a></li>
+            <li><a href="https://t.me/mchekashov">Телеграм</a></li>
+            <li><a href="https://github.com/Ryize">GitHub</a></li>
+        </ul>
+        <li><a href="{% url 'review' %}">Отзывы</a></li>
+    </ul>
+
+    {% if not user.is_authenticated %}
+        <button><a href="{% url 'account_login' %}">Авторизоваться</a></button>
+    {% elif user.is_staff %}
+        <li><a href="{% url 'create_group' %}">Группы</a></li>
+        <li><a href="{% url 'admin:index' %}">Настройки</a></li>
     {% endif %}
-</nav>
+</div>
+
+<script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.3/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.3/ScrollTrigger.min.js"></script>
 <script>
-    function changeFilterVisible() {
-        filter = document.getElementById('filter-form');
-        if (getComputedStyle(filter).display === 'none') {
-            filter.style.display = 'block';
-        } else {
-            filter.style.display = 'none';
-        }
+    const box = document.querySelector('.list')
+
+    const itemsMain = [
+        {% for billing in billings %}
+            {price: {{ billing.amount }}, date: '{{ billing.date }}'},
+        {% endfor %}
+    ].reverse()
+
+    function setMark(elem) {
+        if (elem === undefined) return ''
+        if (elem === 'new') return 'Новая тема'
+        if (elem === 'primary') return 'Ключевая тема'
     }
+
+    box.innerHTML = itemsMain.map(item => (
+        `<div id="dropdown" class="item">
+                <h2>${item.price}₽</h2>
+                <p>${item.date}</p>
+            </div>`
+    )).join(' ')
 </script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-
-<script>
-    function ask_question() {
-        $.ajax({
-            data:
-                {
-                    question: document.getElementById('message-text').value
-                },
-            url: "{% url 'ask_question' %}",
-
-            success: function (response) {
-                $('#exampleModal').modal('hide');
-                if (response.is_taken === true) {
-                    showMessage('Ваш вопрос успешно сохранён!', 'info')
-                } else {
-                    showMessage('Вы не ввели вопрос!', 'error')
-                }
-            },
-
-            error: function (response) {
-                showMessage('Вы не ввели вопрос!', 'error')
-            }
-        });
-        return false;
-    }
-
-    function showMessage(text, code) {
-        const ul = document.getElementById('messages-list')
-        const li = document.createElement('li')
-        const div = document.createElement('div')
-        div.textContent = text
-        div.classList = 'alert alert-' + code + ' msg fade show'
-        div.role = 'alert'
-        li.appendChild(div)
-        ul.appendChild(li)
-        fade_alerts()
-    }
-
-    function superButtonMagic() {
-        // создаем AJAX-вызов
-        $.ajax({
-            data: $(this).serialize(), // получаяем данные формы
-            url: "{% url 'get_filter_data' %}",
-            // если успешно, то
-            success: function (response) {
-                if (response.code === 'OK') {
-                    element = document.getElementById('super-button')
-                    element.innerText = response.answer
-                } else {
-                    alert('Произошла ошибка!')
-                }
-            },
-            // если ошибка, то
-            error: function (response) {
-                // предупредим об ошибке
-                console.log(response.responseJSON.errors)
-            }
-        });
-        return false;
-    }
-</script>
+<script src="{% static 'Course/js/main.js' %}"></script>
 </body>
+
 </html>
