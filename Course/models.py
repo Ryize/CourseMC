@@ -156,3 +156,13 @@ class ApplicationsForTraining(models.Model):
 
     def __str__(self):
         return f'{self.student}, {self.descry}'
+
+
+class AdditionalLessons(models.Model):
+    group = models.ForeignKey(
+        'LearnGroup',
+        on_delete=models.CASCADE,
+        verbose_name='Группа обучения',
+        related_name='additional_lessons',
+    )
+    amount = models.IntegerField(verbose_name='Количество')

@@ -85,6 +85,7 @@ class MyPostListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['descry'] = Post.objects.filter(is_displayed=False).all()
+        context['my_post'] = True
         return context
 
 
