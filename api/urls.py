@@ -2,7 +2,7 @@ from django.urls import path
 
 from .views import (LearnGroupViewSet, ScheduleGet, ScheduleViewSet,
                     StudentQuestionView, StudentViewSet, ClassesTimetableView,
-                    ApplicationsForTrainingView)
+                    ApplicationsForTrainingView, PaymentAmountView)
 
 urlpatterns = [
     path("schedule/", ScheduleViewSet.as_view()),
@@ -12,4 +12,5 @@ urlpatterns = [
     path("student_question/", StudentQuestionView.as_view()),
     path("classes_timetable/<str:user_name>/", ClassesTimetableView.as_view()),
     path("app_training/", ApplicationsForTrainingView.as_view()),
+    path("payment/<int:student_id>/", PaymentAmountView.as_view()),
 ]

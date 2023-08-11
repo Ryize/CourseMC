@@ -70,3 +70,7 @@ class ApplicationsForTrainingSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApplicationsForTraining
         fields = '__all__'
+
+
+class PaymentAmountSerializer(serializers.Serializer):
+    student_id = serializers.IntegerField()

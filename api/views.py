@@ -1,11 +1,15 @@
+from django.contrib.auth.models import User
+from django.http import JsonResponse
+from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from Course.models import LearnGroup, Schedule, Student, StudentQuestion, ClassesTimetable, ApplicationsForTraining
+from billing.count_bill_logic import get_lesson_data
 
 from .serializers import (LearnGroupListSerializer, ScheduleListSerializer,
                           StudentListSerializer, StudentQuestionListSerializer, ClassesTimetableListSerializer,
-                          ApplicationsForTrainingSerializer)
+                          ApplicationsForTrainingSerializer, PaymentAmountSerializer)
 
 
 class ScheduleViewSet(APIView):
@@ -98,3 +102,24 @@ class ApplicationsForTrainingView(APIView):
         app_training = ApplicationsForTraining.objects.filter(descry=False).all()
         serializer = ApplicationsForTrainingSerializer(app_training, many=True)
         return Response(serializer.data)
+
+
+class PaymentAmountView(GenericAPIView):
+    """
+    Позволяет получить кол-во неоплаченных уроков и сумму для оплаты.
+    """
+    def get_serializer(self, *args, **kwargs):
+        return PaymentAmountSerializer(*args, **kwargs)
+
+    def get(self, request, student_id, *args, **kwargs):
+        student = Student.objects.filter(pk=student_id).first()
+        if not student:
+            return JsonResponse({'error': 'Пользователь не найден!'})
+        user = User.objects.get(username=student.name)
+        _, amount_occupations, amount = get_lesson_data(user)
+        return JsonResponse(
+            {
+                'amount': amount,
+                'amount_occupations': amount_occupations,
+            }
+        )

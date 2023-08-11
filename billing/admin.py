@@ -1,9 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 
-from Course.models import Student, LearnGroup, ClassesTimetable
+from Course.models import Student, ClassesTimetable
 from billing.models import InformationPayments, EducationCost, Absences, Adjustment
-from billing.count_bill_logic import get_lesson_data
 from billing.views import get_cost_classes
 
 
@@ -57,13 +56,24 @@ class EducationCostAdmin(admin.ModelAdmin):
         'should',
     )
     list_filter = (
-        'user',
         'amount',
     )
     actions = ('calculate_amount', 'calculate_taking_account_risks',)
     empty_value_display = '-пустой-'
     list_per_page = 64
     list_max_show_all = 8
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        user = request.user
+        if user:
+            last_pay = InformationPayments.objects.filter(
+                user__name=user.username
+            ).first()
+            if not last_pay:
+                return
+
+            cost_classes = get_cost_classes(user)
 
     def should(self, obj):
         user = User.objects.filter(username=obj.user.name).first()
@@ -77,6 +87,8 @@ class EducationCostAdmin(admin.ModelAdmin):
             cost_classes = get_cost_classes(user)
             if cost_classes > 0:
                 return cost_classes
+
+    should.admin_order_field = 'should'  # Связываем метод should с полем для сортировки
 
     def per_month(self, obj):
         student = Student.objects.filter(name=obj.user.name).first()
