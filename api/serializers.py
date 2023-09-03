@@ -74,3 +74,8 @@ class ApplicationsForTrainingSerializer(serializers.ModelSerializer):
 
 class PaymentAmountSerializer(serializers.Serializer):
     student_id = serializers.IntegerField()
+
+
+class MissingSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=32)
+    date = serializers.DateField()

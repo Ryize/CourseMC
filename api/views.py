@@ -1,3 +1,5 @@
+from urllib.parse import unquote
+
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from rest_framework.generics import GenericAPIView
@@ -6,10 +8,22 @@ from rest_framework.views import APIView
 
 from Course.models import LearnGroup, Schedule, Student, StudentQuestion, ClassesTimetable, ApplicationsForTraining
 from billing.count_bill_logic import get_lesson_data
+from billing.models import Absences
+from .KEY import KEY
 
 from .serializers import (LearnGroupListSerializer, ScheduleListSerializer,
                           StudentListSerializer, StudentQuestionListSerializer, ClassesTimetableListSerializer,
-                          ApplicationsForTrainingSerializer, PaymentAmountSerializer)
+                          ApplicationsForTrainingSerializer, PaymentAmountSerializer, MissingSerializer)
+
+
+def check_code(func):
+    def wrapper(*args, **kwargs):
+        if kwargs['code'] != KEY:
+            return Response(status=401)
+        del kwargs['code']
+        return func(*args, **kwargs)
+
+    return wrapper
 
 
 class ScheduleViewSet(APIView):
@@ -66,6 +80,7 @@ class LearnGroupViewSet(APIView):
     Вывод всех групп
     """
 
+    @check_code
     def get(self, request):
         groups = LearnGroup.objects.all()
         serializer = LearnGroupListSerializer(groups, many=True)
@@ -108,14 +123,16 @@ class PaymentAmountView(GenericAPIView):
     """
     Позволяет получить кол-во неоплаченных уроков и сумму для оплаты.
     """
+
     def get_serializer(self, *args, **kwargs):
         return PaymentAmountSerializer(*args, **kwargs)
 
-    def get(self, request, student_id, *args, **kwargs):
-        student = Student.objects.filter(pk=student_id).first()
-        if not student:
-            return JsonResponse({'error': 'Пользователь не найден!'})
-        user = User.objects.get(username=student.name)
+    def get(self, request, username, *args, **kwargs):
+        if username.find("%") == 0:
+            username = unquote(username.upper(), "utf-8")
+        user = User.objects.filter(username=username).first()
+        if not user:
+            return JsonResponse({"error": "User not found error"})
         _, amount_occupations, amount = get_lesson_data(user)
         return JsonResponse(
             {
@@ -123,3 +140,40 @@ class PaymentAmountView(GenericAPIView):
                 'amount_occupations': amount_occupations,
             }
         )
+
+
+class MissingView(GenericAPIView):
+    """
+    Позволяет добавить пропуск.
+    """
+
+    def get_serializer(self, *args, **kwargs):
+        return MissingSerializer(*args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        username = request.POST.get('username')
+        date = request.POST.get('date')
+        serializer = MissingSerializer(data=request.data)
+        if not serializer.is_valid():
+            return JsonResponse(
+                {
+                    'status': False,
+                    'description': 'Incorrect data'
+                }
+            )
+        student = Student.objects.filter(name=username).first()
+        if not student:
+            return JsonResponse(
+                {
+                    'status': False,
+                    'description': 'Student not found'
+                }
+            )
+        Absences.objects.create(user=student, date=date)
+        return JsonResponse({'status': True})
+
+
+class ClassesTimetableGingerView(GenericAPIView):
+    def get(self, request, group: int):
+        amount = ClassesTimetable.objects.filter(group=group).count()
+        return JsonResponse({'amount': amount * 4})
