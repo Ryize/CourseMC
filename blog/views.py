@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.http import JsonResponse
-from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import redirect, render
 from django.views.generic import CreateView, DetailView, ListView
 
 from .forms import PostForm
@@ -58,12 +58,11 @@ class PostListView(ListView):
                     .prefetch_related("categories")
                     .all()
                 )
-        return (
-            Post.objects.filter(is_displayed=True)
-            .order_by("-created_at")
-            .prefetch_related("categories")
-            .all()
-        )
+        return Post.objects.filter(is_displayed=True
+        ).order_by("-created_at"
+        ).prefetch_related("categories"
+        ).all()[::-1]
+        
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -137,8 +136,7 @@ def change_post(request, post_id):
 
 
 def _change_post_get(request, post_id):
-    # post = Post.objects.get(id=post_id)
-    post = get_object_or_404(Post, pk=post_id)
+    post = Post.objects.get(id=post_id)
     if post.author != request.user and not request.user.is_staff:
         return redirect(reverse_lazy("blog_home"))
     form = PostForm()

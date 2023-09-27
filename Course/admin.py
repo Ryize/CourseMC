@@ -7,7 +7,7 @@ from .models import *
 
 
 @admin.register(Student)
-class PersonAdmin(admin.ModelAdmin):
+class StudentAdmin(admin.ModelAdmin):
     fields = (
         'name',
         'contact',
@@ -62,8 +62,8 @@ class LearnGroupAdmin(admin.ModelAdmin):
         'title',
         'is_studies',
     )
-    readonly_fields = ('created_at',)
     empty_value_display = '-пустой-'
+    readonly_fields = ('created_at',)
     list_per_page = 64
     list_max_show_all = 8
     search_fields = ['title']
@@ -73,6 +73,7 @@ class LearnGroupAdmin(admin.ModelAdmin):
 class ScheduleAdmin(admin.ModelAdmin):
     content = forms.CharField(widget=CKEditorUploadingWidget())
     fields = (
+        'for_filter',
         'theme',
         'lesson_materials',
         'lesson_type',
@@ -80,6 +81,7 @@ class ScheduleAdmin(admin.ModelAdmin):
     list_display = (
         'pk',
         'theme',
+        'for_filter',
     )
     list_display_links = (
         'theme',
@@ -217,5 +219,24 @@ class ApplicationsForTrainingAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at',)
     empty_value_display = 'не указанно'
     list_editable = ('descry',)
+    list_per_page = 64
+    list_max_show_all = 8
+
+
+@admin.register(AdditionalLessons)
+class AdditionalLessonsAdmin(admin.ModelAdmin):
+    fields = (
+        'group',
+        'amount',
+    )
+    list_display = (
+        'group',
+        'amount',
+    )
+    list_display_links = (
+        'group',
+        'amount',
+    )
+    empty_value_display = 'не указанно'
     list_per_page = 64
     list_max_show_all = 8

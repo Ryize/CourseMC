@@ -3,6 +3,7 @@ import datetime
 
 from Course.models import Student, ClassesTimetable
 from billing.models import EducationCost, InformationPayments
+from django.contrib.auth import get_user
 
 
 def weekday_count(start, end):

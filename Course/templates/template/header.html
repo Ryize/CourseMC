@@ -1,185 +1,57 @@
-<!-- Bootstrap Bundle JS (jsDelivr CDN) -->
-<script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
-        crossorigin="anonymous"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
-        integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
-        crossorigin="anonymous"></script>
-<style>
+<header>
+	<div class="container">
+		<h3><a href="{% url 'home' %}">CourseMC</a></h3>
 
-    .underline-one {
-        color: #00bfff; /* Цвет обычной ссылки */
-        position: relative;
-        cursor: pointer;
-        text-decoration: none; /* Убираем подчеркивание */
-    }
+			<div class="right black" id="headerRight">
+					<ul>
+							{% if user.is_authenticated %}
+							<li class="active"><a href="{% url 'schedule' %}">Расписания</a></li>
+							{% endif %}
+							<li onclick="activeDropDownNav(0)">Сервисы
+									<ion-icon name="chevron-down-outline"></ion-icon>
+							</li>
+							<li onclick="activeDropDownNav(1)">Действия
+									<ion-icon name="chevron-down-outline"></ion-icon>
+							</li>
+							<li onclick="activeDropDownNav(2)">Контакты
+									<ion-icon name="chevron-down-outline"></ion-icon>
+							</li>
+							<li><a href="{% url 'review' %}">Отзывы</a></li>
+					</ul>
+					{% if not user.is_authenticated %}
+							<button type="button" data-modal-target="modal-auth">Авторизоваться</button>
+					{% elif user.is_staff %}
+							<li><a href="{% url 'admin:index' %}">Настройки</a></li>
+					{% endif %}
+			</div>
 
-    .underline-one:after {
-        content: "";
-        display: block;
-        position: absolute;
-        right: 0;
-        bottom: -3px;
-        width: 0;
-        height: 2px; /* Высота линии */
-        background-color: black; /* Цвет подчеркивания при исчезании линии*/
-        transition: width 0.5s; /* Время эффекта */
-    }
+			<div class="menu">
+					<ion-icon name="menu-outline"></ion-icon>
+					<ion-icon name="close-outline"></ion-icon>
+			</div>
 
-    .underline-one:hover:after {
-        content: "";
-        width: 100%;
-        display: block;
-        position: absolute;
-        left: 0;
-        bottom: -3px;
-        height: 2px; /* Высота линии */
-        background-color: red; /* Цвет подчеркивания при появлении линии*/
-        transition: width 0.5s; /* Время эффекта */
-    }
+			<div class="drop drop1">
+					<ul>
+							<li style="--var: 55%;"><a href="{% url 'blog_home' %}">Твои Статьи</a></li>
+							<li style="--var: 95%;"><a href="{% url 'todo' %}">Твои Напоминания</a></li>
+							<li style="--var: 75%;"><a href="{% url 'questionnaireIndex' %}">Твой Опросник</a></li>
+							<li style="--var: 100%;"><a href="{% url 'py_interpreter' %}">Твой Интерпретатор</a></li>
+					</ul>
+			</div>
 
-</style>
-<nav class="navbar navbar-expand-lg bg-dark navbar-dark sticky-top" style="width: 100%;">
-    <a class="navbar-brand" href="{% url 'home' %}">Курс M&C</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
-            aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-        <div class="navbar-nav">
-            {% if user.is_authenticated %}
-                <a class="nav-item nav-link underline-one active" href="{% url 'schedule' %}">Расписания</a>
-            {% endif %}
-            <label class="dropdown">
-                <a class="dropdown-toggle nav-item nav-link active" href="#" role="button" id="dropdownMenuLink"
-                   data-bs-toggle="dropdown" aria-expanded="false">
-                    Сервисы
-                </a>
+			<div class="drop drop2">
+					<ul>
+							<li style="--var: 67%;"><a href="{% url 'billing_index' %}">Оплатить занятия</a></li>
+							<li style="--var: 50%;"><a href="{% url 'schedule' %}">Создать отчёт</a></li>
+					</ul>
+			</div>
 
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                    <li><a class="dropdown-item underline-one" href="{% url 'blog_home' %}">Твои Статьи</a></li>
-                    <li><a class="dropdown-item underline-one" href="{% url 'todo' %}">Твои Напоминания</a></li>
-                    <li><a class="dropdown-item underline-one" href="{% url 'questionnaireIndex' %}">Твой Опросник</a>
-                    </li>
-                    <li><a class="dropdown-item underline-one" href="{% url 'gpt_home' %}">Твой Помощник</a>
-                    <li><a class="dropdown-item underline-one" href="{% url 'py_interpreter' %}">Твой Интерпретатор</a>
-                    </li>
-                    </li>
-                </ul>
-
-            </label>
-            <label class="dropdown">
-                <a class="dropdown-toggle nav-item nav-link active" href="#" role="button" id="dropdownMenuLink"
-                   data-bs-toggle="dropdown" aria-expanded="false">
-                    Действия
-                </a>
-
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                    <li>
-                        <a class="dropdown-item underline-one {% if not user.is_authenticated %} disabled {% endif %}"
-                           href="{% url 'billing_index' %}">Оплатить занятия</a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item underline-one {% if not user.is_authenticated %} disabled {% endif %}"
-                           href="{% url 'schedule' %}">Создать отчёт</a></li>
-                    <li>
-                        <a class="dropdown-item underline-one {% if not user.is_authenticated %} disabled {% endif %}"
-                           href="{% url 'schedule' %}">Задать анонимный вопрос</a>
-                    </li>
-                </ul>
-            </label>
-            <label class="dropdown">
-                <a class="dropdown-toggle nav-item nav-link active" href="#" role="button" id="dropdownMenuLink"
-                   data-bs-toggle="dropdown" aria-expanded="false">
-                    Контакты
-                </a>
-
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                    <li><a class="dropdown-item underline-one" href="https://vk.com/matvey.chekashov"
-                           target="_blank">ВК</a></li>
-                    <li><a class="dropdown-item underline-one" href="https://t.me/mchekashov"
-                           target="_blank">Телеграм</a></li>
-                    <li><a class="dropdown-item underline-one" href="https://github.com/Ryize"
-                           target="_blank">GitHub</a></li>
-                    {% if user.is_staff %}
-                        <li><a class="dropdown-item underline-one" href="{% url 'admin:index' %}"
-                               target="_blank">Настройки</a></li>
-                    {% endif %}
-                </ul>
-            </label>
-            <a class="nav-item nav-link active underline-one"
-               href="{% url 'review' %}">Отзывы<small>{% if reviews_count %}({{ reviews_count }}){% endif %}</small></a>
-            {% if user.is_staff %}
-                <a class="nav-item nav-link active underline-one"
-                   href="{% url 'create_group' %}">Группы</a>
-                <a href="{% url 'admin:index' %}" class="nav-link active nav-item underline-one">Настройки</a>
-            {% endif %}
-        </div>
-        <div class="collapse navbar-collapse justify-content-end" id="navbarCollapse">
-            <ul class="navbar-nav">
-                {% if user.is_staff %}
-                    <li class="nav-item">
-                        <a href="{% url 'admin:index' %}" class="nav-link active">Настройки</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'account_logout' %}" class="nav-link">Выйти</a>
-                        {% elif user.is_authenticated %}
-                    <li class="nav-item">
-                        <a href="{% url 'account_logout' %}" class="nav-link">Выйти</a>
-                        {% else %}
-                    <li class="nav-item">
-                    <a href="{% url 'account_login' %}" class="nav-link">Авторизоваться</a>
-                {% endif %}
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
-<script>
-    function scrollToDiv() {
-        $('a[href*=#]:not([href=#])').click(function () {
-            if (location.pathname.replace(/^\//, '') == this.pathname.replace(/^\//, '') && location.hostname == this.hostname) {
-                var target = $(this.hash);
-                target = target.length ? target : $('[name=' + this.hash.slice(1) + ']');
-                if (target.length) {
-                    $('html,body').animate({
-                        scrollTop: target.offset().top
-                    }, 1000);
-                    return false;
-                }
-            }
-        });
-    }
-
-    $(document).load(function () {
-        scrollToDiv();
-    });
-</script>
-
-<script>
-    $(function () {
-
-        $(window).on('scroll', function () {
-
-            if ($(window).scrollTop() >= 600) {
-
-                $('body').attr('id', 'gotop');
-                if (!$('.gototop').length) {
-                    // Создаем ссылку, которая будет работать как кнопка возврата пользователя наверх сайта
-                    // Наверх можно поменять на кнопку или любое другое название
-                    // Так же вместо style="", можно привязаться все атрибуты стилей к классу .gototop
-                    $('body').append('<a href="#gotop" class="gototop" style="position: fixed; right: 10px; bottom: 10px; display: block; padding: 5px 10px;"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-arrow-up-short" viewBox="0 0 16 16"> <path fill-rule="evenodd" d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5z"/> </svg></a>');
-                    scrollToDiv(); // Вызываем функцию, которая делали между <head></head>
-                }
-            } else {
-                // Убираем нашу ссылку и когда анимация заканчивается удаляем ее совсем
-                $('.gototop').fadeOut(600, function () {
-                    $(this).remove()
-                });
-            }
-
-        });
-    });
-</script>
+			<div class="drop drop3">
+					<ul>
+							<li style="--var: 30%;"><a href="https://vk.com/matvey.chekashov">ВК</a></li>
+							<li style="--var: 100%;"><a href="https://t.me/mchekashov">Телеграм</a></li>
+							<li style="--var: 75%;"><a href="https://github.com/Ryize">GitHub</a></li>
+					</ul>
+			</div>
+	</div>
+</header>

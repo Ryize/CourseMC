@@ -8,22 +8,12 @@ from rest_framework.views import APIView
 
 from Course.models import LearnGroup, Schedule, Student, StudentQuestion, ClassesTimetable, ApplicationsForTraining
 from billing.count_bill_logic import get_lesson_data
-from billing.models import Absences
-from .KEY import KEY
+from billing.models import Absences, InformationPayments
+from billing.views import get_cost_classes
 
 from .serializers import (LearnGroupListSerializer, ScheduleListSerializer,
                           StudentListSerializer, StudentQuestionListSerializer, ClassesTimetableListSerializer,
                           ApplicationsForTrainingSerializer, PaymentAmountSerializer, MissingSerializer)
-
-
-def check_code(func):
-    def wrapper(*args, **kwargs):
-        if kwargs['code'] != KEY:
-            return Response(status=401)
-        del kwargs['code']
-        return func(*args, **kwargs)
-
-    return wrapper
 
 
 class ScheduleViewSet(APIView):
@@ -32,7 +22,7 @@ class ScheduleViewSet(APIView):
     """
 
     def get(self, request):
-        schedules = Schedule.objects.all().order_by("weekday")
+        schedules = Schedule.objects.all()
         serializer = ScheduleListSerializer(schedules, many=True)
         return Response(serializer.data)
 
@@ -80,7 +70,6 @@ class LearnGroupViewSet(APIView):
     Вывод всех групп
     """
 
-    @check_code
     def get(self, request):
         groups = LearnGroup.objects.all()
         serializer = LearnGroupListSerializer(groups, many=True)
@@ -117,29 +106,40 @@ class ApplicationsForTrainingView(APIView):
         app_training = ApplicationsForTraining.objects.filter(descry=False).all()
         serializer = ApplicationsForTrainingSerializer(app_training, many=True)
         return Response(serializer.data)
-
-
+        
+        
 class PaymentAmountView(GenericAPIView):
     """
     Позволяет получить кол-во неоплаченных уроков и сумму для оплаты.
     """
-
     def get_serializer(self, *args, **kwargs):
         return PaymentAmountSerializer(*args, **kwargs)
+        
+    def post(self, request, username, *args, **kwargs):
+        if username.find("%") == 0:
+            username = unquote(username.upper(), "utf-8")
+        student = Student.objects.filter(name=username).first()
+        user = User.objects.filter(username=username).first()
+        if not user:
+            return JsonResponse({"error": "User not found"})
+        amount = get_cost_classes(user)
+        InformationPayments.objects.create(user=student, amount=amount)
+        return Response(status=201)
+        
 
     def get(self, request, username, *args, **kwargs):
         if username.find("%") == 0:
             username = unquote(username.upper(), "utf-8")
         user = User.objects.filter(username=username).first()
         if not user:
-            return JsonResponse({"error": "User not found error"})
-        _, amount_occupations, amount = get_lesson_data(user)
+            return JsonResponse({"error": "User not found"})
+        amount = get_cost_classes(user)
         return JsonResponse(
             {
                 'amount': amount,
-                'amount_occupations': amount_occupations,
             }
         )
+
 
 
 class MissingView(GenericAPIView):
@@ -177,3 +177,4 @@ class ClassesTimetableGingerView(GenericAPIView):
     def get(self, request, group: int):
         amount = ClassesTimetable.objects.filter(group=group).count()
         return JsonResponse({'amount': amount * 4})
+        

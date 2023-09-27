@@ -1,26 +1,21 @@
-<!doctype html>
-<html>
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  {# Bootstrap4を使う #}
-  <!-- linkタグでbootstrapのcssファイルを読み込む -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Авторизация - CourseMC</title>
+	<link rel="stylesheet" href="{% static 'Course/css/style.css' %}">
+	<link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}" type="image/x-icon">
+	
+</head>
+<body class="flex p-0 login">
+	{% include 'template/header.html' %}
+	{% block content %}
 
-  <!-- タイトルの設定-->
-  <title>Tutorial</title>
-
-<body>
-
-  {% block content %}
-
-   <!-- block content ～ endblockの間に子テンプレートの内容が差し込まれる -->
+   <!-- block content login -->
 
   {% endblock %}
-
-  <!-- bootstrapのjavascrit読み込み-->
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
-
-
+	{% include 'template/footer.html' %}
 </body>
 </html>

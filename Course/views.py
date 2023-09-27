@@ -18,7 +18,7 @@ from django.views.generic.edit import FormView
 
 from Course.doc import docx_worker, save_report
 from Course.forms import StudentForm
-from Course.models import LearnGroup, Schedule, Student, StudentQuestion, ApplicationsForTraining
+from Course.models import LearnGroup, Schedule, Student, StudentQuestion, ApplicationsForTraining, AdditionalLessons
 from Course.report import get_content_disposition, get_content_type
 from billing.models import Absences
 from reviews.models import Review
@@ -64,10 +64,15 @@ class StudentRecordView(FormView):
                 'error_message': 'Вы уже заполняли форму!',
             }
             return JsonResponse(response)
-        student = form.save()
-        name = form.cleaned_data['name']
-        email = form.cleaned_data['email']
-        password = form.cleaned_data['password']
+        name = form.cleaned_data.get('name')
+        email = form.cleaned_data.get('email')
+        password = form.cleaned_data.get('password')
+        if email.count('coursemc.ru'):
+            response = {
+                'success': False,
+                'error_message': 'Такой тип email запрещён!',
+            }
+            return JsonResponse(response)
         try:
             user = User.objects.create_user(name, email, password)
         except IntegrityError:
@@ -76,6 +81,7 @@ class StudentRecordView(FormView):
                 'error_message': 'Пользователь с таким именем уже существует!',
             }
             return JsonResponse(response)
+        student = form.save()
         ApplicationsForTraining.objects.create(student=student, ip=ip)
         user.save()
         response = {
@@ -96,9 +102,10 @@ class StudentRecordView(FormView):
         Returns:
             JsonResponse: Json ответ со статусом неудачи и пояснением.
         """
+        
         response = {
             'success': False,
-            'error_message': 'Форма заполнена не верно!',
+            'error_message': 'Форма заполнена неверно!',
         }
         return JsonResponse(response)
 
@@ -151,7 +158,12 @@ class TimetableView(LoginRequiredMixin, ListView):
         months = self._months(d1, d2)
         if months <= 0:
             months = 1
-        schedules = Schedule.objects.all()[:months*22]
+        additional_lessons = AdditionalLessons.objects.filter(group=group).first()
+        if not additional_lessons:
+            additional_lessons = 0
+        else:
+            additional_lessons = additional_lessons.amount
+        schedules = Schedule.objects.all()[:months*22 + additional_lessons]
 
         theme = self._get_param('theme')
         if theme:
@@ -218,13 +230,6 @@ class TimetableView(LoginRequiredMixin, ListView):
 
     @staticmethod
     def _months(d1, d2):
-        """
-        Получаем кол-во месяцев между двумя датами (
-        для формирования расписаний
-        ).
-        Первая дата - начало обучения.
-        Вторая дата - текущая дата.
-        """
         return d1.month - d2.month + 12 * (d1.year - d2.year)
 
 

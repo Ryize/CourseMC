@@ -1,9 +1,8 @@
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models import F
 from django.utils import timezone
 
-from Course.models import Student, ClassesTimetable
+from Course.models import Student
 
 
 class InformationPayments(models.Model):
@@ -28,7 +27,6 @@ class EducationCost(models.Model):
                              verbose_name="Ученик",
                              )
     amount = models.PositiveIntegerField(verbose_name='Сумма', default=0)
-    order = models.PositiveIntegerField(default=1)
 
     def __str__(self):
         return f'{self.user}, {self.amount}'
@@ -75,3 +73,4 @@ class Adjustment(models.Model):
     class Meta:
         verbose_name = 'Корректировка'
         verbose_name_plural = 'Корректировки'
+        

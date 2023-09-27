@@ -6,36 +6,37 @@
 {% block head_title %}{% trans "Sign In" %}{% endblock %}
 
 {% block content %}
-<title>Авторизация - CourseMC</title>
-<body class='p-0'>
-    {% include 'template/header.html' %}
-<div class="content-wrapper p-0">
-    <div class="container-fluid">
-        {% include 'template/base_head.html' %}
-
-        <center>
-            <div class="payment-info col-md-6 col-lg-4" style="margin-top: 7%;">
-                <h1>Авторизация</h1><br>
-                <form data-type="online" method="post" class="form-enroll-course form-base">
-                    <fieldset>
-                        {% csrf_token %}
-                        {{ form.as_p }}
-                        <div class="text-center"><input type="hidden" name="utm_source" value="yandex">
-                            <button type="submit"
-                                    class="btn btn-new btn-new--orange btn-new--width mb-new-2">
-                                <span>Войти</span>
-                            </button>
-                            <p style="margin-top: 13px;">Мы 2 года делаем курсы для тех, кто
-                            <strong>хочет и готов</strong> пробовать новое, меняться, искать себя и работу
-                            <strong>мечты</strong></p>
-                        </div>
-                    </fieldset>
-                </form>
-            </div>
-        </center>
 
 
-</div>
-</div>
-</body>
+<section class="section section-login">
+	<div class="container">
+		<form class="form-login form-enroll-course form-base" data-type="online" method="post">
+			<h1 class="form-title">Авторизация</h1>
+			{% csrf_token %}
+			<!-- {{ form.as_p }} -->
+			<div class="input-box">
+				<label for="id_login">Имя пользователя:</label>
+				<input type="text" name="login" placeholder="Имя пользователя" autocomplete="username" maxlength="150" required="" id="id_login">
+			</div>
+			<div class="input-box">
+				<label for="id_password">Пароль:</label> 
+				<input type="password" name="password" placeholder="Пароль" autocomplete="current-password" required="" id="id_password">
+			</div>
+			<div class="input-box">
+				<input class="input-checkbox" type="checkbox" name="remember" id="id_remember">
+				<label for="id_remember">Запомнить меня</label> 
+			</div>
+			<div class="text-center">
+				<input type="hidden" name="utm_source" value="yandex">
+				<button type="submit" class="btn">Войти</button>
+				<p style="margin-top: 13px;">Мы 2 года делаем курсы для тех, кто
+					<strong>хочет и готов</strong> пробовать новое, меняться, искать себя и работу
+					<strong>мечты</strong>
+				</p>
+			</div>
+
+		</form>
+	</div>
+</section>
+
 {% endblock %}

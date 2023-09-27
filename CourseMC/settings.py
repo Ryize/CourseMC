@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "ckeditor",
     "ckeditor_uploader",
     "rest_framework",
+    "colorfield",
     "reviews.apps.ReviewsConfig",
     "Course.apps.AuthConfig",
     "questionnaire.apps.QuestionnaireConfig",
@@ -307,3 +308,5 @@ STATICFILES_DIRS = [
 ]
 
 APPEND_SLASH = False
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240

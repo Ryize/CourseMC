@@ -36,17 +36,21 @@ def send_request_api(request):
             'success': True,
             'text': text_gpt,
         }
-        RequestsGPT.objects.create(
-            user=request.user,
-            text_request=data,
-            text_response=text_gpt
-        )
+        if request.user.username != 'MatveyChekashov':
+            RequestsGPT.objects.create(
+                user=request.user,
+                text_request=data,
+                text_response=text_gpt
+            )
         return JsonResponse(result_data)
-    return JsonResponse({'success': False})
 
 
 class ChatGPT:
-    __api_keys = ()
+    __api_keys = (
+        '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',
+        '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',
+        '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',
+    )
 
     def __init__(self):
         openai.api_key = random.choice(self.__api_keys)

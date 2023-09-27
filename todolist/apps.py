@@ -6,4 +6,4 @@ from django.apps import AppConfig
 
 class TodolistConfig(AppConfig):
     name = 'todolist'
-    verbose_name = 'Задачник'
+    verbose_name = 'Напоминания'

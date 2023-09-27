@@ -1,949 +1,829 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CourseMC</title>
-    <link rel="stylesheet" href="{% static 'Course/css/style.css' %}">
-    <link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}" type="image/x-icon">
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>CourseMC</title>
+	<link rel="stylesheet" href="{% static 'Course/css/style.css' %}">
+	<link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}" type="image/x-icon">
+
 </head>
 <style>
-    html,
-    body {
-        max-width: 100%;
-        overflow-x: hidden;
-    }
+	html,
+	body {
+		max-width: 100%;
+		overflow-x: hidden;
+	}
 </style>
 
 <body onclick="closeAll()">
-<header>
-    <div class="container">
-        <h3>CourseMC</h3>
-
-        <div class="right" id="headerRight">
-            <ul>
-                {% if user.is_authenticated %}
-                    <li><a href="{% url 'schedule' %}">Расписания</a></li>
-                {% endif %}
-                <li onclick="activeDropDownNav(0)">Сервисы
-                    <ion-icon name="chevron-down-outline"></ion-icon>
-                </li>
-                <li onclick="activeDropDownNav(1)">Действия
-                    <ion-icon name="chevron-down-outline"></ion-icon>
-                </li>
-                <li onclick="activeDropDownNav(2)">Контакты
-                    <ion-icon name="chevron-down-outline"></ion-icon>
-                </li>
-                <li><a href="{% url 'review' %}">Отзывы</a></li>
-            </ul>
-            {% if not user.is_authenticated %}
-                <button><a href="{% url 'account_login' %}">Авторизоваться</a></button>
-            {% elif user.is_staff %}
-                <li><a href="{% url 'create_group' %}">Группы</a></li>
-                <li><a href="{% url 'admin:index' %}">Настройки</a></li>
-            {% endif %}
-        </div>
-
-        <div class="menu">
-            <ion-icon name="menu-outline"></ion-icon>
-            <ion-icon name="close-outline"></ion-icon>
-        </div>
-
-        <div class="drop drop1">
-            <ul>
-                <li style="--var: 55%;"><a href="{% url 'blog_home' %}">Твои Статьи</a></li>
-                <li style="--var: 95%;"><a href="{% url 'todo' %}">Твои Напоминания</a></li>
-                <li style="--var: 75%;"><a href="{% url 'questionnaireIndex' %}">Твой Опросник</a></li>
-                <li style="--var: 80%;"><a href="{% url 'gpt_home' %}">Твой Помощник</a></li>
-                <li style="--var: 100%;"><a href="{% url 'py_interpreter' %}">Твой Интерпретатор</a></li>
-            </ul>
-        </div>
-
-        <div class="drop drop2">
-            <ul>
-                <li style="--var: 67%;"><a href="{% url 'billing_index' %}">Оплатить занятия</a></li>
-                <li style="--var: 50%;"><a href="{% url 'schedule' %}">Создать отчёт</a></li>
-            </ul>
-        </div>
-
-        <div class="drop drop3">
-            <ul>
-                <li style="--var: 30%;"><a href="https://vk.com/matvey.chekashov">ВК</a></li>
-                <li style="--var: 100%;"><a href="https://t.me/mchekashov">Телеграм</a></li>
-                <li style="--var: 75%;"><a href="https://github.com/Ryize">GitHub</a></li>
-            </ul>
-        </div>
-    </div>
-</header>
-
-<!-- Block 1 -->
-<section class="homeSection">
-    <div class="container">
-        <div>
-            <h1>Онлайн-курс Профессия <span>Python-разработчик</span></h1>
-            <p>Практический онлайн-курс по Python: от основ языка и алгоритмов до django и unit-тестирования. Вы
-                создадите несколько действующих сервисов и получите все необходимые навыки и знания для старта
-                работы в
-                Python программировании (Junior Python Developer).Последнее обновление курса - 12 февраля 2023 года
-            </p>
-        </div>
-
-        <img src="{% static 'Course/assets/1.png' %}" alt="">
-    </div>
-</section>
-
-<!-- Block 2 -->
-<section class="homeSection">
-    <div class="left">
-        <h2>О курсе</h2>
-        <p>Курс составлялся на основе вакансий и требований компаний к Python-разработчикам. Всё необходимое
-            добавили, ненужное убрали — вам осталось посмотреть, всё выполнить и получить профессию. Сложность
-            повышается поэтапно, поэтому вы можете учиться и без начальной подготовки в этой сфере.
-            Преподаватели и наставники — действующие Python-разработчики. Курс вы пройдёте вместе с личным
-            наставником, который поможет в обучении и в прохождении собеседований.
-            Видеоматериалы, созданные с любовью, много практических заданий для отработки знаний и 3 проекта — сайт
-            интернет-магазина или блога, Telegam-bot и написание игры (шахматы или gomoku)</p>
-    </div>
-
-    <div class="right">
-        <div>
-            <img src="{% static 'Course/assets/1.svg' %}" alt="">
-            <p><span>1</span> месяц поддержки наставника после обучения</p>
-        </div>
-        <div>
-            <img src="{% static 'Course/assets/2.svg' %}" alt="">
-            <p><span>9</span> месяцев обучения</p>
-        </div>
-        <div>
-            <img src="{% static 'Course/assets/3.svg' %}" alt="">
-            <p><span>6000₽</span> в месяц</p>
-        </div>
-        <div>
-            <img src="{% static 'Course/assets/4.svg' %}" alt="">
-            <p>Когда вам удобно</p>
-        </div>
-        <div>
-            <img src="{% static 'Course/assets/5.svg' %}" alt="">
-            <p>В любом месте</p>
-        </div>
-    </div>
-</section>
-
-<!-- Block 3 -->
-<section class="homeSection">
-    <div class="container">
-        <div class="left">
-            <h2><span>Python</span>-разработчиков не хватает</h2>
-            <p>Только на hh.ru прямо сейчас размещено больше 16 000 вакансий. Работодателям нужны специалисты, и они
-                готовы хорошо платить. При этом Python имеет широкий спектр применения</p>
-        </div>
-
-        <div class="right">
-            <img src="{% static 'Course/assets/2.png' %}" alt="">
-            <img src="{% static 'Course/assets/3.png' %}" alt="">
-        </div>
-    </div>
-</section>
-
-<!-- Block 4 -->
-<section class="homeSection">
-    <h2><span>Для кого</span> этот курс</h2>
-
-    <div class="box">
-        <div class="item">
-            <img src="{% static 'Course/assets/6.svg' %}" alt="">
-
-            <div>
-                <h3>Для тех, кто хочет стать Python-разработчиком</h3>
-                <p>Основная задача курса - подготовить вас к профессии Python-разработчик. После обучения вы сможете
-                    найти работу и уже в рамках компании быстро развивать свои навыки</p>
-            </div>
-        </div>
-
-        <div class="item">
-            <img src="{% static 'Course/assets/7.svg' %}" alt="">
-
-            <div>
-                <h3>Подойдет тем, кому нужно использовать Python в работе</h3>
-                <p>Знания Python являются выгодным преимуществом для маркетологов, аналитиков и многих других
-                    специалистов</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Block 5 -->
-<section class="homeSection">
-    <div class="container">
-        <img src="{% static 'Course/assets/4.png' %}" alt="">
-
-        <div class="right">
-            <h2><span>Как проходит</span> обучение</h2>
-
-            <div class="stepline">
-                <div class="line"></div>
-
-                <div class="step">
-                    <div>1</div>
-                    <p>Вы занимаетесь с наставником вместе с группой других учеников(В группе до 4'х человек)</p>
-                </div>
-                <div class="step">
-                    <div>2</div>
-                    <p>Задания состоят из трёх уровней сложности. Выполненные задания проверяет ментор</p>
-                </div>
-                <div class="step">
-                    <div>3</div>
-                    <p>Параллельно ведется проектная работа. Выполненные проекты - это ваше готовое портфолио</p>
-                </div>
-                <div class="step">
-                    <div>4</div>
-                    <p>В течение 24 часов наставник даёт развёрнутый ответ, указывает на ошибки, отвечает на
-                        вопросы.
-                        Когда результат устроит всех - откроется следующий модуль</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Block 6 -->
-<section class="homeSection">
-    <div class="container">
-        <h2>Мы <span>не</span> удаляем вас из бесед после прохождения курса</h2>
-        <ion-icon name="close-outline"></ion-icon>
-    </div>
-</section>
-
-<!-- Block 7 -->
-<section class="homeSection">
-    <div class="left">
-        <h3>Вы научитесь</h3>
-
-        <ul>
-            <li>
-                <ion-icon name="checkmark"></ion-icon>
-                Программирование на Python
-            </li>
-            <li>
-                <ion-icon name="checkmark"></ion-icon>
-                ООП (Object-oriented programming)
-            </li>
-            <li>
-                <ion-icon name="checkmark"></ion-icon>
-                Сетевые протоколы Ethernet, IP, TCP, UDP, HTTP
-            </li>
-            <li>
-                <ion-icon name="checkmark"></ion-icon>
-                Понимание архитектуры REST, SOAP
-            </li>
-            <li>
-                <ion-icon name="checkmark"></ion-icon>
-                Работа с СУБД в Python. SQL, СУБД, ORM
-            </li>
-            <li>
-                <ion-icon name="checkmark"></ion-icon>
-                Боты для ВК/Телеграм
-            </li>
-            <li>
-                <ion-icon name="checkmark"></ion-icon>
-                Фреймворк Flask
-            </li>
-            <li>
-                <ion-icon name="checkmark"></ion-icon>
-                Фреймворк Django
-            </li>
-            <li>
-                <ion-icon name="checkmark"></ion-icon>
-                Unit-тестирование
-            </li>
-            <li>
-                <ion-icon name="checkmark"></ion-icon>
-                Git - система контроля версий
-            </li>
-        </ul>
-    </div>
-
-    <div class="right">
-        <h2><span>Актуальные знания</span> в курсе</h2>
-        <p>Мы провели аналитику вакансий и будем учить вас только тому, что нужно для трудоустройства</p>
-    </div>
-</section>
-
-<!-- Block 8 -->
-<section class="homeSection">
-    <div class="container">
-        <img src="{% static 'Course/assets/8.svg' %}" alt="">
-
-        <div>
-            <h2>120 000 ₽</h2>
-            <h4>Средняя зарплата мидл Python-разработчика в России в 2021 году</h4>
-            <p>По данным <a href="https://hh.ru/article/24562">hh.ru</a></p>
-        </div>
-    </div>
-</section>
-
-<!-- Block 9 -->
-<section class="homeSection">
-    <h2><span>Программа</span> курса</h2>
-
-    <div class="list">
-        <div id="dropdown" class="item active">
-            <div class="select" onclick="activeDropDown(0)">
-                <div>
-                    <p>1 блок</p>
-                    <h3>Основы Python</h3>
-                </div>
-
-                <ion-icon name="chevron-down-outline"></ion-icon>
-            </div>
-
-            <div class="dropdown">
-                <ul>
-                    <li>
-                        <div class="dot"></div>
-                        Настройка IDE
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Базовый синтаксис
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Переменные, операторы, типы переменных
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Условные конструкции, циклы
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Ввод - вывод, файловый ввод вывод
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Встроенные структуры данных
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Стандартные функции
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Свои функции
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Система контроля версий. Git
-                    </li>
-                </ul>
-
-                <h2>
-                    <ion-icon name="time-outline"></ion-icon>
-                    54 ак. часов
-                </h2>
-            </div>
-        </div>
-
-        <div id="dropdown" class="item">
-            <div class="select" onclick="activeDropDown(1)">
-                <div>
-                    <p>2 блок</p>
-                    <h3>ООП</h3>
-                </div>
-
-                <ion-icon name="chevron-down-outline"></ion-icon>
-            </div>
-
-            <div class="dropdown">
-                <ul>
-                    <li>
-                        <div class="dot"></div>
-                        Базовые понятия, предпосылки и история
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Класс, экземпляр класса, атрибуты, поведение
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Наследование
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Полиморфизм
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Инкапсуляция
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Абстракция
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Интерфейсы и абстрактные классы
-                    </li>
-                </ul>
-
-                <h2>
-                    <ion-icon name="time-outline"></ion-icon>
-                    6 ак. часа
-                </h2>
-            </div>
-        </div>
-
-        <div id="dropdown" class="item">
-            <div class="select" onclick="activeDropDown(2)">
-                <div>
-                    <p>3 блок</p>
-                    <h3>Сети. Передача данных</h3>
-                </div>
-
-                <ion-icon name="chevron-down-outline"></ion-icon>
-            </div>
-
-            <div class="dropdown">
-                <ul>
-                    <li>
-                        <div class="dot"></div>
-                        Сериализация, десериализация
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Введение в компьютерные сети
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Виды сетей
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Стек сетевых протоколов: Ethernet, IP, TCP, UDP, HTTP
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Основы архитектуры клиент-сервер
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Написание простейшего клиент-серверного приложения
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Понимание архитектуры REST, SOAP
-                    </li>
-                </ul>
-
-                <h2>
-                    <ion-icon name="time-outline"></ion-icon>
-                    3 ак. часов
-                </h2>
-            </div>
-        </div>
-
-        <div id="dropdown" class="item">
-            <div class="select" onclick="activeDropDown(3)">
-                <div>
-                    <p>4 блок</p>
-                    <h3>Создание ботов</h3>
-                </div>
-
-                <ion-icon name="chevron-down-outline"></ion-icon>
-            </div>
-
-            <div class="dropdown">
-                <ul>
-                    <li>
-                        <div class="dot"></div>
-                        Что такое боты
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Стили написания ботов
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Написания ботов на библиотеке vk_api
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Написания ботов на библиотеке pyTelegramBotAPI
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Работа с orm
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Отображение 'клавиатуры'
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Статические файлы
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Тестирование
-                    </li>
-                </ul>
-
-                <h2>
-                    <ion-icon name="time-outline"></ion-icon>
-                    18 ак. часов
-                </h2>
-            </div>
-        </div>
-
-        <div id="dropdown" class="item">
-            <div class="select" onclick="activeDropDown(4)">
-                <div>
-                    <p>5 блок</p>
-                    <h3>Фреймворк Flask</h3>
-                </div>
-
-                <ion-icon name="chevron-down-outline"></ion-icon>
-            </div>
-
-            <div class="dropdown">
-                <ul>
-                    <li>
-                        <div class="dot"></div>
-                        Основы работы с Flask
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Концепция MVC
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Создание скелета веб-сайта
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Работа с orm
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Отображение данных на сайте
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Создание главной страницы
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Работа с формами
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Авторизация и регистрация
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Статические файлы
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Тестирование
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Деплой
-                    </li>
-                </ul>
-
-                <h2>
-                    <ion-icon name="time-outline"></ion-icon>
-                    27 ак. часов
-                </h2>
-            </div>
-        </div>
-
-        <div id="dropdown" class="item">
-            <div class="select" onclick="activeDropDown(5)">
-                <div>
-                    <p>6 блок</p>
-                    <h3>Фреймворк Django</h3>
-                </div>
-
-                <ion-icon name="chevron-down-outline"></ion-icon>
-            </div>
-
-            <div class="dropdown">
-                <ul>
-                    <li>
-                        <div class="dot"></div>
-                        Основы работы с Django
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Концепция MVC
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Создание скелета веб-сайта
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Работа со страницами, обработчиками и ссылками
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Работа с моделями
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Django admin веб-сайта
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Отображение данных на сайте
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Создание главной страницы
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Оформление сайта с bootstrap
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Работа с формами
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Авторизация и права пользователей
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Добавление статических файлов
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Добавление дополнительных приложений
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Тестирование
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Деплой
-                    </li>
-                </ul>
-
-                <h2>
-                    <ion-icon name="time-outline"></ion-icon>
-                    60 ак. часов
-                </h2>
-            </div>
-        </div>
-
-        <div id="dropdown" class="item">
-            <div class="select" onclick="activeDropDown(6)">
-                <div>
-                    <p>7 блок</p>
-                    <h3>Базы данных SQL</h3>
-                </div>
-
-                <ion-icon name="chevron-down-outline"></ion-icon>
-            </div>
-
-            <div class="dropdown">
-                <ul>
-                    <li>
-                        <div class="dot"></div>
-                        Введение в базы данных: необходимость, принципы работы
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Основы работы с базами данных на декларативном языке SQL
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Альтернативные виды баз данных и их различия
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Современные возможности баз данных
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Использование баз данных в Python приложениях
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Django + SQL, Django - модели
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Django-view
-                    </li>
-                </ul>
-
-                <h2>
-                    <ion-icon name="time-outline"></ion-icon>
-                    6 ак. часов
-                </h2>
-            </div>
-        </div>
-
-        <div id="dropdown" class="item">
-            <div class="select" onclick="activeDropDown(7)">
-                <div>
-                    <p>8 блок</p>
-                    <h3>Регулярные выражения</h3>
-                </div>
-
-                <ion-icon name="chevron-down-outline"></ion-icon>
-            </div>
-
-            <div class="dropdown">
-                <ul>
-                    <li>
-                        <div class="dot"></div>
-                        Понятие регулярного выражения
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Синтаксис регулярных выражений в Python
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Использование регулярных выражений в Python
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Практическая работа
-                    </li>
-                </ul>
-
-                <h2>
-                    <ion-icon name="time-outline"></ion-icon>
-                    3 ак. часа
-                </h2>
-            </div>
-        </div>
-
-        <div id="dropdown" class="item">
-            <div class="select" onclick="activeDropDown(8)">
-                <div>
-                    <p>9 блок</p>
-                    <h3>Unit-тестирование. Pytest</h3>
-                </div>
-
-                <ion-icon name="chevron-down-outline"></ion-icon>
-            </div>
-
-            <div class="dropdown">
-                <ul>
-                    <li>
-                        <div class="dot"></div>
-                        Значение и структура тестов
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Библиотека Pytest
-                    </li>
-                </ul>
-
-                <h2>
-                    <ion-icon name="time-outline"></ion-icon>
-                    3 ак. часа
-                </h2>
-            </div>
-        </div>
-
-        <div id="dropdown" class="item">
-            <div class="select" onclick="activeDropDown(9)">
-                <div>
-                    <p>10 блок</p>
-                    <h3>Процесс разработки ПО</h3>
-                </div>
-
-                <ion-icon name="chevron-down-outline"></ion-icon>
-            </div>
-
-            <div class="dropdown">
-                <ul>
-                    <li>
-                        <div class="dot"></div>
-                        Scrum, Agile, Kanban
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Примеры использования в разных проектах
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Командная работа. Роли
-                    </li>
-                    <li>
-                        <div class="dot"></div>
-                        Построение работы с продуктами с процессами внутри организации
-                    </li>
-                </ul>
-
-                <h2>
-                    <ion-icon name="time-outline"></ion-icon>
-                    3 ак. часа
-                </h2>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="homeSection">
-    <div class="container">
-        <h2>Получите консультацию</h2>
-
-        <div class="box">
-            <div>
-                <h3><span>от 30 000 ₽</span> / за весь курс</h3>
-            </div>
-
-            <div>
-                <h3><span>от 6 000 ₽</span> / мес</h3>
-                <h3>при оплате по частям</h3>
-            </div>
-        </div>
-
-        <form method="post">
-            {% csrf_token %}
-            <label>Имя:</label>
-            <input type="text" placeholder="Имя*" name="name" id="id_name" required
-                    {% if can_send_train %}
-                   disabled
-                    {% endif %}>
-
-            <label>Контакты:</label>
-            <input type="text" placeholder="Ссылка на ВК/Телеграм*" name="contact" id="id_contact" required
-                    {% if can_send_train %}
-                   disabled
-                    {% endif %}>
-
-            <label>Почта:</label>
-            <input type="text" placeholder="Почта*" name="email" id="id_email" required
-                    {% if can_send_train %}
-                   disabled
-                    {% endif %}>
-
-            <label>Пароль:</label>
-            <input type="text" placeholder="Пароль*" name="password" id="id_password" required
-                    {% if can_send_train %}
-                   disabled
-                    {% endif %}>
-
-            <button type="button" onclick="sendUserdata()" id="signupSubmit">Записаться</button>
-        </form>
-    </div>
-</section>
-
-<footer>
-    <p>© 2022 CourseMC – Обучение Python разработке</p>
-</footer>
-
-<div class="navigation">
-    <ul>
-        {% if user.is_authenticated %}
-            <li><a href="{% url 'schedule' %}">Расписания</a></li>
-        {% endif %}
-        <li onclick="activeDropDownNavMob(0)" class="action">Сервисы
-            <ion-icon
-                    name="chevron-down-outline"></ion-icon>
-        </li>
-        <ul>
-            <li><a href="{% url 'blog_home' %}">Твои Статьи</a></li>
-            <li><a href="{% url 'todo' %}">Твои Напоминания</a></li>
-            <li><a href="{% url 'questionnaireIndex' %}">Твой Опросник</a></li>
-            <li><a href="{% url 'gpt_home' %}">Твой Помощник</a></li>
-            <li><a href="{% url 'py_interpreter' %}">Твой Интерпретатор</a></li>
-        </ul>
-        <li onclick="activeDropDownNavMob(1)" class="action">Действия
-            <ion-icon
-                    name="chevron-down-outline"></ion-icon>
-        </li>
-        <ul>
-            <li><a href="{% url 'billing_index' %}">Оплатить занятия</a></li>
-            <li><a href="{% url 'schedule' %}">Создать отчёт</a></li>
-        </ul>
-        <li onclick="activeDropDownNavMob(2)" class="action">Контакты
-            <ion-icon
-                    name="chevron-down-outline"></ion-icon>
-        </li>
-        <ul>
-            <li><a href="https://vk.com/matvey.chekashov">ВК</a></li>
-            <li><a href="https://t.me/mchekashov">Телеграм</a></li>
-            <li><a href="https://github.com/Ryize">GitHub</a></li>
-        </ul>
-        <li><a href="{% url 'review' %}">Отзывы</a></li>
-    </ul>
-
-    {% if not user.is_authenticated %}
-        <button><a href="{% url 'account_login' %}">Авторизоваться</a></button>
-    {% elif user.is_staff %}
-        <li><a href="{% url 'create_group' %}">Группы</a></li>
-        <li><a href="{% url 'admin:index' %}">Настройки</a></li>
-    {% endif %}
-</div>
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script>
-    function sendUserdata() {
-        // get the nickname
-        var name = document.getElementsByName('name')[0].value
-        var contact = document.getElementsByName('contact')[0].value
-        var email = document.getElementsByName('email')[0].value
-        var password = document.getElementsByName('password')[0].value
-        data = {
-            name: name,
-            contact: contact,
-            email: email,
-            password: password
-        }
-        // GET AJAX request
-        $.ajax({
-            type: "POST",
-            url: "{% url 'home' %}",
-            data: {
-                name: name,
-                contact: contact,
-                email: email,
-                password: password,
-                csrfmiddlewaretoken: '{{ csrf_token }}',
-                dataType: "json",
-            },
-            success: function (response) {
-                // if not valid user, alert the user
-                if (response["success"]) {
-                    alert("Спасибо за обращение, мы свяжемся с вами в ближайшее время!");
-                    document.getElementById("signupSubmit").classList.add('disabled');
-                } else {
-                    alert(response["error_message"]);
-                }
-            },
-            error: function (response) {
-                if (response["success"]) {
-                    alert("Спасибо за обращение, мы свяжемся с вами в ближайшее время!");
-                    document.getElementById("signupSubmit").classList.add('disabled');
-                } else {
-                    alert(response["error_message"]);
-                }
-            }
-        })
-    }
-</script>
-
-<script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
-<script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.3/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.3/ScrollTrigger.min.js"></script>
-<script src="{% static 'Course/js/main.js' %}"></script>
+	{% include 'template/header.html' %}
+
+	<!-- Block 1 -->
+	<section class="homeSection">
+		<div class="container">
+			<div>
+				<h1>Онлайн-курс Профессия <span>Python-разработчик</span></h1>
+				<p>Практический онлайн-курс по Python: от основ языка и алгоритмов до django и unit-тестирования. Вы
+					создадите несколько действующих сервисов и получите все необходимые навыки и знания для старта
+					работы в
+					Python программировании (Junior Python Developer).Последнее обновление курса - 12 февраля 2023 года
+				</p>
+			</div>
+
+			<img src="{% static 'Course/assets/1.png' %}" alt="">
+		</div>
+	</section>
+
+	<!-- Block 2 -->
+	<section class="homeSection">
+		<div class="left">
+			<h2>О курсе</h2>
+			<p>Курс составлялся на основе вакансий и требований компаний к Python-разработчикам. Всё необходимое
+				добавили, ненужное убрали — вам осталось посмотреть, всё выполнить и получить профессию. Сложность
+				повышается поэтапно, поэтому вы можете учиться и без начальной подготовки в этой сфере.
+				Преподаватели и наставники — действующие Python-разработчики. Курс вы пройдёте вместе с личным
+				наставником, который поможет в обучении и в прохождении собеседований.
+				Видеоматериалы, созданные с любовью, много практических заданий для отработки знаний и 3 проекта — сайт
+				интернет-магазина или блога, Telegam-bot и написание игры (шахматы или gomoku)</p>
+		</div>
+
+		<div class="right">
+			<div>
+				<img src="{% static 'Course/assets/1.svg' %}" alt="">
+				<p><span>1</span> месяц поддержки наставника после обучения</p>
+			</div>
+			<div>
+				<img src="{% static 'Course/assets/2.svg' %}" alt="">
+				<p><span>9</span> месяцев обучения</p>
+			</div>
+			<div>
+				<img src="{% static 'Course/assets/3.svg' %}" alt="">
+				<p><span>6000₽</span> в месяц</p>
+			</div>
+			<div>
+				<img src="{% static 'Course/assets/4.svg' %}" alt="">
+				<p>Когда вам удобно</p>
+			</div>
+			<div>
+				<img src="{% static 'Course/assets/5.svg' %}" alt="">
+				<p>В любом месте</p>
+			</div>
+		</div>
+	</section>
+
+	<!-- Block 3 -->
+	<section class="homeSection">
+		<div class="container">
+			<div class="left">
+				<h2><span>Python</span>-разработчиков не хватает</h2>
+				<p>Только на hh.ru прямо сейчас размещено больше 16 000 вакансий. Работодателям нужны специалисты, и они
+					готовы хорошо платить. При этом Python имеет широкий спектр применения</p>
+			</div>
+
+			<div class="right">
+				<img src="{% static 'Course/assets/2.png' %}" alt="">
+				<img src="{% static 'Course/assets/3.png' %}" alt="">
+			</div>
+		</div>
+	</section>
+
+	<!-- Block 4 -->
+	<section class="homeSection">
+		<h2><span>Для кого</span> этот курс</h2>
+
+		<div class="box">
+			<div class="item">
+				<img src="{% static 'Course/assets/6.svg' %}" alt="">
+
+				<div>
+					<h3>Для тех, кто хочет стать Python-разработчиком</h3>
+					<p>Основная задача курса - подготовить вас к профессии Python-разработчик. После обучения вы сможете
+						найти работу и уже в рамках компании быстро развивать свои навыки</p>
+				</div>
+			</div>
+
+			<div class="item">
+				<img src="{% static 'Course/assets/7.svg' %}" alt="">
+
+				<div>
+					<h3>Подойдет тем, кому нужно использовать Python в работе</h3>
+					<p>Знания Python являются выгодным преимуществом для маркетологов, аналитиков и многих других
+						специалистов</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Block 5 -->
+	<section class="homeSection">
+		<div class="container">
+			<img src="{% static 'Course/assets/4.png' %}" alt="">
+
+			<div class="right">
+				<h2><span>Как проходит</span> обучение</h2>
+
+				<div class="stepline">
+					<div class="line"></div>
+
+					<div class="step">
+						<div>1</div>
+						<p>Вы занимаетесь с наставником вместе с группой других учеников(В группе до 4'х человек)</p>
+					</div>
+					<div class="step">
+						<div>2</div>
+						<p>Задания состоят из трёх уровней сложности. Выполненные задания проверяет ментор</p>
+					</div>
+					<div class="step">
+						<div>3</div>
+						<p>Параллельно ведется проектная работа. Выполненные проекты - это ваше готовое портфолио</p>
+					</div>
+					<div class="step">
+						<div>4</div>
+						<p>В течение 24 часов наставник даёт развёрнутый ответ, указывает на ошибки, отвечает на
+							вопросы.
+							Когда результат устроит всех - откроется следующий модуль</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Block 6 -->
+	<section class="homeSection">
+		<div class="container">
+			<h2>Мы <span>не</span> удаляем вас из бесед после прохождения курса</h2>
+			<ion-icon name="close-outline"></ion-icon>
+		</div>
+	</section>
+
+	<!-- Block 7 -->
+	<section class="homeSection">
+		<div class="left">
+			<h3>Вы научитесь</h3>
+
+			<ul>
+				<li>
+					<ion-icon name="checkmark"></ion-icon>
+					Программирование на Python
+				</li>
+				<li>
+					<ion-icon name="checkmark"></ion-icon>
+					ООП (Object-oriented programming)
+				</li>
+				<li>
+					<ion-icon name="checkmark"></ion-icon>
+					Сетевые протоколы Ethernet, IP, TCP, UDP, HTTP
+				</li>
+				<li>
+					<ion-icon name="checkmark"></ion-icon>
+					Понимание архитектуры REST, SOAP
+				</li>
+				<li>
+					<ion-icon name="checkmark"></ion-icon>
+					Работа с СУБД в Python. SQL, СУБД, ORM
+				</li>
+				<li>
+					<ion-icon name="checkmark"></ion-icon>
+					Боты для ВК/Телеграм
+				</li>
+				<li>
+					<ion-icon name="checkmark"></ion-icon>
+					Фреймворк Flask
+				</li>
+				<li>
+					<ion-icon name="checkmark"></ion-icon>
+					Фреймворк Django
+				</li>
+				<li>
+					<ion-icon name="checkmark"></ion-icon>
+					Unit-тестирование
+				</li>
+				<li>
+					<ion-icon name="checkmark"></ion-icon>
+					Git - система контроля версий
+				</li>
+			</ul>
+		</div>
+
+		<div class="right">
+			<h2><span>Актуальные знания</span> в курсе</h2>
+			<p>Мы провели аналитику вакансий и будем учить вас только тому, что нужно для трудоустройства</p>
+		</div>
+	</section>
+
+	<!-- Block 8 -->
+	<section class="homeSection">
+		<div class="container">
+			<img src="{% static 'Course/assets/8.svg' %}" alt="">
+
+			<div>
+				<h2>120 000 ₽</h2>
+				<h4>Средняя зарплата мидл Python-разработчика в России в 2021 году</h4>
+				<p>По данным <a href="https://hh.ru/article/24562">hh.ru</a></p>
+			</div>
+		</div>
+	</section>
+
+	<!-- Block 9 -->
+	<section class="homeSection">
+		<h2><span>Программа</span> курса</h2>
+
+		<div class="list">
+			<div id="dropdown" class="item active">
+				<div class="select" onclick="activeDropDown(0)">
+					<div>
+						<p>1 блок</p>
+						<h3>Основы Python</h3>
+					</div>
+
+					<ion-icon name="chevron-down-outline"></ion-icon>
+				</div>
+
+				<div class="dropdown">
+					<ul>
+						<li>
+							<div class="dot"></div>
+							Настройка IDE
+						</li>
+						<li>
+							<div class="dot"></div>
+							Базовый синтаксис
+						</li>
+						<li>
+							<div class="dot"></div>
+							Переменные, операторы, типы переменных
+						</li>
+						<li>
+							<div class="dot"></div>
+							Условные конструкции, циклы
+						</li>
+						<li>
+							<div class="dot"></div>
+							Ввод - вывод, файловый ввод вывод
+						</li>
+						<li>
+							<div class="dot"></div>
+							Встроенные структуры данных
+						</li>
+						<li>
+							<div class="dot"></div>
+							Стандартные функции
+						</li>
+						<li>
+							<div class="dot"></div>
+							Свои функции
+						</li>
+						<li>
+							<div class="dot"></div>
+							Система контроля версий. Git
+						</li>
+					</ul>
+
+					<h2>
+						<ion-icon name="time-outline"></ion-icon>
+						54 ак. часов
+					</h2>
+				</div>
+			</div>
+
+			<div id="dropdown" class="item">
+				<div class="select" onclick="activeDropDown(1)">
+					<div>
+						<p>2 блок</p>
+						<h3>ООП</h3>
+					</div>
+
+					<ion-icon name="chevron-down-outline"></ion-icon>
+				</div>
+
+				<div class="dropdown">
+					<ul>
+						<li>
+							<div class="dot"></div>
+							Базовые понятия, предпосылки и история
+						</li>
+						<li>
+							<div class="dot"></div>
+							Класс, экземпляр класса, атрибуты, поведение
+						</li>
+						<li>
+							<div class="dot"></div>
+							Наследование
+						</li>
+						<li>
+							<div class="dot"></div>
+							Полиморфизм
+						</li>
+						<li>
+							<div class="dot"></div>
+							Инкапсуляция
+						</li>
+						<li>
+							<div class="dot"></div>
+							Абстракция
+						</li>
+						<li>
+							<div class="dot"></div>
+							Интерфейсы и абстрактные классы
+						</li>
+					</ul>
+
+					<h2>
+						<ion-icon name="time-outline"></ion-icon>
+						6 ак. часа
+					</h2>
+				</div>
+			</div>
+
+			<div id="dropdown" class="item">
+				<div class="select" onclick="activeDropDown(2)">
+					<div>
+						<p>3 блок</p>
+						<h3>Сети. Передача данных</h3>
+					</div>
+
+					<ion-icon name="chevron-down-outline"></ion-icon>
+				</div>
+
+				<div class="dropdown">
+					<ul>
+						<li>
+							<div class="dot"></div>
+							Сериализация, десериализация
+						</li>
+						<li>
+							<div class="dot"></div>
+							Введение в компьютерные сети
+						</li>
+						<li>
+							<div class="dot"></div>
+							Виды сетей
+						</li>
+						<li>
+							<div class="dot"></div>
+							Стек сетевых протоколов: Ethernet, IP, TCP, UDP, HTTP
+						</li>
+						<li>
+							<div class="dot"></div>
+							Основы архитектуры клиент-сервер
+						</li>
+						<li>
+							<div class="dot"></div>
+							Написание простейшего клиент-серверного приложения
+						</li>
+						<li>
+							<div class="dot"></div>
+							Понимание архитектуры REST, SOAP
+						</li>
+					</ul>
+
+					<h2>
+						<ion-icon name="time-outline"></ion-icon>
+						3 ак. часов
+					</h2>
+				</div>
+			</div>
+
+			<div id="dropdown" class="item">
+				<div class="select" onclick="activeDropDown(3)">
+					<div>
+						<p>4 блок</p>
+						<h3>Создание ботов</h3>
+					</div>
+
+					<ion-icon name="chevron-down-outline"></ion-icon>
+				</div>
+
+				<div class="dropdown">
+					<ul>
+						<li>
+							<div class="dot"></div>
+							Что такое боты
+						</li>
+						<li>
+							<div class="dot"></div>
+							Стили написания ботов
+						</li>
+						<li>
+							<div class="dot"></div>
+							Написания ботов на библиотеке vk_api
+						</li>
+						<li>
+							<div class="dot"></div>
+							Написания ботов на библиотеке pyTelegramBotAPI
+						</li>
+						<li>
+							<div class="dot"></div>
+							Работа с orm
+						</li>
+						<li>
+							<div class="dot"></div>
+							Отображение 'клавиатуры'
+						</li>
+						<li>
+							<div class="dot"></div>
+							Статические файлы
+						</li>
+						<li>
+							<div class="dot"></div>
+							Тестирование
+						</li>
+					</ul>
+
+					<h2>
+						<ion-icon name="time-outline"></ion-icon>
+						18 ак. часов
+					</h2>
+				</div>
+			</div>
+
+			<div id="dropdown" class="item">
+				<div class="select" onclick="activeDropDown(4)">
+					<div>
+						<p>5 блок</p>
+						<h3>Фреймворк Flask</h3>
+					</div>
+
+					<ion-icon name="chevron-down-outline"></ion-icon>
+				</div>
+
+				<div class="dropdown">
+					<ul>
+						<li>
+							<div class="dot"></div>
+							Основы работы с Flask
+						</li>
+						<li>
+							<div class="dot"></div>
+							Концепция MVC
+						</li>
+						<li>
+							<div class="dot"></div>
+							Создание скелета веб-сайта
+						</li>
+						<li>
+							<div class="dot"></div>
+							Работа с orm
+						</li>
+						<li>
+							<div class="dot"></div>
+							Отображение данных на сайте
+						</li>
+						<li>
+							<div class="dot"></div>
+							Создание главной страницы
+						</li>
+						<li>
+							<div class="dot"></div>
+							Работа с формами
+						</li>
+						<li>
+							<div class="dot"></div>
+							Авторизация и регистрация
+						</li>
+						<li>
+							<div class="dot"></div>
+							Статические файлы
+						</li>
+						<li>
+							<div class="dot"></div>
+							Тестирование
+						</li>
+						<li>
+							<div class="dot"></div>
+							Деплой
+						</li>
+					</ul>
+
+					<h2>
+						<ion-icon name="time-outline"></ion-icon>
+						27 ак. часов
+					</h2>
+				</div>
+			</div>
+
+			<div id="dropdown" class="item">
+				<div class="select" onclick="activeDropDown(5)">
+					<div>
+						<p>6 блок</p>
+						<h3>Фреймворк Django</h3>
+					</div>
+
+					<ion-icon name="chevron-down-outline"></ion-icon>
+				</div>
+
+				<div class="dropdown">
+					<ul>
+						<li>
+							<div class="dot"></div>
+							Основы работы с Django
+						</li>
+						<li>
+							<div class="dot"></div>
+							Концепция MVC
+						</li>
+						<li>
+							<div class="dot"></div>
+							Создание скелета веб-сайта
+						</li>
+						<li>
+							<div class="dot"></div>
+							Работа со страницами, обработчиками и ссылками
+						</li>
+						<li>
+							<div class="dot"></div>
+							Работа с моделями
+						</li>
+						<li>
+							<div class="dot"></div>
+							Django admin веб-сайта
+						</li>
+						<li>
+							<div class="dot"></div>
+							Отображение данных на сайте
+						</li>
+						<li>
+							<div class="dot"></div>
+							Создание главной страницы
+						</li>
+						<li>
+							<div class="dot"></div>
+							Оформление сайта с bootstrap
+						</li>
+						<li>
+							<div class="dot"></div>
+							Работа с формами
+						</li>
+						<li>
+							<div class="dot"></div>
+							Авторизация и права пользователей
+						</li>
+						<li>
+							<div class="dot"></div>
+							Добавление статических файлов
+						</li>
+						<li>
+							<div class="dot"></div>
+							Добавление дополнительных приложений
+						</li>
+						<li>
+							<div class="dot"></div>
+							Тестирование
+						</li>
+						<li>
+							<div class="dot"></div>
+							Деплой
+						</li>
+					</ul>
+
+					<h2>
+						<ion-icon name="time-outline"></ion-icon>
+						60 ак. часов
+					</h2>
+				</div>
+			</div>
+
+			<div id="dropdown" class="item">
+				<div class="select" onclick="activeDropDown(6)">
+					<div>
+						<p>7 блок</p>
+						<h3>Базы данных SQL</h3>
+					</div>
+
+					<ion-icon name="chevron-down-outline"></ion-icon>
+				</div>
+
+				<div class="dropdown">
+					<ul>
+						<li>
+							<div class="dot"></div>
+							Введение в базы данных: необходимость, принципы работы
+						</li>
+						<li>
+							<div class="dot"></div>
+							Основы работы с базами данных на декларативном языке SQL
+						</li>
+						<li>
+							<div class="dot"></div>
+							Альтернативные виды баз данных и их различия
+						</li>
+						<li>
+							<div class="dot"></div>
+							Современные возможности баз данных
+						</li>
+						<li>
+							<div class="dot"></div>
+							Использование баз данных в Python приложениях
+						</li>
+						<li>
+							<div class="dot"></div>
+							Django + SQL, Django - модели
+						</li>
+						<li>
+							<div class="dot"></div>
+							Django-view
+						</li>
+					</ul>
+
+					<h2>
+						<ion-icon name="time-outline"></ion-icon>
+						6 ак. часов
+					</h2>
+				</div>
+			</div>
+
+			<div id="dropdown" class="item">
+				<div class="select" onclick="activeDropDown(7)">
+					<div>
+						<p>8 блок</p>
+						<h3>Регулярные выражения</h3>
+					</div>
+
+					<ion-icon name="chevron-down-outline"></ion-icon>
+				</div>
+
+				<div class="dropdown">
+					<ul>
+						<li>
+							<div class="dot"></div>
+							Понятие регулярного выражения
+						</li>
+						<li>
+							<div class="dot"></div>
+							Синтаксис регулярных выражений в Python
+						</li>
+						<li>
+							<div class="dot"></div>
+							Использование регулярных выражений в Python
+						</li>
+						<li>
+							<div class="dot"></div>
+							Практическая работа
+						</li>
+					</ul>
+
+					<h2>
+						<ion-icon name="time-outline"></ion-icon>
+						3 ак. часа
+					</h2>
+				</div>
+			</div>
+
+			<div id="dropdown" class="item">
+				<div class="select" onclick="activeDropDown(8)">
+					<div>
+						<p>9 блок</p>
+						<h3>Unit-тестирование. Pytest</h3>
+					</div>
+
+					<ion-icon name="chevron-down-outline"></ion-icon>
+				</div>
+
+				<div class="dropdown">
+					<ul>
+						<li>
+							<div class="dot"></div>
+							Значение и структура тестов
+						</li>
+						<li>
+							<div class="dot"></div>
+							Библиотека Pytest
+						</li>
+					</ul>
+
+					<h2>
+						<ion-icon name="time-outline"></ion-icon>
+						3 ак. часа
+					</h2>
+				</div>
+			</div>
+
+			<div id="dropdown" class="item">
+				<div class="select" onclick="activeDropDown(9)">
+					<div>
+						<p>10 блок</p>
+						<h3>Процесс разработки ПО</h3>
+					</div>
+
+					<ion-icon name="chevron-down-outline"></ion-icon>
+				</div>
+
+				<div class="dropdown">
+					<ul>
+						<li>
+							<div class="dot"></div>
+							Scrum, Agile, Kanban
+						</li>
+						<li>
+							<div class="dot"></div>
+							Примеры использования в разных проектах
+						</li>
+						<li>
+							<div class="dot"></div>
+							Командная работа. Роли
+						</li>
+						<li>
+							<div class="dot"></div>
+							Построение работы с продуктами с процессами внутри организации
+						</li>
+					</ul>
+
+					<h2>
+						<ion-icon name="time-outline"></ion-icon>
+						3 ак. часа
+					</h2>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="homeSection">
+		<div class="container">
+			<h2>Получите консультацию</h2>
+
+			<div class="box">
+				<div>
+					<h3><span>от 30 000 ₽</span> / за весь курс</h3>
+				</div>
+
+				<div>
+					<h3><span>от 6 000 ₽</span> / мес</h3>
+					<h3>при оплате по частям</h3>
+				</div>
+			</div>
+
+			<form method="post">
+				{% csrf_token %}
+				<label>Имя:</label>
+				<input type="text" placeholder="Имя*" name="name" id="id_name" required {% if can_send_train %} disabled {% endif %}>
+
+				<label>Контакты:</label>
+				<input type="text" placeholder="Ссылка на ВК/Телеграм*" name="contact" id="id_contact" required {% if can_send_train %} disabled {% endif %}>
+
+				<label>Почта:</label>
+				<input type="text" placeholder="Почта*" name="email" id="id_email" required {% if can_send_train %} disabled {% endif %}>
+
+				<label>Пароль:</label>
+				<input type="text" placeholder="Пароль*" name="password" id="id_password" required {% if can_send_train %} disabled {% endif %}>
+
+				<button type="button" onclick="sendUserdata()" id="signupSubmit">Записаться</button>
+			</form>
+		</div>
+	</section>
+
+	{% include 'template/footer.html' %}
+
+	<script>
+			function sendUserdata() {
+				// get the nickname
+				var name = document.getElementsByName('name')[0].value
+				var contact = document.getElementsByName('contact')[0].value
+				var email = document.getElementsByName('email')[0].value
+				var password = document.getElementsByName('password')[0].value
+				data = {
+					name: name,
+					contact: contact,
+					email: email,
+					password: password
+				}
+				// GET AJAX request
+				$.ajax({
+					type: "POST",
+					url: "{% url 'home' %}",
+					data: {
+						name: name,
+						contact: contact,
+						email: email,
+						password: password,
+						csrfmiddlewaretoken: '{{ csrf_token }}',
+						dataType: "json",
+					},
+					success: function (response) {
+						// if not valid user, alert the user
+						if (response["success"]) {
+							alert("Спасибо за обращение, мы свяжемся с вами в ближайшее время!");
+							document.getElementById("signupSubmit").classList.add('disabled');
+						} else {
+							alert(response["error_message"]);
+						}
+					},
+					error: function (response) {
+						if (response["success"]) {
+							alert("Спасибо за обращение, мы свяжемся с вами в ближайшее время!");
+							document.getElementById("signupSubmit").classList.add('disabled');
+						} else {
+							alert(response["error_message"]);
+						}
+					}
+				})
+			}
+
+	</script>
+
 </body>
 
 </html>

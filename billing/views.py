@@ -15,7 +15,7 @@ class BillingView(LoginRequiredMixin, ListView):
     """
     Выводит список предыдущих платежей и реализует возможность оплаты.
 
-    В качестве сервиса оплаты используется ЮКасса от Яндекс.
+    В качестве сервиса оплаты используется ЮКасса.
     """
 
     model = InformationPayments
@@ -78,7 +78,7 @@ class BillingView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['cost_classes'] = cost_classes
         context['student_email'] = student_email
-        context['amount_15_lesson'] = cost_classes // 50
+        context['amount_15_lesson'] = 1
         context['student_email'] = student_email
         context['billings'] = billings[::-1]
         context['amount_classes'] = amount_classes
@@ -156,7 +156,7 @@ def get_cost_classes(user):
 
     lesson_price, amount_classes, cost_classes = get_lesson_data(user=user)
 
-    cost_classes += -(number_passes * lesson_price) + sum_adjustments
+    cost_classes += int(-(number_passes * lesson_price*0.75) + sum_adjustments)
     return cost_classes
 
 
