@@ -1,3 +1,4 @@
+"""Views для страниц связанных с оплатой."""
 from typing import Iterable
 
 from django.contrib.auth import get_user
@@ -7,7 +8,8 @@ from django.shortcuts import render, redirect
 from django.views.generic import ListView
 
 from Course.models import Student
-from billing.models import InformationPayments, Absences, Adjustment, EducationCost
+from billing.models import (InformationPayments, Absences,
+                            Adjustment, EducationCost)
 from billing.count_bill_logic import get_lesson_data
 
 
@@ -156,7 +158,8 @@ def get_cost_classes(user):
 
     lesson_price, amount_classes, cost_classes = get_lesson_data(user=user)
 
-    cost_classes += int(-(number_passes * lesson_price*0.75) + sum_adjustments)
+    cost_classes += int(
+        -(number_passes * lesson_price * 0.75) + sum_adjustments)
     return cost_classes
 
 

@@ -1,14 +1,15 @@
 from rest_framework import serializers
 
-from Course.models import LearnGroup, Schedule, Student, StudentQuestion, ClassesTimetable, ApplicationsForTraining
+from Course.models import (LearnGroup, Schedule, Student, StudentQuestion,
+                           ClassesTimetable, ApplicationsForTraining)
 
 
 class ScheduleListSerializer(serializers.ModelSerializer):
     """ Список всех расписаний. """
 
     def create(self, validated_data):
-        a = validated_data["absent"]
-        del validated_data["absent"]
+        a = validated_data['absent']
+        del validated_data['absent']
         schedule = Schedule.objects.creatd(**validated_data)
         schedule.absent.set(a)
         schedule.save()
@@ -16,7 +17,7 @@ class ScheduleListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Schedule
-        fields = "__all__"
+        fields = '__all__'
 
 
 class StudentListSerializer(serializers.ModelSerializer):
@@ -29,7 +30,7 @@ class StudentListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Student
-        fields = "__all__"
+        fields = '__all__'
 
 
 class LearnGroupListSerializer(serializers.ModelSerializer):
@@ -42,7 +43,7 @@ class LearnGroupListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LearnGroup
-        fields = "__all__"
+        fields = '__all__'
 
 
 class StudentQuestionListSerializer(serializers.ModelSerializer):
@@ -50,7 +51,7 @@ class StudentQuestionListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StudentQuestion
-        fields = "__all__"
+        fields = '__all__'
 
 
 class ClassesTimetableListSerializer(serializers.ModelSerializer):
@@ -58,7 +59,7 @@ class ClassesTimetableListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ClassesTimetable
-        fields = "__all__"
+        fields = '__all__'
 
 
 class ApplicationsForTrainingSerializer(serializers.ModelSerializer):
@@ -70,11 +71,10 @@ class ApplicationsForTrainingSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApplicationsForTraining
         fields = '__all__'
-        
-        
+
+
 class PaymentAmountSerializer(serializers.Serializer):
     student_id = serializers.IntegerField()
-
 
 
 class MissingSerializer(serializers.Serializer):

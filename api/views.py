@@ -7,7 +7,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from Course.models import LearnGroup, Schedule, Student, StudentQuestion, ClassesTimetable, ApplicationsForTraining
-from billing.count_bill_logic import get_lesson_data
 from billing.models import Absences, InformationPayments
 from billing.views import get_cost_classes
 
@@ -40,10 +39,10 @@ class ScheduleGet(APIView):
     """
 
     def post(self, request):
-        username = request.data["username"]
+        username = request.data['username']
         student = Student.objects.get(name=username)
         group = student.groups
-        schedule = Schedule.objects.filter(group=group).order_by("weekday").values()
+        schedule = Schedule.objects.filter(group=group).order_by('weekday').values()
         return Response(schedule)
 
 
@@ -89,7 +88,7 @@ class StudentQuestionView(APIView):
     """
 
     def get(self, request):
-        student_question = StudentQuestion.objects.all().order_by("-created_at")
+        student_question = StudentQuestion.objects.all().order_by('-created_at')
         serializer = StudentQuestionListSerializer(student_question, many=True)
         return Response(serializer.data)
 
@@ -116,23 +115,23 @@ class PaymentAmountView(GenericAPIView):
         return PaymentAmountSerializer(*args, **kwargs)
         
     def post(self, request, username, *args, **kwargs):
-        if username.find("%") == 0:
-            username = unquote(username.upper(), "utf-8")
+        if username.find('%') == 0:
+            username = unquote(username.upper(), 'utf-8')
         student = Student.objects.filter(name=username).first()
         user = User.objects.filter(username=username).first()
         if not user:
-            return JsonResponse({"error": "User not found"})
+            return JsonResponse({'error': 'User not found'})
         amount = get_cost_classes(user)
         InformationPayments.objects.create(user=student, amount=amount)
         return Response(status=201)
         
 
     def get(self, request, username, *args, **kwargs):
-        if username.find("%") == 0:
-            username = unquote(username.upper(), "utf-8")
+        if username.find('%') == 0:
+            username = unquote(username.upper(), 'utf-8')
         user = User.objects.filter(username=username).first()
         if not user:
-            return JsonResponse({"error": "User not found"})
+            return JsonResponse({'error': 'User not found'})
         amount = get_cost_classes(user)
         return JsonResponse(
             {

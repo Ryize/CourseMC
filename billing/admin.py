@@ -1,9 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 
-from Course.models import Student, LearnGroup, ClassesTimetable
-from billing.models import InformationPayments, EducationCost, Absences, Adjustment
-from billing.count_bill_logic import get_lesson_data
+from Course.models import Student, ClassesTimetable
+from billing.models import (InformationPayments, EducationCost,
+                            Absences, Adjustment)
 from billing.views import get_cost_classes
 
 
@@ -12,16 +12,19 @@ class UserListFilter(admin.SimpleListFilter):
 
     parameter_name = 'user'
 
-    def lookups(self, request, model_admin):
+    def lookups(self, request, model_admin) -> tuple:
         """
         Возвращает список кортежей.
 
-        Первый элемент в каждом кортеже — это закодированное значение параметра,
-        которое будет отображаться в URL-запросе.
-        Второй элемент — это удобочитаемое имя параметра,
-        которое появится на правой боковой панели.
+        Returns:
+            tuple:
+            [i][0] - закодированное значение параметра, которое будет
+            отображаться в URL-запросе.
+            [i][1] - удобочитаемое имя параметра, которое появится на правой
+            боковой панели.
         """
-        students = set([chat.user for chat in InformationPayments.objects.all()])
+        students = set(
+            [chat.user for chat in InformationPayments.objects.all()])
         result_data = []
         for student in students:
             result_data.append((student.name, student.name,))
@@ -29,13 +32,17 @@ class UserListFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         """
-        Возвращает отфильтрованный набор запросов на основе значения,
-        указанного в строке запроса, которое можно получить с помощью
-        `self.value()`.
+        Фильтрует запрос.
+
+        Returns:
+            queryset: Отфильтрованный набор запросов на основе значения,
+            указанного в строке запроса, которое можно получить с помощью
+            `self.value()`.
         """
         if not self.value():
             return queryset
-        return queryset.filter(user=User.objects.filter(username=self.value()).first())
+        return queryset.filter(
+            user=User.objects.filter(username=self.value()).first())
 
 
 @admin.register(EducationCost)
@@ -82,8 +89,10 @@ class EducationCostAdmin(admin.ModelAdmin):
         student = Student.objects.filter(name=obj.user.name).first()
         group = student.groups
         if student:
-            cost_one_lesson = EducationCost.objects.filter(user=student).first()
-            number_classes = ClassesTimetable.objects.filter(group=group).count()
+            cost_one_lesson = EducationCost.objects.filter(
+                user=student).first()
+            number_classes = ClassesTimetable.objects.filter(
+                group=group).count()
             return cost_one_lesson.amount * number_classes * 4
 
     def calculate_amount(self, request, queryset):
@@ -92,7 +101,8 @@ class EducationCostAdmin(admin.ModelAdmin):
 
     def calculate_taking_account_risks(self, request, queryset):
         costs = self._calculate_amount_month(queryset)
-        self.message_user(request, f'Сумма с учётом рисков: {int(costs * 0.85)} рублей')
+        self.message_user(request,
+                          f'Сумма с учётом рисков: {int(costs * 0.85)} рублей')
 
     @staticmethod
     def _calculate_amount_month(queryset):
@@ -100,7 +110,8 @@ class EducationCostAdmin(admin.ModelAdmin):
         for cost in queryset.all():
             student = cost.user
             group = student.groups
-            number_classes = ClassesTimetable.objects.filter(group=group).count()
+            number_classes = ClassesTimetable.objects.filter(
+                group=group).count()
             costs += cost.amount * number_classes * 4
         return costs
 
