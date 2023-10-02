@@ -4,6 +4,7 @@ from typing import Iterable
 from django.contrib.auth import get_user
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.views.generic import ListView
 
@@ -24,7 +25,7 @@ class BillingView(LoginRequiredMixin, ListView):
     template_name = 'billing/index.html'
     context_object_name = 'schedules'
 
-    def get_context_data(self, *, object_list=None, **kwargs):
+    def get_context_data(self, *, object_list=None, **kwargs) -> dict:
         """
         Добавляем кол-во уроков, пропусков, список предыдущих платежей
         и размер оплаты.
@@ -76,7 +77,7 @@ class BillingView(LoginRequiredMixin, ListView):
             number_passes: int,
             lesson_price: int,
             **kwargs
-    ):
+    ) -> dict:
         context = super().get_context_data(**kwargs)
         context['cost_classes'] = cost_classes
         context['student_email'] = student_email
@@ -127,7 +128,7 @@ class BillingView(LoginRequiredMixin, ListView):
         return self.request.GET.get(name)
 
 
-def get_cost_classes(user):
+def get_cost_classes(user: User) -> int:
     """
     Получает размер оплаты для указанного пользователя.
 
@@ -163,7 +164,7 @@ def get_cost_classes(user):
     return cost_classes
 
 
-def get_student_email(request):
+def get_student_email(request) -> str:
     """
     Получает email текущего пользователя.
 

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from django.contrib import admin
 from django.contrib.auth.models import User
 
@@ -8,6 +10,14 @@ from billing.views import get_cost_classes
 
 
 class UserListFilter(admin.SimpleListFilter):
+    """
+    Фильтр для пользователей в админ-панели списка платежей
+    (InformationPaymentsAdmin).
+
+    Позволяет добавлять в стандартный фильтр только тех, кто оплатил хотя бы
+    раз.
+    """
+
     title = 'Пользователи'
 
     parameter_name = 'user'
@@ -24,7 +34,8 @@ class UserListFilter(admin.SimpleListFilter):
             боковой панели.
         """
         students = set(
-            [chat.user for chat in InformationPayments.objects.all()])
+            [chat.user for chat in InformationPayments.objects.all() if
+             chat.user.is_learned])
         result_data = []
         for student in students:
             result_data.append((student.name, student.name,))
@@ -41,12 +52,19 @@ class UserListFilter(admin.SimpleListFilter):
         """
         if not self.value():
             return queryset
-        return queryset.filter(
-            user=User.objects.filter(username=self.value()).first())
+        user = Student.objects.filter(name=self.value()).first()
+        return queryset.filter(user=user)
 
 
 @admin.register(EducationCost)
 class EducationCostAdmin(admin.ModelAdmin):
+    """
+    Стоимость обучения.
+
+    Помимо стандартных полей из models, содержит кастомные
+    поля определённые в этом классе.
+    Используется как мониторинг должников/подсчёта общей прибыли за месяц.
+    """
     fields = (
         'user',
         'amount',
@@ -64,15 +82,21 @@ class EducationCostAdmin(admin.ModelAdmin):
         'should',
     )
     list_filter = (
-        'user',
         'amount',
+        UserListFilter,
     )
     actions = ('calculate_amount', 'calculate_taking_account_risks',)
     empty_value_display = '-пустой-'
     list_per_page = 64
     list_max_show_all = 8
 
-    def should(self, obj):
+    def should(self, obj) -> Optional[int]:
+        """
+        Сколько ученик должен денег.
+
+        Если ученика не существует, или сумма равна или меньше 0,
+        возвращает None. Иначе возвращает сумму долга.
+        """
         user = User.objects.filter(username=obj.user.name).first()
         if user:
             last_pay = InformationPayments.objects.filter(
@@ -85,7 +109,12 @@ class EducationCostAdmin(admin.ModelAdmin):
             if cost_classes > 0:
                 return cost_classes
 
-    def per_month(self, obj):
+    def per_month(self, obj) -> Optional[int]:
+        """
+        Сколько платит ученик за месяц.
+
+        Если ученика нет, вернёт None. Иначе вернёт сумму оплаты за месяц.
+        """
         student = Student.objects.filter(name=obj.user.name).first()
         group = student.groups
         if student:
@@ -96,16 +125,30 @@ class EducationCostAdmin(admin.ModelAdmin):
             return cost_one_lesson.amount * number_classes * 4
 
     def calculate_amount(self, request, queryset):
+        """
+        Действие из выпадающего меню для подсчета общей суммы оплаты за месяц
+        для указанного числа учеников.
+        """
         costs = self._calculate_amount_month(queryset)
         self.message_user(request, f'Итоговая сумма: {costs} рублей')
 
     def calculate_taking_account_risks(self, request, queryset):
+        """
+        Действие из выпадающего меню для подсчета общей суммы оплаты за месяц
+        с учётом рисков (вычитает 10% от итоговой суммы).
+        Риск это пропуск, отмена урока.
+        """
         costs = self._calculate_amount_month(queryset)
         self.message_user(request,
                           f'Сумма с учётом рисков: {int(costs * 0.85)} рублей')
 
     @staticmethod
-    def _calculate_amount_month(queryset):
+    def _calculate_amount_month(queryset) -> int:
+        """
+        Вспомогательный метод для подсчета суммы оплаты за месяц обучения.
+
+        Необходимые данные передаются в Queryset.
+        """
         costs = 0
         for cost in queryset.all():
             student = cost.user
@@ -127,6 +170,11 @@ class EducationCostAdmin(admin.ModelAdmin):
 
 @admin.register(InformationPayments)
 class InformationPaymentsAdmin(admin.ModelAdmin):
+    """
+    Список платежей.
+
+    Платёж может добавляться и через API.
+    """
     fields = (
         'user',
         'amount',
@@ -150,6 +198,11 @@ class InformationPaymentsAdmin(admin.ModelAdmin):
 
 @admin.register(Absences)
 class AbsencesAdmin(admin.ModelAdmin):
+    """
+    Админ-панель для пропусков уроков.
+
+    Пропуск может добавляться и через API.
+    """
     fields = (
         'user',
         'date',
@@ -162,6 +215,9 @@ class AbsencesAdmin(admin.ModelAdmin):
         'user',
         'date',
     )
+    list_filter = (
+        UserListFilter,
+    )
     empty_value_display = '-пустой-'
     list_per_page = 64
     list_max_show_all = 8
@@ -169,6 +225,11 @@ class AbsencesAdmin(admin.ModelAdmin):
 
 @admin.register(Adjustment)
 class AdjustmentAdmin(admin.ModelAdmin):
+    """
+    Админ-панель для корректировок оплаты.
+
+    Корректировка может быть как с плюсом, так и с минусом.
+    """
     fields = (
         'user',
         'reason',
