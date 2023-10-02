@@ -1,0 +1,122 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>CourseMC - Твои Напоминания</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="{% static 'Course/css/bootstrap.min.css' %}">
+	<link rel="stylesheet" href="{% static 'Course/css/style.css' %}">
+	<link rel="stylesheet" href="{% static 'css/style.css' %}">
+	<link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}" type="image/x-icon">
+</head>
+<body class="flex">
+{% include 'template/header.html' %}
+{% include 'template/flash_message.html' %}
+
+
+<style>
+    body {
+        margin: 0px;
+        padding: 0px;
+        min-height: 100%;
+    }
+
+    html {
+        height: 100%;
+    }
+
+    h3 {
+        font-family: 'Rokkitt', sans-serif;
+        color: #777;
+        text-align: center;
+        font-weight: 400;
+        margin-bottom: 15px;
+    }
+    
+    .w-auto{
+        width: auto;
+    }
+
+    #app {
+        margin-top: 20px;
+    }
+</style>
+<section class="section section-task-manager">
+	<div django-app="TaskManager" id="app">
+	    <div class="container">
+	        <div class="content">
+	            <h1>Напоминания</h1>
+	            {% if group_title %}
+	                <h3>
+	                    <center>{{ group_title }}</center>
+	                </h3>
+	            {% endif %}
+	            <p class="tagline"></p>
+	            <form action="" method="post">
+	                {% csrf_token %}
+	                <div class="inputContainer">
+	                    <input type="text" id="description" class="taskName" placeholder="О чём вам напомнить?"
+	                           name="description" required>
+	                    <label for="description">Описание</label>
+	                </div>
+	                <div class="inputContainer half last">
+	                    <i class="fa fa-caret-down selectArrow"></i>
+	                    <select id="category" class="taskCategory" name="category_select">
+	                        <option class="disabled" value="">Категория</option>
+	                        {% for category in categories %}
+	                            <option value="{{ category.title }}"
+	                                    name="{{ category.title }}">{{ category.title }}</option>
+	                        {% endfor %}
+	                    </select>
+	                    <label for="category">Категория</label>
+	                </div>
+	                <div class="inputContainer half last right">
+	                    <input type="date" id="dueDate" class="taskDate" name="date" required>
+	                    <label for="dueDate">Дата</label><br><br><br>
+	                </div>
+	                <div class="row">
+	                    <button class="taskAdd" name="task_add" type="submit"><i class="fa fa-plus icon"></i>Создать
+	                    </button>
+	                    <button class="taskDelete" name="task_delete" formnovalidate="" type="submit"
+	                            onclick="$('input#sublist').click();"><i class="fa fa-trash-o icon"></i>Удалить задания
+	                    </button>
+	                </div>
+	
+	                <center>
+	                    {% if text_todo != 'личные' %}
+	                        <a href="{% url 'todo_group' %}">Напоминания {{ text_todo }}</a>
+	                    {% else %}
+	                        <a href="{% url 'todo' %}">Напоминания {{ text_todo }}</a>
+	                    {% endif %}
+	                </center>
+	
+	
+	                <ul class="taskList">
+	                    {% for todo in todos %}
+	                        <li class="taskItem">
+	                            <input type="checkbox" class="taskCheckbox" name="checked_box" id="{{ todo.id }}"
+	                                   value="{{ todo.id }}">
+	                            <label for="{{ todo.id }}"><span class="complete-">{{ todo.title }}</span></label>
+	                            <span class="w-auto category-{{ todo.category }}">{{ todo.category }}</span>
+	                            <strong class="taskDate"><i class="fa fa-calendar"></i>{{ todo.created }}
+	                                - {{ todo.due_date }}</strong>
+	                        </li>
+	                    {% endfor %}
+	
+	
+	                </ul>
+	            </form>
+	        </div>
+	
+	    </div>
+	</div>
+</section>
+
+{% include 'template/footer.html' %}
+
+</body>
+</html>

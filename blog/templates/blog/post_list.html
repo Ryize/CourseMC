@@ -1,0 +1,198 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Твои статьи - CourseMC</title>
+    <link rel="stylesheet" href="{% static 'Course/css/style.css' %}">
+    <link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}" type="image/x-icon">
+</head>
+<style>
+    html,
+    body {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+</style>
+
+<body onclick="closeAll()">
+	{% include 'template/header.html' %}
+
+<section class="scheduleSection">
+    <div class="title blog">
+        <h2 onclick="document.location=`{% url 'blog_home' %}`" style="cursor: pointer;">Блог</h2>
+
+        <div class="controlls">
+            {% if user.is_authenticated %}
+                <button><a href="{% url 'create_post' %}">Создать статью</a></button>
+                <button><a href="{% url 'my_post' %}">Мои статьи</a></button>
+            {% endif %}
+            <div class="filter">
+                <div class="select" onclick="activeFilter()">
+                    <p>Фильтровать</p>
+                    <ion-icon name="chevron-down-outline"></ion-icon>
+
+                </div>
+
+                <div class="dropdown-filter">
+                    <div class="active">Все</div>
+                    <div>Новая тема</div>
+                    <div>Ключевая тема</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="list blog"></div>
+
+    <nav class="pagination-container">
+        <button class="back">
+            <ion-icon name="chevron-back-outline"></ion-icon>
+        </button>
+        <div id="pagination-numbers"></div>
+        <button class="next">
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+        </button>
+    </nav>
+</section>
+
+<script>
+    const box = document.querySelector('.list')
+
+    const itemsMain = [
+        {% for post in posts %}
+            {% if post.is_displayed %}
+                {
+                    id: {{ post.pk }},
+                    categories: [{% for category in post.categories.all %}'{{ category|escapejs }}',{% endfor %}],
+                    name: '{{post.title}}',
+                    text: '{{post.description}}',
+                    autor: '{{post.author}}',
+                    date: '{{post.created_at}}',
+                    image: '{{post.image.url}}',
+                    url: 'onclick="document.location=`{% url 'post_view' post.pk %}`"'
+                },
+            {% endif %}
+        {% endfor %}
+    ].reverse()
+
+    function setMark(elem) {
+        if (elem === undefined) return ''
+        if (elem === 'new') return 'Новая тема'
+        if (elem === 'primary') return 'Ключевая тема'
+    }
+
+    box.innerHTML = itemsMain.map(item => (
+        `<div id="dropdown-blog" class="item" ${item.url}>
+                <img src="${item.image}" />
+
+                <div class="box">
+                    <div class="categories">${item.categories.map(cat => `<div>${cat}</div>`).join(' ')}</div>
+
+                    <div class="info">
+                        <h3>${item.name}</h3>
+                        <p>${item.text}</p>
+                    </div>
+
+                    <div class="autor">
+                        <h4>${item.autor}
+{% if my_post %}
+<a href='../change_post/${item.id}'>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+  <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+</svg>
+</a>
+{% endif %}
+</h4>
+                        <p>${item.date}</p>
+                    </div>
+                </div>
+            </div>`
+    )).join(' ')
+
+
+    const listItemsBlog = document.querySelectorAll("#dropdown-blog");
+    const backBlog = document.querySelector(".back");
+    const nextBlog = document.querySelector(".next");
+
+    const paginationLimitBlog = 9;
+    const pageCountBlog = Math.ceil(listItemsBlog.length / paginationLimitBlog);
+    let currentPageBlog = 1;
+
+    const appendPageNumberBlog = (index) => {
+        const pageNumberBlog = document.createElement("button");
+        pageNumberBlog.className = "pagination-number";
+        pageNumberBlog.innerHTML = index;
+        pageNumberBlog.setAttribute("page-index", index);
+        pageNumberBlog.setAttribute("aria-label", "Page " + index);
+
+        paginationNumbers.appendChild(pageNumberBlog);
+    };
+
+    const getPaginationNumbersBlog = () => {
+        for (let i = 1; i <= pageCountBlog; i++) {
+            appendPageNumberBlog(i);
+        }
+    };
+
+    const handleActivePageNumberBlog = () => {
+        document.querySelectorAll(".pagination-number").forEach((button) => {
+            button.classList.remove("active");
+            const pageIndex = Number(button.getAttribute("page-index"));
+            if (pageIndex == currentPageBlog) {
+                button.classList.add("active");
+            }
+        });
+    };
+
+    function setcurrentPageBlog(pageNum) {
+        currentPageBlog = pageNum;
+        handleActivePageNumberBlog();
+
+        const prevRange = (pageNum - 1) * paginationLimitBlog;
+        const currRange = pageNum * paginationLimitBlog;
+
+        listItemsBlog.forEach((item, index) => {
+            item.classList.add("hidden");
+            if (index >= prevRange && index < currRange) {
+                item.classList.remove("hidden");
+            }
+        });
+    };
+
+    backBlog.addEventListener('click', () => {
+        if (currentPageBlog > 1) {
+            setcurrentPageBlog(currentPageBlog - 1);
+        }
+    })
+
+    nextBlog.addEventListener('click', () => {
+        if (currentPageBlog < pageCountBlog) {
+            setcurrentPageBlog(currentPageBlog + 1);
+        }
+    })
+
+    window.addEventListener("load", () => {
+        getPaginationNumbersBlog();
+        setcurrentPageBlog(1);
+
+        document.querySelectorAll(".pagination-number").forEach((button) => {
+            const pageIndex = Number(button.getAttribute("page-index"));
+
+            if (pageIndex) {
+                button.addEventListener("click", () => {
+                    setcurrentPageBlog(pageIndex);
+                });
+            }
+        });
+    });
+</script>
+
+
+{% include 'template/footer.html' %}
+</body>
+
+</html>

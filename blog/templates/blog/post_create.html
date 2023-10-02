@@ -1,0 +1,53 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Создание статьи - CourseMC</title>
+	<link rel="stylesheet" href="{% static 'Course/css/bootstrap.min.css' %}">
+	<link rel="stylesheet" href="{% static 'Course/css/style.css' %}">
+	<link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}" type="image/x-icon">
+</head>
+<body class="flex">
+
+
+{% include 'template/header.html' %}
+<style>
+    body {
+        background-color: rgb(241, 243, 250);
+    }
+    input{
+        width: 50%;
+    }
+</style>
+
+<section class="section post-create">
+	<center style="margin-top: 35px;">
+	    <h1>Создать статью</h1>
+	    <h6>После создания, статью будет проверять Администратор</h6>
+	</center>
+	
+	<div class="container" style="margin-top: 55px;">
+	    <div class="row">
+	        <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1"></div>
+	        <div class="col-xs-10 col-sm-12 col-md-10 col-lg-10 border p-3">
+	            <form method="post" enctype="multipart/form-data">
+	                {% csrf_token %}
+	                {{ form.media }}
+	                {% for field in form %}
+	                    {{ field.label }}: {{ field }}
+	                    <hr>
+	                {% endfor %}
+	                <center><input type="submit" value="Сохранить" class="btn btn-primary w-25"></center>
+	            </form>
+	        </div>
+	    </div>
+	</div>
+</section>
+
+
+{% include 'template/footer.html' %}
+</body>
+</html>
