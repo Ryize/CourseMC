@@ -74,9 +74,11 @@ class ApplicationsForTrainingSerializer(serializers.ModelSerializer):
 
 
 class PaymentAmountSerializer(serializers.Serializer):
+    """ Сумма оплаты для указанного ученика. """
     student_id = serializers.IntegerField()
 
 
 class MissingSerializer(serializers.Serializer):
+    """ Для пропуска занятий. """
     username = serializers.CharField(max_length=32)
     date = serializers.DateField()
