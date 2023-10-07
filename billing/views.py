@@ -144,6 +144,7 @@ def get_cost_classes(user: User) -> int:
     billings = InformationPayments.objects.filter(
         user=student,
     ).order_by('-date').all()
+
     number_passes, sum_adjustments = 0, 0
     if billings:
         last_billing = billings.first()

@@ -1,12 +1,13 @@
 from typing import Optional
 
+from django.db.models import IntegerField, Case, Value, When
 from django.contrib import admin
 from django.contrib.auth.models import User
 
-from Course.models import Student, ClassesTimetable
-from billing.models import (InformationPayments, EducationCost,
-                            Absences, Adjustment)
+from billing.models import (Absences, Adjustment,
+                            EducationCost, InformationPayments)
 from billing.views import get_cost_classes
+from Course.models import ClassesTimetable, Student
 
 
 class UserListFilter(admin.SimpleListFilter):
@@ -73,13 +74,13 @@ class EducationCostAdmin(admin.ModelAdmin):
         'user',
         'amount',
         'per_month',
-        'should',
+        'debt',
     )
     list_display_links = (
         'user',
         'amount',
         'per_month',
-        'should',
+        'debt',
     )
     list_filter = (
         'amount',
@@ -90,12 +91,12 @@ class EducationCostAdmin(admin.ModelAdmin):
     list_per_page = 64
     list_max_show_all = 8
 
-    def should(self, obj) -> Optional[int]:
+    def _get_debt(self, obj):
         """
-        Сколько ученик должен денег.
+           Сколько ученик должен денег.
 
-        Если ученика не существует, или сумма равна или меньше 0,
-        возвращает None. Иначе возвращает сумму долга.
+           Если ученика не существует, или сумма равна или меньше 0,
+           возвращает None. Иначе возвращает сумму долга.
         """
         user = User.objects.filter(username=obj.user.name).first()
         if user:
@@ -108,6 +109,37 @@ class EducationCostAdmin(admin.ModelAdmin):
             cost_classes = get_cost_classes(user)
             if cost_classes > 0:
                 return cost_classes
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        for obj in queryset: print(obj.id)
+
+        # Значения debt из _get_data для каждой записи
+        debt_values_list = [self._get_debt(obj) for obj in queryset]
+        print(debt_values_list)
+
+        # Список условий для каждой записи
+        conditions = [
+            When(id=obj.id, then=Value(
+                debt_value, output_field=IntegerField()))
+            for obj, debt_value in zip(queryset, debt_values_list)]
+        print(conditions)
+
+        # Case и annotate для присвоения значений debt
+        queryset = queryset.annotate(
+            debt=Case(
+                *conditions,
+                default=Value(
+                    0,
+                    output_field=IntegerField()
+                ), output_field=IntegerField()
+            )
+        )
+
+        return queryset.order_by('-debt')
+
+    def debt(self, obj) -> Optional[int]:
+        return obj.debt
 
     def per_month(self, obj) -> Optional[int]:
         """
@@ -159,10 +191,12 @@ class EducationCostAdmin(admin.ModelAdmin):
         return costs
 
     calculate_amount.short_description = "Посчитать"
-    calculate_taking_account_risks.short_description = "Посчитать с учётом рисков"
+    calculate_taking_account_risks.short_description = ("Посчитать "
+                                                        "с учётом рисков")
 
-    should.short_description = 'Должен'
-    should.empty_value_display = 'Оплатил'
+    debt.admin_order_field = 'debt'
+    debt.short_description = 'Должен'
+    debt.empty_value_display = 'Оплатил'
 
     per_month.short_description = 'За месяц'
     per_month.empty_value_display = 'Нет информации'
