@@ -107,3 +107,25 @@ class Adjustment(models.Model):
     class Meta:
         verbose_name = 'Корректировка'
         verbose_name_plural = 'Корректировки'
+
+
+class PaymentVerification(models.Model):
+    """
+    Содержит данные для проверки объекта через YooKassa.
+
+    Fields:
+        user: ForeignKey (связь с пользователем, модель Student)
+        payment_id: CharField (id платежа. Получаем и используем в YooKassa)
+        amount: PositiveIntegerField (сумма оплаты)
+        date: DateTimeField (дата создания платежа)
+    """
+    user = models.ForeignKey(Student,
+                             on_delete=models.CASCADE,
+                             verbose_name='Ученик',
+                             )
+
+    payment_id = models.CharField(max_length=32, verbose_name='id платежа')
+
+    amount = models.PositiveIntegerField()
+
+    date = models.DateTimeField(verbose_name='Дата', default=timezone.now)

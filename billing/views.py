@@ -9,8 +9,9 @@ from django.shortcuts import render, redirect
 from django.views.generic import ListView
 
 from Course.models import Student
+from billing.check_billing import get_payment_url
 from billing.models import (InformationPayments, Absences,
-                            Adjustment, EducationCost)
+                            Adjustment, EducationCost, PaymentVerification)
 from billing.count_bill_logic import get_lesson_data
 
 
@@ -87,6 +88,16 @@ class BillingView(LoginRequiredMixin, ListView):
         context['amount_classes'] = amount_classes
         context['number_passes'] = number_passes
         context['lesson_price'] = lesson_price
+        if cost_classes < 1:
+            return context
+        payment_data = get_payment_url(cost_classes)
+        student = Student.objects.filter(
+            name=get_user(self.request).username,
+        ).first()
+        PaymentVerification.objects.create(user=student,
+                                           payment_id=payment_data[1],
+                                           amount=cost_classes)
+        context['payment_url'] = payment_data[0]
         return context
 
     def dispatch(self, request, *args, **kwargs):

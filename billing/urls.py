@@ -1,5 +1,6 @@
 from django.urls import path
 
+from .check_billing import *
 from .views import *
 
 urlpatterns = [

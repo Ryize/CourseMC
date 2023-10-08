@@ -8,7 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Расписания - CourseMC</title>
     <link rel="stylesheet" href="{% static 'Course/css/style.css' %}">
-    <link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}" type="image/x-icon">
+    <link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}"
+          type="image/x-icon">
 </head>
 <style>
     html,
@@ -19,12 +20,13 @@
 </style>
 
 <body onclick="closeAll()">
-	{% include 'template/header.html' %}
+{% include 'template/header.html' %}
 
 <section class="scheduleSection">
     <div class="title">
         <h2>Оплата занятий</h2>
-        <p>*Сумма к оплате генерируется автоматически. Если вы с ней не согласны сообщите учителю.</p>
+        <p>*Сумма к оплате генерируется автоматически. Если вы с ней не
+            согласны сообщите учителю.</p>
     </div>
 
     <div class="actions">
@@ -33,65 +35,15 @@
             <h3>Количество пропусков: <span>{{ number_passes }}</span></h3>
             <h3>Стоимость урока: <span>{{ lesson_price }}₽</span></h3>
         </div>
-
-        <form class="yoomoney-payment-form" style="height: 30px;"
-              action="https://yookassa.ru/integration/simplepay/payment" method="post"
-              accept-charset="utf-8">
-
-            <div class="ym-hidden-inputs">
-                <input name="shopSuccessURL" type="hidden" value="http://coursemc.ru/billing/success/">
-            </div>
-
-            <button data-text="Заплатить">Оплатить {{ cost_classes }}&nbsp;₽</button>
-            <div class="ym-products ym-display-none">
-                <div class="ym-product">
-                    <input disabled="" type="hidden" name="text" value="Урок"><input disabled=""
-                                                                                     type="hidden"
-                                                                                     name="price"
-                                                                                     value="{{ cost_classes }}"><input
-                        disabled="" type="hidden" name="quantity" value="1"><input disabled=""
-                                                                                   type="hidden"
-                                                                                   name="paymentSubjectType"
-                                                                                   value="service"><input
-                        disabled="" type="hidden" name="paymentMethodType"
-                        value="full_payment"><input disabled="" type="hidden" name="tax" value="1">
-                </div>
-            </div>
-            <input value="" type="hidden" name="ym_merchant_receipt">
-
-            <div class="ym-customer-info">
-                <input name="cps_email" class="ym-input ym-display-none" placeholder="Email"
-                       type="hidden" value="{{ student_email }}">
-
-
-            </div>
-
-            <div class="ym-hidden-inputs">
-
-
-            </div>
-
-            <div class="ym-payment-btn-block ym-align-space-between">
-                <div class="ym-input-icon-rub ym-display-none">
-                    <input name="sum" placeholder="0.00"
-                           class="ym-input ym-sum-input ym-required-input" type="hidden" step="any"
-                           value="{{ cost_classes }}">
-                </div>
-                <lineargradient id="paint0_linear" x1="57.3564" y1="0" x2="57.3564" y2="63"
-                                gradientunits="userSpaceOnUse">
-                    <stop stop-color="#0160D1">
-                        <stop offset="1" stop-color="#00479C"></stop>
-                    </stop>
-                </lineargradient>
-                <lineargradient id="paint1_linear" x1="12.8472" y1="9.35889" x2="12.8472"
-                                y2="55.2393" gradientunits="userSpaceOnUse">
-                    <stop stop-color="#0160D1">
-                        <stop offset="1" stop-color="#00479C"></stop>
-                    </stop>
-                </lineargradient>
-
-            </div>
-            <input name="shopId" type="hidden" value="986660"></form>
+        {% if cost_classes > 0 %}
+            <form class="yoomoney-payment-form" style="height: 30px;"
+                  action="{{ payment_url }}">
+                <button data-text="Заплатить"
+                        onclick="document.location = '{{ payment_url }}'">
+                    Оплатить {{ cost_classes }}&nbsp;₽
+                </button>
+            </form>
+        {% endif %}
         <script src="https://yookassa.ru/integration/simplepay/js/yookassa_construct_form.js"></script>
     </div>
 
@@ -108,7 +60,6 @@
         </button>
     </nav>
 </section>
-
 
 
 <script>

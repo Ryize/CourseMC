@@ -40,3 +40,4 @@ docx~=0.2.4
 htmldocx~=0.0.6
 openai~=0.27.2
 django-colorfield==0.10.1
+yookassa==2.3.5
