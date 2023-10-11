@@ -1,4 +1,5 @@
 import datetime
+import os
 import time
 import uuid
 
@@ -8,8 +9,8 @@ from time import sleep
 from yookassa import Payment, Configuration
 from yookassa.domain.exceptions import BadRequestError
 
-from .config import SHOP_ID, SECRET_KEY
-from .models import PaymentVerification, InformationPayments
+from billing.config import SHOP_ID, SECRET_KEY
+from billing.models import PaymentVerification, InformationPayments
 
 Configuration.account_id = SHOP_ID
 Configuration.secret_key = SECRET_KEY
@@ -66,15 +67,27 @@ def check_payment(payment_id, amount):
 
 
 def _():
+    if os.environ.get('RUN_CHECK_BILLING', '0') == '1':
+        return
+    os.environ['RUN_CHECK_BILLING'] = '1'
     while True:
-        for i in PaymentVerification.objects.all():
-            if (time.time() - i.date.timestamp()) / 60 > 30:
-                i.delete()
-            if check_payment(i.payment_id, i.amount):
-                i.delete()
-                InformationPayments.objects.create(user=i.user,
-                                                   amount=i.amount)
-        sleep(60)
+        try:
+            users = {}
+            for i in PaymentVerification.objects.order_by('-date').all():
+                if i.user not in users:
+                    users[i.user] = 0
+                if users[i.user] > 5:
+                    i.delete()
+                if (time.time() - i.date.timestamp()) / 60 > 30:
+                    i.delete()
+                if check_payment(i.payment_id, i.amount):
+                    i.delete()
+                    InformationPayments.objects.create(user=i.user,
+                                                       amount=i.amount)
+                time.sleep(3)
+            sleep(60)
+        except:
+            pass
 
 
 t = Thread(target=_, daemon=True)
