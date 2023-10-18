@@ -1,10 +1,10 @@
-import datetime
 import os
 import time
 import uuid
 
 from threading import Thread
 from time import sleep
+from typing import Union
 
 from yookassa import Payment, Configuration
 from yookassa.domain.exceptions import BadRequestError
@@ -16,7 +16,19 @@ Configuration.account_id = SHOP_ID
 Configuration.secret_key = SECRET_KEY
 
 
-def get_payment_url(amount):
+def get_payment_url(amount: int) -> tuple:
+    """
+    Получение ссылки и id оплаты занятия.
+
+    Args:
+        amount: int (сумма оплаты)
+
+    Returns:
+        tuple:
+            [0] - str (ссылка на оплату)
+            [1] - str (id оплаты. Нужно для подтверждения оплаты в YooKassa)
+    """
+
     idempotence_key = str(uuid.uuid4())
     payment = Payment.create({
         'amount': {
@@ -42,10 +54,19 @@ def get_payment_url(amount):
         }
     }, idempotence_key)
 
-    return payment.confirmation.confirmation_url, payment.id
+    return payment.confirmation.confirmation_url, str(payment.id)
 
 
-def check_payment(payment_id, amount):
+def check_payment(payment_id: Union[str, int], amount: int) -> bool:
+    """
+    Проверить оплату.
+
+    Args:
+        payment_id: str | int (id оплаты, который получается при создании
+        ссылки оплаты)
+        amount: int (сумма оплаты)
+    """
+
     res = Payment.find_one(payment_id)
     if res.status == 'pending':
         idempotence_key = str(uuid.uuid4())
@@ -66,7 +87,14 @@ def check_payment(payment_id, amount):
     return res.status == 'succeeded'
 
 
-def _():
+def _() -> None:
+    """
+    Подтверждение оплаты.
+
+    Каждые 60 секунд проверяет, была ли оплата, если да, то создается платеж.
+    Использует модель PaymentVerification.
+    """
+
     if os.environ.get('RUN_CHECK_BILLING', '0') == '1':
         return
     os.environ['RUN_CHECK_BILLING'] = '1'

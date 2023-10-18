@@ -205,11 +205,6 @@ def billing_success(request):
     Returns:
         HttpResponse (HTML страница).
     """
-    amount = get_cost_classes(get_user(request))
-    if amount == 0:
-        return redirect('home')
-    student = Student.objects.filter(name=request.user.username).first()
-    InformationPayments.objects.create(user=student, amount=amount)
     return render(request, 'billing/success.html')
 
 
