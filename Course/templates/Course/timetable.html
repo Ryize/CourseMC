@@ -8,7 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Расписания - CourseMC</title>
     <link rel="stylesheet" href="{% static 'Course/css/style.css' %}">
-    <link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}" type="image/x-icon">
+    <link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}"
+          type="image/x-icon">
 </head>
 <style>
     html,
@@ -19,7 +20,8 @@
 </style>
 
 <body onclick="closeAll()">
-	{% include 'template/header.html' %}
+{% include 'template/header.html' %}
+
 
 <section class="scheduleSection">
     <h2>Расписание</h2>
@@ -31,7 +33,6 @@
             </button>
         </a>
         <div class="right">
-
             <div class="filter">
                 <div class="select" onclick="activeFilter()">
                     <p>Фильтровать</p>
@@ -46,7 +47,7 @@
             </div>
         </div>
     </div>
-
+    <h3> Кол-во пропусков: <span>{{ absences }}</span></h3>
     <div class="list"></div>
 
     <nav class="pagination-container">
@@ -66,7 +67,9 @@
     const itemsMain = [
         {% for schedule in schedules %}
             {
-                lesson: {{ forloop.counter }}, name: '{{ schedule.theme|safe }}', content: `
+                lesson: {{ forloop.counter }},
+                name: '{{ schedule.theme|safe }}',
+                content: `
         <div>
             {{ schedule.lesson_materials|safe }}
         </div>
