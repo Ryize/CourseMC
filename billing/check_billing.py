@@ -67,22 +67,20 @@ def check_payment(payment_id: Union[str, int], amount: int) -> bool:
         amount: int (сумма оплаты)
     """
 
-    res = Payment.find_one(payment_id)
-    if res.status == 'pending':
-        idempotence_key = str(uuid.uuid4())
-        try:
-            Payment.capture(
-                payment_id,
-                {
-                    "amount": {
-                        "value": f"{amount}",
-                        "currency": "RUB"
-                    }
-                },
-                idempotence_key
-            )
-        except BadRequestError:
-            pass
+    idempotence_key = str(uuid.uuid4())
+    try:
+        Payment.capture(
+            payment_id,
+            {
+                "amount": {
+                    "value": f"{amount}",
+                    "currency": "RUB"
+                }
+            },
+            idempotence_key
+        )
+    except:
+        pass
     res = Payment.find_one(payment_id)
     return res.status == 'succeeded'
 
