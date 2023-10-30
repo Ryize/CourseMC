@@ -7,13 +7,13 @@ CERTIFICATES_PATH = f'{STATIC_PATH}/certificates'
 def create_certificate(name: str, date: str, certificate_number: str):
     im = Image.open(f'{STATIC_PATH}/certificate.png')
     draw_text = ImageDraw.Draw(im)
-    font_fio = ImageFont.truetype(f"{STATIC_PATH}/montserrat.ttf", 100)
-    font_date = ImageFont.truetype(f"{STATIC_PATH}/montserrat.ttf", 36)
+    font_fio = ImageFont.truetype(f"{STATIC_PATH}/montserrat.ttf", 90)
+    font_date = ImageFont.truetype(f"{STATIC_PATH}/helvetica.ttf", 36)
     font_certificate_number = ImageFont.truetype(
-        f"{STATIC_PATH}/montserrat.ttf", 42)
+        f"{STATIC_PATH}/helvetica.ttf", 42)
 
     draw_text.text(
-        (200, 658),
+        (200, 680),
         name,
         fill=('#ffffff'),
         font=font_fio
@@ -32,4 +32,6 @@ def create_certificate(name: str, date: str, certificate_number: str):
         fill=('#ffffff'),
         font=font_certificate_number
     )
-    im.save(f'{CERTIFICATES_PATH}/{certificate_number}.png')
+    file_path = f'{CERTIFICATES_PATH}/{certificate_number}.png'
+    im.save(file_path)
+    return file_path

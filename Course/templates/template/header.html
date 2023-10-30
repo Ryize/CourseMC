@@ -1,57 +1,71 @@
 <header>
-	<div class="container">
-		<h3><a href="{% url 'home' %}">CourseMC</a></h3>
+    <div class="container">
+        <h3><a href="{% url 'home' %}">CourseMC</a></h3>
 
-			<div class="right black" id="headerRight">
-					<ul>
-							{% if user.is_authenticated %}
-							<li class="active"><a href="{% url 'schedule' %}">Расписания</a></li>
-							{% endif %}
-							<li onclick="activeDropDownNav(0)">Сервисы
-									<ion-icon name="chevron-down-outline"></ion-icon>
-							</li>
-							<li onclick="activeDropDownNav(1)">Действия
-									<ion-icon name="chevron-down-outline"></ion-icon>
-							</li>
-							<li onclick="activeDropDownNav(2)">Контакты
-									<ion-icon name="chevron-down-outline"></ion-icon>
-							</li>
-							<li><a href="{% url 'review' %}">Отзывы</a></li>
-					</ul>
-					{% if not user.is_authenticated %}
-							<button type="button" data-modal-target="modal-auth">Авторизоваться</button>
-					{% elif user.is_staff %}
-							<li><a href="{% url 'admin:index' %}">Настройки</a></li>
-					{% endif %}
-			</div>
+        <div class="right black" id="headerRight">
+            <ul>
+                {% if user.is_authenticated %}
+                    <li class="active"><a href="{% url 'schedule' %}">Расписания</a>
+                    </li>
+                {% endif %}
+                <li onclick="activeDropDownNav(0)">Сервисы
+                    <ion-icon name="chevron-down-outline"></ion-icon>
+                </li>
+                <li onclick="activeDropDownNav(1)">Действия
+                    <ion-icon name="chevron-down-outline"></ion-icon>
+                </li>
+                <li onclick="activeDropDownNav(2)">Контакты
+                    <ion-icon name="chevron-down-outline"></ion-icon>
+                </li>
+                <li><a href="{% url 'review' %}">Отзывы</a></li>
+            </ul>
+            {% if not user.is_authenticated %}
+                <button type="button" data-modal-target="modal-auth">
+                    Авторизоваться
+                </button>
+            {% elif user.is_staff %}
+                <li><a href="{% url 'admin:index' %}">Настройки</a></li>
+            {% endif %}
+        </div>
 
-			<div class="menu">
-					<ion-icon name="menu-outline"></ion-icon>
-					<ion-icon name="close-outline"></ion-icon>
-			</div>
+        <div class="menu">
+            <ion-icon name="menu-outline"></ion-icon>
+            <ion-icon name="close-outline"></ion-icon>
+        </div>
 
-			<div class="drop drop1">
-					<ul>
-							<li style="--var: 55%;"><a href="{% url 'blog_home' %}">Твои Статьи</a></li>
-							<li style="--var: 95%;"><a href="{% url 'todo' %}">Твои Напоминания</a></li>
-							<li style="--var: 75%;"><a href="{% url 'questionnaireIndex' %}">Твой Опросник</a></li>
-							<li style="--var: 100%;"><a href="{% url 'py_interpreter' %}">Твой Интерпретатор</a></li>
-					</ul>
-			</div>
+        <div class="drop drop1">
+            <ul>
+                <li style="--var: 55%;"><a href="{% url 'blog_home' %}">Твои
+                    Статьи</a></li>
+                <li style="--var: 95%;"><a href="{% url 'todo' %}">Твои
+                    Напоминания</a></li>
+                <li style="--var: 75%;"><a
+                        href="{% url 'questionnaireIndex' %}">Твой Опросник</a>
+                </li>
+                <li style="--var: 100%;"><a href="{% url 'py_interpreter' %}">Твой
+                    Интерпретатор</a></li>
+            </ul>
+        </div>
 
-			<div class="drop drop2">
-					<ul>
-							<li style="--var: 67%;"><a href="{% url 'billing_index' %}">Оплатить занятия</a></li>
-							<li style="--var: 50%;"><a href="{% url 'schedule' %}">Создать отчёт</a></li>
-					</ul>
-			</div>
+        <div class="drop drop2">
+            <ul>
+                <li style="--var: 50%;"><a
+                        href="{% url 'certificate_verify' %}">Проверить
+                    сертификат</a></li>
+                <li style="--var: 67%;"><a href="{% url 'billing_index' %}">Оплатить
+                    занятия</a></li>
+            </ul>
+        </div>
 
-			<div class="drop drop3">
-					<ul>
-							<li style="--var: 30%;"><a href="https://vk.com/matvey.chekashov">ВК</a></li>
-							<li style="--var: 100%;"><a href="https://t.me/mchekashov">Телеграм</a></li>
-							<li style="--var: 75%;"><a href="https://github.com/Ryize">GitHub</a></li>
-					</ul>
-			</div>
-	</div>
+        <div class="drop drop3">
+            <ul>
+                <li style="--var: 30%;"><a
+                        href="https://vk.com/matvey.chekashov">ВК</a></li>
+                <li style="--var: 100%;"><a href="https://t.me/mchekashov">Телеграм</a>
+                </li>
+                <li style="--var: 75%;"><a href="https://github.com/Ryize">GitHub</a>
+                </li>
+            </ul>
+        </div>
+    </div>
 </header>
