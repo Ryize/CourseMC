@@ -20,6 +20,7 @@ urlpatterns = [
     path("billing/", include("billing.urls")),
     path("todo/", include("todolist.urls")),
     path("certificate/", include("certificate.urls")),
+    path("interview/", include("interview.urls")),
     path("<path:url>/", page_not_found_view),
 ]
 

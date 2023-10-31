@@ -1,0 +1,86 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible"
+          content="IE=edge">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <title>Вопросы для интервью</title>
+    <link rel="stylesheet" href="{% static 'interview/style.css' %}">
+
+</head>
+
+<body>
+<div>
+    <h1>Вопросы для собеседования</h1>
+    <!-- Create Form -->
+    <form id="form">
+
+        <!-- Details -->
+        <div class="form-control">
+            <label for="name" id="label-name">
+                Количество вопросов (от 10 до 50)
+            </label>
+
+            <!-- Input Type Text -->
+            <input type="number"
+                   id="name"
+                   value="10"
+                   name="amount"
+                   min=10
+                   max=50
+                   onchange="imposeMinMax(this)"
+                   required/>
+        </div>
+        <div class="form-control">
+            <label>Категории
+                <small>(Выберите хотя бы одну)</small>
+            </label>
+            <label><input type="checkbox" name="technologies"
+                          value="random">Случайные</label>
+            {% for i in categories %}
+                <label><input type="checkbox" name="technologies"
+                              value="{{ i }}">{{ i }}</label>
+            {% endfor %}
+        </div>
+
+        <center>
+            <button id="button">Сгенерировать вопросы</button>
+        </center>
+    </form>
+</div>
+<script type="text/javascript">
+    function imposeMinMax(el) {
+        if (el.value != "") {
+            if (parseInt(el.value) < parseInt(el.min)) {
+                el.value = el.min;
+            }
+            if (parseInt(el.value) > parseInt(el.max)) {
+                el.value = el.max;
+            }
+        }
+    }
+
+    $(function () {
+        $("#button").click(function () {
+            $("#button").addClass("onclic", 250, validate);
+        });
+
+        function validate() {
+            setTimeout(function () {
+                $("#button").removeClass("onclic");
+                $("#button").addClass("validate", 450, callback);
+            }, 2250);
+        }
+
+        function callback() {
+            setTimeout(function () {
+                $("#button").removeClass("validate");
+            }, 1250);
+        }
+    });
+</script>
+</body>
+</html>

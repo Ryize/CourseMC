@@ -1,0 +1,109 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible"
+          content="IE=edge">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <title>Вопросы для интервью</title>
+    <link rel="stylesheet" href="{% static 'interview/style.css' %}">
+
+</head>
+
+<body>
+<style>
+    label {
+        font-size: 125%;
+    }
+
+    form {
+        background-color: #fff;
+        max-width: 75%;
+        margin: 50px auto;
+        padding: 30px 20px;
+        box-shadow: 2px 5px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    a{
+        text-decoration: none;
+    }
+
+    i{
+        cursor: pointer;
+    }
+
+    label{
+        cursor: auto;
+    }
+</style>
+<div>
+    <h1>Вопросы для собеседования</h1>
+    <form id="form">
+        <div class="form-control">
+            <input type="hidden"
+                   id="name"
+                   value="{{ amount }}"
+                   name="amount"
+                   min=10
+                   max=50
+                   onchange="imposeMinMax(this)"
+                   required/>
+        </div>
+        <div class="form-control">
+            {% if 'random' in technologies %}
+                <label><input type="checkbox" name="technologies"
+                              value="random">Случайные</label>
+            {% endif %}
+            {% for i in categories %}
+                {% if i in technologies %}
+                    <input type="hidden" name="technologies"
+                           value="{{ i }}" checked>
+                {% endif %}
+            {% endfor %}
+        <small>Нажми на номер вопроса, чтобы найти ответ в Google</small><br><br>
+            {% for i in question %}
+                <label><i onclick="window.open('https://www.google.com/search?q=Python+{{ i }}')">{{ forloop.counter }})</i> {{ i }}</label>
+            {% endfor %}
+        </div>
+
+        <center>
+            <button id="button">Сгенерировать заново</button><br>
+            <a href="javascript:history.back()">⏎ Назад</a>
+        </center>
+    </form>
+</div>
+<script type="text/javascript">
+    function imposeMinMax(el) {
+        if (el.value != "") {
+            if (parseInt(el.value) < parseInt(el.min)) {
+                el.value = el.min;
+            }
+            if (parseInt(el.value) > parseInt(el.max)) {
+                el.value = el.max;
+            }
+        }
+    }
+
+    $(function () {
+        $("#button").click(function () {
+            $("#button").addClass("onclic", 250, validate);
+        });
+
+        function validate() {
+            setTimeout(function () {
+                $("#button").removeClass("onclic");
+                $("#button").addClass("validate", 450, callback);
+            }, 2250);
+        }
+
+        function callback() {
+            setTimeout(function () {
+                $("#button").removeClass("validate");
+            }, 1250);
+        }
+    });
+</script>
+</body>
+</html>

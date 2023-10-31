@@ -1,96 +1,113 @@
 {% load static %}
 
 <div class="navigation">
-	<ul>
-		{% if user.is_authenticated %}
-		<li><a href="{% url 'schedule' %}">Расписания</a></li>
-		{% endif %}
-		<li onclick="activeDropDownNavMob(0)" class="action">Сервисы
-			<ion-icon name="chevron-down-outline"></ion-icon>
-		</li>
-		<ul>
-			<li><a href="{% url 'blog_home' %}">Твои Статьи</a></li>
-			<li><a href="{% url 'todo' %}">Твои Напоминания</a></li>
-			<li><a href="{% url 'questionnaireIndex' %}">Твой Опросник</a></li>
-			<li><a href="{% url 'py_interpreter' %}">Твой Интерпретатор</a></li>
-		</ul>
-		<li onclick="activeDropDownNavMob(1)" class="action">Действия
-			<ion-icon name="chevron-down-outline"></ion-icon>
-		</li>
-		<ul>
-			<li><a href="{% url 'billing_index' %}">Оплатить занятия</a></li>
-			<li><a href="{% url 'schedule' %}">Создать отчёт</a></li>
-		</ul>
-		<li onclick="activeDropDownNavMob(2)" class="action">Контакты
-			<ion-icon name="chevron-down-outline"></ion-icon>
-		</li>
-		<ul>
-			<li><a href="https://vk.com/matvey.chekashov">ВК</a></li>
-			<li><a href="https://t.me/mchekashov">Телеграм</a></li>
-			<li><a href="https://github.com/Ryize">GitHub</a></li>
-		</ul>
-		<li><a href="{% url 'review' %}">Отзывы</a></li>
-	</ul>
+    <ul>
+        {% if user.is_authenticated %}
+            <li><a href="{% url 'schedule' %}">Расписания</a></li>
+        {% endif %}
+        <li onclick="activeDropDownNavMob(0)" class="action">Сервисы
+            <ion-icon name="chevron-down-outline"></ion-icon>
+        </li>
+        <ul>
+            <li><a href="{% url 'blog_home' %}">Твои Статьи</a></li>
+            <li><a href="{% url 'todo' %}">Твои Напоминания</a></li>
+            <li><a href="{% url 'questionnaireIndex' %}">Твой Опросник</a></li>
+        </ul>
+        <li onclick="activeDropDownNavMob(1)" class="action">Действия
+            <ion-icon name="chevron-down-outline"></ion-icon>
+        </li>
+        <ul>
+            <li style="--var: 50%;"><a
+                    href="{% url 'certificate_verify' %}">Проверить
+                сертификат</a></li>
+            <li><a href="{% url 'billing_index' %}">Оплатить занятия</a></li>
+        </ul>
+        <li onclick="activeDropDownNavMob(2)" class="action">Контакты
+            <ion-icon name="chevron-down-outline"></ion-icon>
+        </li>
+        <ul>
+            <li><a href="https://vk.com/matvey.chekashov">ВК</a></li>
+            <li><a href="https://t.me/mchekashov">Телеграм</a></li>
+            <li><a href="https://github.com/Ryize">GitHub</a></li>
+        </ul>
+        <li><a href="{% url 'review' %}">Отзывы</a></li>
+    </ul>
 
-	{% if not user.is_authenticated %}
-	<button type="button" data-modal-target="modal-auth">Авторизоваться</button>
-	{% elif user.is_staff %}
-	<li><a href="{% url 'create_group' %}">Группы</a></li>
-	<li><a href="{% url 'admin:index' %}">Настройки</a></li>
-	{% endif %}
+    {% if not user.is_authenticated %}
+        <button type="button" data-modal-target="modal-auth">Авторизоваться
+        </button>
+    {% elif user.is_staff %}
+        <li><a href="{% url 'create_group' %}">Группы</a></li>
+        <li><a href="{% url 'admin:index' %}">Настройки</a></li>
+    {% endif %}
 </div>
 
 <footer class='change'>
-	<p>© 2023 CourseMC – Обучение Python разработке</p>
-	<div onclick="changeTheme()">
-			<ion-icon name="sunny"></ion-icon>
-			<ion-icon name="moon"></ion-icon>
-	</div>
+    <p>© 2023 CourseMC – Обучение Python разработке</p>
+    <div onclick="changeTheme()">
+        <ion-icon name="sunny"></ion-icon>
+        <ion-icon name="moon"></ion-icon>
+    </div>
 </footer>
 
 {% if not user.is_authenticated %}
-<div class="modal" id="modal-auth" aria-hidden="true">
-	<div class="modal-backdrop fade" data-modal-close></div>
-	<div class="modal-dialog">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h3 class="modal-title">Авторизация</h3>
-				<button type="button" class="btn-close" data-modal-close></button>
-			</div>
-			<div class="modal-body">
-				<form class="form-login form-enroll-course form-base" data-type="online" method="post" action="/accounts/login/">
-					{% csrf_token %}
-					<!-- {{ form.as_p }} -->
-					<div class="input-box">
-						<label for="id_login">Имя пользователя:</label>
-						<input type="text" name="login" placeholder="Имя пользователя" autocomplete="username" maxlength="150" required="" id="id_login">
-					</div>
-					<div class="input-box">
-						<label for="id_password">Пароль:</label> 
-						<input type="password" name="password" placeholder="Пароль" autocomplete="current-password" required="" id="id_password">
-					</div>
-					<div class="input-box">
-						<input class="input-checkbox" type="checkbox" name="remember" id="id_remember">
-						<label for="id_remember">Запомнить меня</label> 
-					</div>
-					<div class="text-center">
-						<input type="hidden" name="utm_source" value="yandex">
-						<button type="submit" class="btn">Войти</button>
-						<p style="margin-top: 13px;">Мы 2 года делаем курсы для тех, кто
-							<strong>хочет и готов</strong> пробовать новое, меняться, искать себя и работу
-							<strong>мечты</strong>
-						</p>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
-</div>
+    <div class="modal" id="modal-auth" aria-hidden="true">
+        <div class="modal-backdrop fade" data-modal-close></div>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">Авторизация</h3>
+                    <button type="button" class="btn-close"
+                            data-modal-close></button>
+                </div>
+                <div class="modal-body">
+                    <form class="form-login form-enroll-course form-base"
+                          data-type="online" method="post"
+                          action="/accounts/login/">
+                        {% csrf_token %}
+                        <!-- {{ form.as_p }} -->
+                        <div class="input-box">
+                            <label for="id_login">Имя пользователя:</label>
+                            <input type="text" name="login"
+                                   placeholder="Имя пользователя"
+                                   autocomplete="username" maxlength="150"
+                                   required="" id="id_login">
+                        </div>
+                        <div class="input-box">
+                            <label for="id_password">Пароль:</label>
+                            <input type="password" name="password"
+                                   placeholder="Пароль"
+                                   autocomplete="current-password" required=""
+                                   id="id_password">
+                        </div>
+                        <div class="input-box">
+                            <input class="input-checkbox" type="checkbox"
+                                   name="remember" id="id_remember">
+                            <label for="id_remember">Запомнить меня</label>
+                        </div>
+                        <div class="text-center">
+                            <input type="hidden" name="utm_source"
+                                   value="yandex">
+                            <button type="submit" class="btn">Войти</button>
+                            <p style="margin-top: 13px;">Мы 2 года делаем курсы
+                                для тех, кто
+                                <strong>хочет и готов</strong> пробовать новое,
+                                меняться, искать себя и работу
+                                <strong>мечты</strong>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endif %}
 
 <script src="{% static 'Course/js/jquery.min.js' %}"></script>
-<script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
-<script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+<script type="module"
+        src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule
+        src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
 <script src="{% static 'Course/js/gsap.min.js' %}"></script>
 <script src="{% static 'Course/js/ScrollTrigger.min.js' %}"></script>
 <script src="{% static 'Course/js/main.js' %}"></script>
