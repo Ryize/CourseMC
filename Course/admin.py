@@ -8,7 +8,6 @@ from .models import *
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    change_list_template = "admin/model_change_list.html"
     fields = (
         'name',
         'contact',

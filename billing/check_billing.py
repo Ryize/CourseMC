@@ -1,3 +1,4 @@
+import datetime
 import os
 import time
 import uuid
@@ -7,7 +8,6 @@ from time import sleep
 from typing import Union
 
 from yookassa import Payment, Configuration
-from yookassa.domain.exceptions import BadRequestError
 
 from billing.config import SHOP_ID, SECRET_KEY
 from billing.models import PaymentVerification, InformationPayments
@@ -108,8 +108,9 @@ def _() -> None:
                     i.delete()
                 if check_payment(i.payment_id, i.amount):
                     i.delete()
-                    InformationPayments.objects.create(user=i.user,
-                                                       amount=i.amount)
+                    if not InformationPayments.objects.filter(date=datetime.date.today(), amount=i.amount).first():
+                        InformationPayments.objects.create(user=i.user,
+                                                           amount=i.amount)
                 time.sleep(3)
             sleep(60)
         except:

@@ -1,9 +1,16 @@
-from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+
+from Course.models import Student
 from interview.answer import get_questions
 from interview.models import InterviewQuestionCategory, InterviewQuestion
 
 
+@login_required
 def test_answer(request):
+    student = Student.objects.filter(name=request.user.username).first()
+    if not student or not student.is_learned:
+        return redirect('home')
     amount = int(request.GET.get('amount', 0))
     categories = InterviewQuestionCategory.objects.all()
     if not (10 <= amount <= 50):

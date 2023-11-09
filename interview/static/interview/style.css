@@ -1,7 +1,7 @@
 /* Styling the Body element i.e. Color,
 Font, Alignment */
 body {
-    background-color: #05c46b;
+    /*background-color: #05c46b;*/
     font-family: Verdana;
     text-align: center;
 }
@@ -185,17 +185,6 @@ input[type="number"]::-webkit-inner-spin-button {
 @charset "UTF-8";
 * {
     font-family: "Roboto", sans-serif;
-}
-
-.container {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    margin-left: -65px;
-    margin-top: -20px;
-    width: 130px;
-    height: 40px;
-    text-align: center;
 }
 
 button {

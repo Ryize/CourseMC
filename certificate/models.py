@@ -9,7 +9,7 @@ class Certificate(models.Model):
     student = models.ForeignKey(Student, on_delete=models.PROTECT,
                                 verbose_name='Студент', unique=True)
     fio = models.CharField(max_length=64, verbose_name='Имя фамилия')
-    date = models.DateField(default=datetime.datetime.now)
+    date = models.DateField(default=datetime.datetime.now, verbose_name='Дата')
     number = models.PositiveIntegerField(verbose_name='Номер')
     comment = models.TextField(verbose_name='Рекомендация', default='')
 
