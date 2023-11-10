@@ -13,7 +13,8 @@ class Student(models.Model):
                               verbose_name='Почта'
                               )
     password = models.CharField(
-        max_length=128, verbose_name='Пароль', default=random.randint(1111, 9999)
+        max_length=128, verbose_name='Пароль',
+        default=random.randint(1111, 9999)
     )
     groups = models.ForeignKey(
         'LearnGroup',
@@ -23,7 +24,8 @@ class Student(models.Model):
         related_name='students',
     )
     is_learned = models.BooleanField(default=False, verbose_name='Учащийся')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Зарегестрирован')
+    created_at = models.DateTimeField(auto_now_add=True,
+                                      verbose_name='Зарегестрирован')
 
     class Meta:
         verbose_name = 'Ученик'
@@ -32,11 +34,14 @@ class Student(models.Model):
     def __str__(self):
         return f'{self.name}'
 
+
 # Schedule.objects.exclude(group=LearnGroup.objects.filter(title='Вояджер').first()).delete()
 class LearnGroup(models.Model):
     title = models.CharField(max_length=32, verbose_name='Название')
-    is_studies = models.BooleanField(default=False, verbose_name='Идут занятия')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создана')
+    is_studies = models.BooleanField(default=False,
+                                     verbose_name='Идут занятия')
+    created_at = models.DateTimeField(auto_now_add=True,
+                                      verbose_name='Создана')
 
     class Meta:
         verbose_name = 'Группа'
@@ -66,7 +71,7 @@ class Schedule(models.Model):
         default='Практика',
         verbose_name='Тип урока',
     )
-    
+
     for_filter = models.IntegerField(default=100)
 
     class Meta:
@@ -127,7 +132,8 @@ class ClassesTimetable(models.Model):
         verbose_name='День недели',
     )
     time_lesson = models.TimeField(verbose_name='Время')
-    duration = models.TimeField(verbose_name='Продолжительность', default='1:00:00')
+    duration = models.TimeField(verbose_name='Продолжительность',
+                                default='1:00:00')
 
     class Meta:
         verbose_name = 'Время занятия'
@@ -150,13 +156,13 @@ class ApplicationsForTraining(models.Model):
     )
     descry = models.BooleanField(default=False, verbose_name='Рассмотрена')
 
+    def __str__(self):
+        return f'{self.student}, {self.descry}'
+
     class Meta:
         verbose_name = 'Заявка на обучение'
         verbose_name_plural = 'Заявки на обучение'
         ordering = ('descry',)
-
-    def __str__(self):
-        return f'{self.student}, {self.descry}'
 
 
 class AdditionalLessons(models.Model):
@@ -167,8 +173,10 @@ class AdditionalLessons(models.Model):
         related_name='additional_lessons',
     )
     amount = models.IntegerField(verbose_name='Количество')
-    
+
+    def __str__(self):
+        return f'Сдвиг у {self.group} на {self.amount}'
+
     class Meta:
         verbose_name = 'Сдвиг расписания'
         verbose_name_plural = 'Сдвиг расписаний'
-    
