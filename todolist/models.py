@@ -43,4 +43,3 @@ class TodoListGroup(TodoList):
         verbose_name = 'Групповая'
         verbose_name_plural = 'Групповые'
         ordering = ["-created_at"]
-

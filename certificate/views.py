@@ -47,7 +47,8 @@ def generate(request):
 
 
 def verify(request):
-    if request.method == 'GET':
+    if request.method == 'GET' or not isinstance(request.POST.get('number'),
+                                                 int):
         return render(request, 'certificate/verify.html')
     number = int(request.POST.get('number'))
     certificate = Certificate.objects.filter(number=number).first()
