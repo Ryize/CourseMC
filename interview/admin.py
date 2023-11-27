@@ -23,6 +23,7 @@ class InterviewQuestionAdmin(admin.ModelAdmin):
     list_filter = (
         'theme',
     )
+    search_fields = ('title',)
     empty_value_display = '-пустой-'
     list_per_page = 64
     list_max_show_all = 8

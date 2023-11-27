@@ -39,7 +39,9 @@
                 <input type="number" class="form-control"
                        placeholder="Пример: 1672846" name="number">
             </div>
-            <button type="submit" class="btn btn-primary">Проверить</button>
+            <button type="submit" class="btn btn-primary"
+                    onchange="check_correct_data_type()">Проверить
+            </button>
         </form>
     </div>
 </div>
@@ -55,5 +57,12 @@
 <div style="display: none;">
     {% include 'template/footer.html' %}
 </div>
+
+<script>
+    function check_correct_data_type(el) {
+        alert(el.valueOf())
+    }
+</script>
+
 </body>
 </html>

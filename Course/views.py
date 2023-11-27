@@ -65,9 +65,16 @@ class StudentRecordView(FormView):
                 'error_message': 'Вы уже заполняли форму!',
             }
             return JsonResponse(response)
-        name = form.cleaned_data.get('name')
-        email = form.cleaned_data.get('email')
-        password = form.cleaned_data.get('password')
+        name = form.cleaned_data.get('name', '')
+        contact = form.cleaned_data.get('contact', '')
+        email = form.cleaned_data.get('email', '')
+        password = form.cleaned_data.get('password', '')
+        if '.' not in contact and '@' not in contact and '/' not in contact:
+            response = {
+                'success': False,
+                'error_message': 'Поле "Контакты" должно содержать ссылку на вашу страницу ВК/Телеграм',
+            }
+            return JsonResponse(response)
         if email.count('coursemc.ru'):
             response = {
                 'success': False,
