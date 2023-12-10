@@ -30,7 +30,7 @@
                         <div id="quest-{{ forloop.counter }}" style="display: none;">
                             {% for question in poll.questions.all %}
 
-                                <p>Вопрос: <strong>{{ question.question }}</strong></p>
+                                <p>Вопрос: <strong>{{ question.question|safe }}</strong></p>
                                 <label title="{{ question.question }}">Варианты ответов:</label>
                                 {% for answer in question.answers.all %}
                                     {% if answer.correct %}

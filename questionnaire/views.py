@@ -81,9 +81,9 @@ def create_question(request, quiz_id):
 @login_required
 def create_answer(request):
     if request.method == "GET":
-        context = {"form": AnswerForm()}
+        context = {"form": AnswerForm(user=request.user)}
         return render(request, "questionnaire/create_answer.html", context)
-    form = AnswerForm(request.POST)
+    form = AnswerForm(request.user, request.POST)
     return process_form(
         request,
         form,

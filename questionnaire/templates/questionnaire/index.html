@@ -84,10 +84,12 @@
             </div>
         </div>
     </div>
-    {% if user.is_authenticated %}
-        <button class="quizButton" onclick="document.location=`{% url 'create_poll' %}`">Создать опрос</button>
-    {% endif %}
 </section>
+    {% if user.is_authenticated %}
+        <button style='background: #FF977E;margin-left: 30%; display: inline;' class="quizButton" onclick="document.location=`{% url 'go_poll' %}`">Пройти опрос</button>
+        <button style='background: #FF977E;margin-left: 25px; display: inline;' class="quizButton" onclick="document.location=`{% url 'create_poll' %}`">Создать опрос</button>
+        <button style='background: #FF977E;margin-left: 25px; display: inline;' class="quizButton" onclick="document.location=`{% url 'my_poll' %}`">Мои опросы</button>
+    {% endif %}
 
 {% include 'template/footer.html' %}
 </body>

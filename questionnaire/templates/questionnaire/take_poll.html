@@ -109,12 +109,12 @@
         <div class="form-control border-0">
 
             <div class="form-control">
-                <label>{{ question.question }}</label>
+                <label>{{ question.question|safe }}</label>
                 <label for="inp-1">
                     {% for answer in question.answers.all %}
                         <input type="radio"
-                               name="answers" value="{{ answer.pk }}" id="number-{{ question.pk }}" class="m-2">
-                        <span>{{ answer.answer }}</span><br>
+                               name="answers" value="{{ answer.pk }}" id="number-{{ answer.pk }}" class="m-2">
+                        <label style='display: inline;' for='number-{{ answer.pk }}'>{{ answer.answer }}</label><br>
                     {% endfor %}
                 </label>
             </div>
