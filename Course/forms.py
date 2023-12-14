@@ -25,7 +25,7 @@ class StudentForm(ModelForm):
             {
                 "class": "form-control",
                 "placeholder": "Необязательно",
-                "value": random.randint(1111, 9999),
+                "value": random.randint(1000, 9999),
             }
         )
 
