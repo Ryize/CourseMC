@@ -33,3 +33,4 @@ class RatingAdmin(admin.ModelAdmin):
 admin.site.register(Quiz)
 admin.site.register(Question)
 admin.site.register(PassedPolls)
+admin.site.register(AnswerQuestion)
