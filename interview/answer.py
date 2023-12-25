@@ -8,7 +8,7 @@ def get_questions(data: QuerySet, themes: QuerySet, amount: int):
     for i in data:
         if str(i.theme) in themes:
             theme.append(i.title)
-            percent.append(int(i.percent) * 5)
+            percent.append(int(i.percent) * 2)
     answers = []
     for i in range(amount):
         if not theme:

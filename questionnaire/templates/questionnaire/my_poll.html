@@ -70,7 +70,7 @@
                                                         <small>Правильный ответ(ы):
                                                             {% for answer in passed_question.question.answers.all %}
                                                                 {% if answer.correct %}
-                                                                    <span><strong>{{ answer }} </strong></span><br>
+                                                                    <span><strong>{{ answer }} </strong></span>
                                                                 {% endif %}
                                                             {% endfor %}
                                                         </small>

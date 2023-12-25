@@ -1,6 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
 
-STATIC_PATH = 'certificate/static'
+STATIC_PATH = 'CourseMC/certificate/static'
 CERTIFICATES_PATH = f'{STATIC_PATH}/certificates'
 
 
