@@ -1,12 +1,11 @@
 {% extends 'admin/change_list.html' %}
-{% block object-tools %}
-    <form action="import/" method="POST">
-        {% csrf_token %}
-        <div style="margin-bottom: 7px;">
-            <a href="{% url 'certificate_generate' %}">Создать
-                сертификат</a>
-        </div>
-
-    </form>
-    {{ block.super }}
+{% load i18n admin_urls %}
+{% block object-tools-items %}
+  {% if has_add_permission %}
+  <li>
+    <a href="{% url 'certificate_generate' %}" class="addlink">
+      Создать сертификат
+    </a>
+  </li>
+  {% endif %}
 {% endblock %}

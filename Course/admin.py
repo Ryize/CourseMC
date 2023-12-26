@@ -3,7 +3,27 @@ from django import forms
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 
+from billing.admin import UserListFilter
 from .models import *
+
+
+class GroupListFilter(admin.SimpleListFilter):
+    title = 'Группы'
+
+    parameter_name = 'group'
+
+    def lookups(self, request, model_admin) -> tuple:
+        posts = set([group.title for group in LearnGroup.objects.all() if
+                     group.is_studies])
+        result_data = []
+        for post in posts:
+            result_data.append((post, post,))
+        return tuple(result_data)
+
+    def queryset(self, request, queryset):
+        if not self.value():
+            return queryset
+        return queryset.filter(group__title=self.value())
 
 
 @admin.register(Student)
@@ -31,7 +51,7 @@ class StudentAdmin(admin.ModelAdmin):
         'contact',
     )
     list_filter = (
-        'groups',
+        GroupListFilter,
         'is_learned',
     )
     readonly_fields = ('created_at',)
@@ -59,7 +79,6 @@ class LearnGroupAdmin(admin.ModelAdmin):
         'title',
     )
     list_filter = (
-        'title',
         'is_studies',
     )
     empty_value_display = '-пустой-'
@@ -96,34 +115,6 @@ class ScheduleAdmin(admin.ModelAdmin):
         'theme',
         'lesson_materials',
     )
-
-
-@admin.register(StudentQuestion)
-class StudentQuestionAdmin(admin.ModelAdmin):
-    fields = (
-        'group',
-        'question',
-        'solved',
-    )
-    list_display = (
-        'group',
-        'question',
-        'solved',
-        'created_at',
-    )
-    list_display_links = (
-        'group',
-        'question',
-        'solved',
-    )
-    list_filter = (
-        'group',
-        'created_at',
-        'solved',
-    )
-    list_per_page = 64
-    list_max_show_all = 8
-    search_fields = ['created_at']
 
 
 class CountryFilter(SimpleListFilter):
@@ -163,8 +154,8 @@ class ClassesTimetableAdmin(admin.ModelAdmin):
         'duration',
     )
     list_filter = (
-        'group',
         'weekday',
+        GroupListFilter,
         'duration',
         'time_lesson',
     )
@@ -176,27 +167,13 @@ class ClassesTimetableAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return ClassesTimetable.objects.all()
         return ClassesTimetable.objects.filter(
-            teacher__username=request.user.username)
+            teacher__username=request.user.username
+        )
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "teacher":
             kwargs["queryset"] = User.objects.filter(is_staff=True)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
-    def get_list_filter(self, request):
-        if request.user.is_superuser:
-            return (CountryFilter,) + self.list_filter
-        return self.list_filter
-
-    def get_list_display(self, request):
-        if request.user.is_superuser:
-            return ('teacher',) + self.list_filter
-        return self.list_display
-
-    def get_list_display_links(self, request, list_display):
-        if request.user.is_superuser:
-            return ('teacher',) + list_display
-        return list_display
 
 
 @admin.register(ApplicationsForTraining)

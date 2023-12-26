@@ -9,9 +9,9 @@ from .models import *
 class ReviewAdmin(admin.ModelAdmin):
     content = forms.CharField(widget=CKEditorUploadingWidget())
     fields = ("author_id", "content", "pub_date")
-    list_display = ("author_id", "content", "pub_date")
-    list_display_links = ("author_id", "content", "pub_date")
-    list_filter = ("author_id", "content", "pub_date")
+    list_display = ("author_id", "pub_date")
+    list_display_links = ("author_id", "pub_date")
+    list_filter = ("pub_date",)
     # readonly_fields = ('author_id', 'content', 'pub_date')
     empty_value_display = "-пустой-"
     list_per_page = 64

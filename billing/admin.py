@@ -19,7 +19,7 @@ class UserListFilter(admin.SimpleListFilter):
     раз.
     """
 
-    title = 'Пользователи'
+    title = 'Ученики'
 
     parameter_name = 'user'
 
@@ -116,14 +116,12 @@ class EducationCostAdmin(admin.ModelAdmin):
 
         # Значения debt из _get_data для каждой записи
         debt_values_list = [self._get_debt(obj) for obj in queryset]
-        print(debt_values_list)
 
         # Список условий для каждой записи
         conditions = [
             When(id=obj.id, then=Value(
                 debt_value, output_field=IntegerField()))
             for obj, debt_value in zip(queryset, debt_values_list)]
-        print(conditions)
 
         # Case и annotate для присвоения значений debt
         queryset = queryset.annotate(

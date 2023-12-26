@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.safestring import mark_safe
 
 from certificate.models import Certificate
 
@@ -20,9 +22,6 @@ class CertificateAdmin(admin.ModelAdmin):
     list_display_links = (
         "student",
         "date",
-    )
-    list_filter = (
-        "student",
     )
     empty_value_display = "-пустой-"
     list_per_page = 64

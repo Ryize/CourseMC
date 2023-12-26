@@ -1,6 +1,10 @@
 from PIL import Image, ImageDraw, ImageFont
 
 STATIC_PATH = 'CourseMC/certificate/static'
+try:
+    im = Image.open(f'{STATIC_PATH}/certificate.png')
+except FileNotFoundError:
+    STATIC_PATH = 'certificate/static'
 CERTIFICATES_PATH = f'{STATIC_PATH}/certificates'
 
 

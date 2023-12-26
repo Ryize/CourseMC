@@ -54,7 +54,7 @@ def get_payment_url(amount: int) -> tuple:
         }
     }, idempotence_key)
 
-    return payment.confirmation.confirmation_url, str(payment.id)
+    return payment.confirmation.confirmation_url, payment.id
 
 
 def check_payment(payment_id: Union[str, int], amount: int) -> bool:
