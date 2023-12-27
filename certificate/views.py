@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 
 from Course.models import Student
-from certificate.cert import create_certificate
+from certificate.cert import create_certificate, STATIC_PATH, CERTIFICATES_PATH
 from certificate.models import Certificate
 
 
@@ -61,3 +61,14 @@ def verify(request):
                       'recommendation': certificate.comment,
                   }
                   )
+
+
+def download(request, number):
+    file_path = f'{CERTIFICATES_PATH}/{number}.png'
+    with open(file_path, 'rb') as fh:
+        response = HttpResponse(fh.read(),
+                                content_type="application/vnd.ms-word")
+        response[
+            'Content-Disposition'] = 'inline; filename=' + os.path.basename(
+            file_path)
+        return response

@@ -9,19 +9,23 @@ class InterviewQuestionAdmin(admin.ModelAdmin):
         'title',
         'theme',
         'percent',
+        'complexity',
     )
     list_display = (
         'title',
         'theme',
         'percent',
+        'complexity',
     )
     list_display_links = (
         'title',
         'theme',
         'percent',
+        'complexity',
     )
     list_filter = (
         'theme',
+        'complexity',
     )
     search_fields = ('title',)
     empty_value_display = '-пустой-'

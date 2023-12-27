@@ -14,7 +14,9 @@ class InterviewQuestionCategory(models.Model):
 
 
 class InterviewQuestion(models.Model):
-    title = models.CharField(max_length=256, verbose_name='Вопрос', unique=True)
+    hard_level = [(i, i) for i in range(1, 11)]
+    title = models.CharField(max_length=256, verbose_name='Вопрос',
+                             unique=True)
     theme = models.ForeignKey(InterviewQuestionCategory,
                               verbose_name='Категория',
                               related_name='interview_questions',
@@ -23,6 +25,8 @@ class InterviewQuestion(models.Model):
     percent = models.PositiveIntegerField(
         verbose_name='Вероятность встретить (%)'
     )
+    complexity = models.IntegerField(choices=hard_level, default=1,
+                                  verbose_name='Сложность')
 
     def __str__(self):
         return f'{self.title}'
