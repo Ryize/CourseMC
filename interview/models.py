@@ -35,3 +35,6 @@ class InterviewQuestion(models.Model):
         verbose_name = 'Вопрос'
         verbose_name_plural = 'Вопросы'
         ordering = ('-percent',)
+
+
+

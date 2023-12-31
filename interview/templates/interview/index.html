@@ -47,6 +47,12 @@
         padding-left: 27px;
     }
 
+    .range-block {
+        box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+        padding: 10px;
+        border-radius: 10px;
+    }
+
 </style>
 <div>
     {% include 'template/header.html' %}
@@ -77,8 +83,46 @@
             <label><input type="checkbox" name="technologies"
                           value="random">Случайные</label>
             {% for i in categories %}
-                <label><input type="checkbox" name="technologies"
-                              value="{{ i }}">{{ i }}</label>
+                <label {% if i.title == 'Python' %}
+                    onchange="showComplexity()"
+                {% endif %}
+                ><input type="checkbox" name="technologies"
+                        value="{{ i }}"
+                >{{ i }}</label>
+                {% if i.title == 'Python' %}
+                    <label class="range-block" style="display: none;">
+                        <label>Укажите сложность <small>(1 - легко, 10 -
+                            хард)</small>:</label>
+                        <label style="display: inline;">
+                            <input type="radio" name="experience_level"
+                                   value="Junior" onchange="changeLevel(this)">
+                            Junior
+                        </label>
+
+                        <label style="display: inline;">
+                            <input type="radio" name="experience_level"
+                                   value="Middle" onchange="changeLevel(this)">
+                            Middle
+                        </label>
+
+                        <label style="display: inline;">
+                            <input type="radio" name="experience_level"
+                                   value="Senior" onchange="changeLevel(this)">
+                            Senior
+                        </label>
+                        <br><br>
+                        <label class="d-inline" style="display: inline;">От:
+                            <input style="width: 37px; display: inline;"
+                                   type="number" value="1" max="10"
+                                   name="start"
+                                   oninput="controlNumber()"></label>
+                        <label style="display: inline; margin-left: 10px;">До:
+                            <input style="width: 37px; display: inline;"
+                                   type="number" value="3" max="10"
+                                   name="end"
+                                   oninput="controlNumber()"></label>
+                    </label>
+                {% endif %}
             {% endfor %}
         </div>
 
@@ -156,6 +200,51 @@
         percent1 = (sliderOne.value / sliderMaxValue) * 100;
         percent2 = (sliderTwo.value / sliderMaxValue) * 100;
         sliderTrack.style.background = `linear-gradient(to right, #dadae5 ${percent1}% , #3264fe ${percent1}% , #3264fe ${percent2}%, #dadae5 ${percent2}%)`;
+    }
+</script>
+
+<script>
+    var backValueStart = document.getElementsByName('start')[0].value;
+    var backValueEnd = document.getElementsByName('end')[0].value;
+
+    function showComplexity() {
+        let display = document.getElementsByClassName('range-block')[0].style.display
+        if (display === 'none') {
+            document.getElementsByClassName('range-block')[0].style = 'display: block;'
+        } else {
+            document.getElementsByClassName('range-block')[0].style = 'display: none;'
+        }
+
+    }
+
+    function controlNumber() {
+        let start = document.getElementsByName('start')[0];
+        let end = document.getElementsByName('end')[0];
+        let valueStart = parseInt(start.value)
+        let valueEnd = parseInt(end.value)
+        if (valueStart > valueEnd || valueStart < 1 || valueEnd > 10) {
+            document.getElementById('button').disabled = true;
+            return;
+        }
+        if (start.value && end.value) {
+            backValueStart = start.value;
+            backValueEnd = end.value;
+            document.getElementById('button').disabled = false;
+            return;
+        }
+    }
+
+    function changeLevel(el){
+        if (el.value === 'Junior'){
+            document.getElementsByName('start')[0].value = 1
+            document.getElementsByName('end')[0].value = 5
+        } else if (el.value === 'Middle') {
+            document.getElementsByName('start')[0].value = 5
+            document.getElementsByName('end')[0].value = 7
+        } else if (el.value === 'Senior') {
+            document.getElementsByName('start')[0].value = 7
+            document.getElementsByName('end')[0].value = 9
+        }
     }
 </script>
 

@@ -84,6 +84,14 @@
                    max=50
                    onchange="imposeMinMax(this)"
                    required/>
+
+            <input style="width: 37px; display: inline;"
+                   type="hidden" value="{{ start }}" max="10"
+                   name="start" oninput="controlNumber()">
+            <input style="width: 37px; display: inline;"
+                   type="hidden" value="{{ end }}" max="10"
+                   name="end"
+                   oninput="controlNumber()">
         </div>
         <div class="form-control">
             {% if 'random' in technologies %}
@@ -99,8 +107,8 @@
             <small>Нажми на номер вопроса, чтобы найти ответ в
                 Google</small><br><br>
             {% for i in question %}
-                <label><i
-                        onclick="window.open('https://www.google.com/search?q=Python+{{ i }}')">{{ forloop.counter }})</i> {{ i }}
+                <label title="{{ i.complexity }}"><i
+                        onclick="window.open('https://www.google.com/search?q=Python+{{ i.title }}')">{{ forloop.counter }})</i> {{ i.title }}
                 </label>
             {% endfor %}
         </div>
