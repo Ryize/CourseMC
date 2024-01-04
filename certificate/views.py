@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 
 from Course.models import Student
-from certificate.cert import create_certificate, STATIC_PATH, CERTIFICATES_PATH
+from certificate.cert import create_certificate, CERTIFICATES_PATH
 from certificate.models import Certificate
 
 
@@ -47,8 +47,7 @@ def generate(request):
 
 
 def verify(request):
-    if request.method == 'GET' or not isinstance(request.POST.get('number'),
-                                                 int):
+    if request.method == 'GET' or not request.POST.get('number', '').isdigit():
         return render(request, 'certificate/verify.html')
     number = int(request.POST.get('number'))
     certificate = Certificate.objects.filter(number=number).first()
