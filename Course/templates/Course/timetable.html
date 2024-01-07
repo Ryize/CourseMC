@@ -51,6 +51,7 @@
     <h3> Кол-во пропусков: <span>{{ absences }}</span></h3>
     <div class="list"></div>
 
+    {% if schedules|length > 20  %}
     <nav class="pagination-container">
         <button class="back">
             <ion-icon name="chevron-back-outline"></ion-icon>
@@ -60,6 +61,7 @@
             <ion-icon name="chevron-forward-outline"></ion-icon>
         </button>
     </nav>
+    {% endif %}
 </section>
 
 <script>

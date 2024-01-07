@@ -159,8 +159,9 @@ class TimetableView(LoginRequiredMixin, ListView):
         Returns:
             Schedule: Отфильтрованный QuerySet.
         """
-        group = Student.objects.filter(
-            name=self.request.user.username).first().groups
+        student = Student.objects.filter(
+            name=self.request.user.username).first()
+        group = student.groups
 
         d1 = datetime.datetime.now()
         d2 = group.created_at
@@ -174,7 +175,7 @@ class TimetableView(LoginRequiredMixin, ListView):
             additional_lessons = 0
         else:
             additional_lessons = additional_lessons.amount
-        schedules = Schedule.objects.all()[:months * 22 + additional_lessons]
+        schedules = Schedule.objects.filter(direction__in=student.direction.all()).all()[:months * 22 + additional_lessons]
 
         theme = self._get_param('theme')
         if theme:

@@ -10,6 +10,24 @@ from billing.views import get_cost_classes
 from Course.models import ClassesTimetable, Student
 
 
+class OnlyMyStudentMixin:
+    """
+    Позволяет получать в поле user (ForeignKey связанное со Student) только
+    своих студентов и которых идут занятия
+    """
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "user" and not request.user.is_superuser:
+            teacher = Student.objects.filter(name=request.user.username).first()
+            kwargs["queryset"] = Student.objects.filter(is_learned=True, groups__teacher=teacher).order_by('-pk')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if not request.user.is_superuser:
+            queryset = queryset.filter(user__groups__teacher__name=request.user.username)
+        return queryset
+
+
 class UserListFilter(admin.SimpleListFilter):
     """
     Фильтр для пользователей в админ-панели списка платежей
@@ -58,7 +76,7 @@ class UserListFilter(admin.SimpleListFilter):
 
 
 @admin.register(EducationCost)
-class EducationCostAdmin(admin.ModelAdmin):
+class EducationCostAdmin(OnlyMyStudentMixin, admin.ModelAdmin):
     """
     Стоимость обучения.
 
@@ -112,7 +130,9 @@ class EducationCostAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        for obj in queryset: print(obj.id)
+
+        if not request.user.is_superuser:
+            queryset = queryset.filter(user__groups__teacher__name=request.user.username)
 
         # Значения debt из _get_data для каждой записи
         debt_values_list = [self._get_debt(obj) for obj in queryset]
@@ -201,7 +221,7 @@ class EducationCostAdmin(admin.ModelAdmin):
 
 
 @admin.register(InformationPayments)
-class InformationPaymentsAdmin(admin.ModelAdmin):
+class InformationPaymentsAdmin(OnlyMyStudentMixin, admin.ModelAdmin):
     """
     Список платежей.
 
@@ -229,7 +249,7 @@ class InformationPaymentsAdmin(admin.ModelAdmin):
 
 
 @admin.register(Absences)
-class AbsencesAdmin(admin.ModelAdmin):
+class AbsencesAdmin(OnlyMyStudentMixin, admin.ModelAdmin):
     """
     Админ-панель для пропусков уроков.
 
@@ -256,7 +276,7 @@ class AbsencesAdmin(admin.ModelAdmin):
 
 
 @admin.register(Adjustment)
-class AdjustmentAdmin(admin.ModelAdmin):
+class AdjustmentAdmin(OnlyMyStudentMixin, admin.ModelAdmin):
     """
     Админ-панель для корректировок оплаты.
 

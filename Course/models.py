@@ -24,6 +24,9 @@ class Student(models.Model):
         related_name='students',
     )
     is_learned = models.BooleanField(default=False, verbose_name='Учащийся')
+    direction = models.ManyToManyField(
+        "DirectionStudy", related_name="students", verbose_name="Направление",
+    )
     created_at = models.DateTimeField(auto_now_add=True,
                                       verbose_name='Зарегестрирован')
 
@@ -39,6 +42,12 @@ class LearnGroup(models.Model):
     title = models.CharField(max_length=32, verbose_name='Название')
     is_studies = models.BooleanField(default=False,
                                      verbose_name='Идут занятия')
+    teacher = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,
+        verbose_name='Учитель',
+        related_name='learngroups',
+    )
     created_at = models.DateTimeField(auto_now_add=True,
                                       verbose_name='Создана')
 
@@ -48,6 +57,18 @@ class LearnGroup(models.Model):
 
     def __str__(self):
         return f'{self.title}'
+
+
+class DirectionStudy(models.Model):
+    title = models.CharField(max_length=48, unique=True,
+                             verbose_name='Название')
+
+    def __str__(self):
+        return f'{self.title}'
+
+    class Meta:
+        verbose_name = 'Направление'
+        verbose_name_plural = 'Направления'
 
 
 class Schedule(models.Model):
@@ -69,6 +90,14 @@ class Schedule(models.Model):
         choices=LESSON_TYPE_CHOICES,
         default='Практика',
         verbose_name='Тип урока',
+    )
+
+    direction = models.ForeignKey(
+        DirectionStudy,
+        on_delete=models.PROTECT,
+        verbose_name='Направление',
+        related_name='schedules',
+        default=1,
     )
 
     for_filter = models.IntegerField(default=100)
@@ -111,12 +140,6 @@ class ClassesTimetable(models.Model):
         ('Пятница', 'Пятница'),
         ('Суббота', 'Суббота'),
         ('Воскресенье', 'Воскресенье'),
-    )
-    teacher = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name='Учитель',
-        related_name='timelesson',
     )
     group = models.ForeignKey(
         'LearnGroup',

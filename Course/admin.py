@@ -33,6 +33,7 @@ class StudentAdmin(admin.ModelAdmin):
         'contact',
         'email',
         'password',
+        'direction',
         'groups',
         'is_learned',
         'created_at',
@@ -42,17 +43,20 @@ class StudentAdmin(admin.ModelAdmin):
         'name',
         'contact',
         'groups',
+        'directions',
         'is_learned',
     )
     list_display_links = (
         'id',
         'name',
         'groups',
+        'directions',
         'contact',
     )
     list_filter = (
         GroupListFilter,
         'is_learned',
+        'direction',
     )
     readonly_fields = ('created_at',)
     empty_value_display = '-пустой-'
@@ -60,26 +64,36 @@ class StudentAdmin(admin.ModelAdmin):
     list_max_show_all = 8
     search_fields = ['name', 'contact', 'email', 'groups']
 
+    def directions(self, obj) -> str:
+        """
+        Список направлений ученика.
+        """
+        return ', '.join([i.title for i in obj.direction.all()])
+
+    directions.short_description = 'Направление'
+
 
 @admin.register(LearnGroup)
 class LearnGroupAdmin(admin.ModelAdmin):
     fields = (
         'title',
+        'teacher',
         'is_studies',
         'created_at',
     )
     list_display = (
-        'id',
         'title',
+        'teacher',
         'is_studies',
         'created_at',
     )
     list_display_links = (
-        'id',
         'title',
+        'teacher',
     )
     list_filter = (
         'is_studies',
+        'teacher',
     )
     empty_value_display = '-пустой-'
     readonly_fields = ('created_at',)
@@ -87,25 +101,48 @@ class LearnGroupAdmin(admin.ModelAdmin):
     list_max_show_all = 8
     search_fields = ['title']
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "teacher":
+            kwargs["queryset"] = User.objects.filter(is_staff=True)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+@admin.register(DirectionStudy)
+class DirectionStudyAdmin(admin.ModelAdmin):
+    fields = (
+        'title',
+    )
+    list_display = (
+        'title',
+    )
+    list_display_links = (
+        'title',
+    )
+    empty_value_display = '-пустой-'
+    list_per_page = 64
+    list_max_show_all = 8
+
 
 @admin.register(Schedule)
 class ScheduleAdmin(admin.ModelAdmin):
     content = forms.CharField(widget=CKEditorUploadingWidget())
     fields = (
-        'for_filter',
+        # 'for_filter',
         'theme',
         'lesson_materials',
         'lesson_type',
+        'direction',
     )
     list_display = (
-        'pk',
         'theme',
-        'for_filter',
+        'direction',
     )
     list_display_links = (
         'theme',
+        'direction',
     )
     list_filter = (
+        'direction',
         'lesson_type',
     )
     empty_value_display = '-пустой-'
@@ -133,9 +170,6 @@ class CountryFilter(SimpleListFilter):
 @admin.register(ClassesTimetable)
 class ClassesTimetableAdmin(admin.ModelAdmin):
     fieldsets = (
-        (None, {
-            'fields': ('teacher', 'group')
-        }),
         (None, {
             'fields': ('weekday', 'time_lesson', 'duration',)
         }),
@@ -167,13 +201,8 @@ class ClassesTimetableAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return ClassesTimetable.objects.all()
         return ClassesTimetable.objects.filter(
-            teacher__username=request.user.username
+            group__teacher__name=request.user.username
         )
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "teacher":
-            kwargs["queryset"] = User.objects.filter(is_staff=True)
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 @admin.register(ApplicationsForTraining)
