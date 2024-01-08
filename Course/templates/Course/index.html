@@ -183,10 +183,15 @@
 
 <!-- Block 7 -->
 <section class="homeSection">
+    <div class="change-course-buttons">
+        <div class="_active" id="changeCourseButton">Backend</div>
+        <div id="changeCourseButton">Машинное обучение</div>
+    </div>
+    <div class="container">
     <div class="left">
         <h3>Вы научитесь</h3>
 
-        <ul>
+        <ul id="learningBlock">
             <li>
                 <ion-icon name="checkmark"></ion-icon>
                 Программирование на Python
@@ -235,6 +240,7 @@
         <p>Мы провели аналитику вакансий и будем учить вас только тому, что
             нужно для трудоустройства</p>
     </div>
+    </div>
 </section>
 
 <!-- Block 8 -->
@@ -255,7 +261,7 @@
 <section class="homeSection">
     <h2><span>Программа</span> курса</h2>
 
-    <div class="list">
+    <div class="list" id="courseProgram">
         <div id="dropdown" class="item active">
             <div class="select" onclick="activeDropDown(0)">
                 <div>
@@ -763,11 +769,11 @@
 
         <div class="box">
             <div>
-                <h3><span>от 36 000 ₽</span> / за весь курс</h3>
+                <h3><span id="priceForFullCourse">от 36 000 ₽</span> / за весь курс</h3>
             </div>
 
             <div>
-                <h3><span>от 6 000 ₽</span> / мес</h3>
+                <h3><span id="pricePerMonth">от 6 000 ₽</span> / мес</h3>
                 <h3>при оплате по частям</h3>
             </div>
         </div>
@@ -800,6 +806,338 @@
 </section>
 
 {% include 'template/footer.html' %}
+
+<script>
+    const learningBlock = document.querySelector('#learningBlock');
+    const courseProgram = document.querySelector('#courseProgram');
+    const priceForFullCourse = document.querySelector('#priceForFullCourse');
+    const pricePerMonth = document.querySelector('#pricePerMonth');
+
+    const minHeightForLearningBlock = learningBlock.parentNode.offsetHeight + 40;
+    const minHeightForCourseProgram = courseProgram.clientHeight;
+
+    const changeCourseButtons = document.querySelectorAll('#changeCourseButton');
+
+    const dataForBackend = {
+        learningBlock: [
+            'Программирование на Python',
+            'ООП (Object-oriented programming)',
+            'Сетевые протоколы Ethernet, IP, TCP, UDP, HTTP',
+            'Понимание архитектуры REST, SOAP',
+            'Работа в СУБД в Python. SQL, СУБД, ORM',
+            'Боты для ВК/Телеграм', 'Фреймворк Flask',
+            'Фреймворк Django',
+            'Unit-тестирование',
+            'Git - система контроля версий'
+        ],
+        courseProgram: [
+            {
+                title: 'Основы Python',
+                points: [
+                    'Настройка IDE',
+                    'Базовый синтаксис',
+                    'Переменные, операторы, типы переменных',
+                    'Условные конструкции, циклы',
+                    'Ввод - вывод, файловый ввод вывод',
+                    'Встроенные структуры данных',
+                    'Стандартные функции',
+                    'Свои функции',
+                    'Система контроля версий. Git'
+                ],
+                hours: '90 ак. часов',
+            },
+            {
+                title: 'ООП',
+                points: [
+                    'Базовые понятия, предпосылки и история',
+                    'Класс, экзеемпляр класса, атрибуты, поведение',
+                    'Наследование',
+                    'Полиморфизм',
+                    'Инкапсуляция',
+                    'Абстракция',
+                    'Интерфейсы и абстрактные классы',
+                ],
+                hours: '13 ак. часов',
+            },
+            {
+                title: 'Unit-тестирование. Pytest',
+                points: [
+                    'Значение и структура тестов',
+                    'Библиотека UnitTest',
+                    'Библиотека Pytest',
+                ],
+                hours: '3 ак. часа',
+            },
+            {
+                title: 'Сети. Передача данных',
+                points: [
+                    'Сериализация, десериализация',
+                    'Введение в компьютерные сети',
+                    'Виды сетей',
+                    'Стек сетевых протоколов: Ethernet, IP, TCP, UDP, HTTP',
+                    'Основы архитектуры клиент-сервер',
+                    'Написание простейшего клиент-серверного приложения',
+                    'Понимание архитектуры REST, SOAP',
+                ],
+                hours: '3 ак. часа',
+            },
+            {
+                title: 'Базы данных SQL',
+                points: [
+                    'Введение в базы данных: необходимость, принципы работы',
+                    'Основы работы с базами данных на языке SQL',
+                    'Альтернативные виды баз данных и их различия',
+                    'Современные возможности баз данных',
+                    'Использование баз данных в Python приложениях',
+                ],
+                hours: '6 ак. часов',
+            },
+            {
+                title: 'Создание ботов',
+                points: [
+                    'Что такое боты',
+                    'Стили написания ботов',
+                    'Написания ботов на библиотеке vk_api',
+                    'Написания ботов на библиотеке pyTelegramBotAPI',
+                    'Работа с orm',
+                    "Отображение 'клавиатуры'",
+                    'Тестирование'
+                ],
+                hours: '40 ак. часов',
+            },
+            {
+                title: 'Регулярные выражения',
+                points: [
+                    'Понятие регулярного выражения',
+                    'Синтаксис регулярных выражений в Python',
+                    'Использование регулярных выражений в Python',
+                    'Практическая работа',
+                ],
+                hours: '3 ак. часа',
+            },
+            {
+                title: 'Фреймворк Flask',
+                points: [
+                    'Основы работы с Flask',
+                    'Концепция MVC',
+                    'Создание скелета веб-сайта',
+                    'Работа с orm',
+                    'Отображение данных на сайте',
+                    'Создание главной страницы',
+                    'Работа с формами',
+                    'Авторизация и регистрация',
+                    'Статические файлы',
+                    'Тестирование',
+                    'Деплой',
+                ],
+                hours: '32 ак. часа',
+            },
+            {
+                title: 'Фреймворк Django',
+                points: [
+                    'Основы работы с Django',
+                    'Концепция MVC',
+                    'Создание скелета веб-сайта',
+                    'Работа со страницами, обработчиками и ссылками',
+                    'Работа с моделями',
+                    'Django admin веб-сайта',
+                    'Отображение данных на сайте',
+                    'Создание главной страницы',
+                    'Оформление сайта с bootstrap',
+                    'Работа с формами',
+                    'Авторизация и права пользователей',
+                    'Добавление статических файлов',
+                    'Добавление дополнительных приложений',
+                    'Тестирование',
+                    'Деплой',
+                ],
+                hours: '60 ак. часов',
+            },
+            {
+                title: 'Процесс разработки ПО',
+                points: [
+                    'Scrum, Agile, Kanban',
+                    'Примеры использования в разных проектах',
+                    'Командная работа. Роли',
+                    'Построение работы с продуктами с процессами внутри организации',
+                ],
+                hours: '3 ак. часа',
+            },
+        ],
+        priceForFullCourse: 'от 36 000 ₽',
+        pricePerMonth: 'от 6 000 ₽'
+    }
+    const dataForMachineLearning = {
+        learningBlock: [
+            'Терминалогия ИИ',
+            'Понимание математики ИИ',
+            'Написание ИИ на Python',
+            'Применение ИИ в задачах классификации',
+            'Предсказание событий с помощью ИИ',
+            'Чёткая структура необходимых знаний для устройства на работу',
+            'Подготовка к собеседованию',
+            'Разбор вакансий и подготовка к трудоустройству'
+        ],
+        courseProgram: [
+            {
+                title: 'Основы Python',
+                points: [
+                    'Переменные, условные операторы',
+                    'Циклы',
+                    'Функции',
+                ],
+                hours: '5 ак. часов',
+            },
+            {
+                title: 'Введение',
+                points: [
+                    'Терминология ИИ.',
+                    'Сферы применения ИИ.',
+                    'Как устроен реальный мир и кто использует ИИ?',
+                ],
+                hours: '5 ак. часов',
+            },
+            {
+                title: 'Основы нейронных сетей',
+                points: [
+                    'Персептрон—модель человеческого мозга.',
+                    'Функции активации.',
+                    'Виды нейронных сетей.',
+                ],
+                hours: '5 ак. часов',
+            },
+            {
+                title: 'Основы обучения нейронных сетей',
+                points: [
+                    'Методы машинного обучения.',
+                    'Понятие ошибки и функции ошибок.',
+                    'Градиентный спуск.',
+                    'Терминология машинного обучения.',
+                    'Библиотеки обучения нейросетей на Python.',
+                ],
+                hours: '7 ак. часов',
+            },
+            {
+                title: 'Регрессия нейронных сетей',
+                points: [
+                    'Задача регрессии.',
+                    'Практика—предсказание качества вина.',
+                    'Практика—предсказание цен на дома.',
+                ],
+                hours: '8 ак. часов',
+            },
+            {
+                title: 'Классификация с помощью ИИ',
+                points: [
+                    'Задача классификации.',
+                    'Практика—классификация рукописных цифр персептроном.',
+                    'Устройство сверточной нейронной сети.',
+                    'Метрики бинарной классификации.',
+                    'Практика—бинарная классификация лиц на мужские и женские.',
+                    'Борьба с переобучением—прореживание.',
+                    'Практика—классификация рукописных цифр.',
+                ],
+                hours: '20 ак. часов',
+            },
+            {
+                title: 'Обработка временных данных и прогнозирование',
+                points: [
+                    'Устройство рекуррентной сети.',
+                    'Практика—классификация отзывов к фильмам.',
+                    'Практика—прогнозирование температуры воздуха.',
+                ],
+                hours: '10 ак. часов',
+            },
+            {
+                title: 'Подготовка к собеседованию',
+                points: [
+                    'Подготовка к собеседованию—что нужно знать.',
+                    'Математический аппарат.',
+                    'Компьютерная часть.',
+                ],
+                hours: '10 ак. часов',
+            },
+            {
+                title: 'Найди работу!',
+                points: [
+                    'Частые вопросы и правильные ответы.',
+                    'Где искать работу?',
+                    'Вакансии ИИ в России, зарплаты и примеры задач.',
+                ],
+                hours: '3 ак. часов',
+            },
+        ],
+        priceForFullCourse: '29 000 ₽',
+        pricePerMonth: 'от 4 000 ₽'
+    }
+
+    changeData(dataForBackend);
+    
+    changeCourseButtons.forEach((button, i) => {
+        button.addEventListener('click', () => {
+            button.classList.add('_active');
+            if (changeCourseButtons[i - 1] === undefined) {
+                changeCourseButtons[changeCourseButtons.length - 1].classList.remove('_active');
+                changeData(dataForBackend);
+	    } else {
+                changeCourseButtons[i - 1].classList.remove('_active');
+                changeData(dataForMachineLearning);
+	    }
+            learningBlock.parentNode.style.minHeight = `${minHeightForLearningBlock}px`;
+            courseProgram.style.minHeight = `${minHeightForCourseProgram}px`;
+        });
+    });
+
+    function changeData(obj) {
+        learningBlock.innerHTML = '';
+        obj.learningBlock.forEach(title => {
+            learningBlock.innerHTML += `<li><ion-icon name="checkmark"></ion-icon>${title}</li>`
+        });
+        courseProgram.innerHTML = '';
+        obj.courseProgram.forEach((program, i) => {
+            const dropdown = document.createElement('div');
+            dropdown.id = 'dropdown';
+            dropdown.classList.add('item');
+            if (i === 0) {
+                dropdown.classList.add('active');
+            }
+            dropdown.innerHTML = `<div class="select" onclick="activeDropDown(${i})">
+                                      <div>
+                                          <p>${i + 1} блок</p>
+                                          <h3>${program.title}</h3>
+                                      </div>
+
+                                      <ion-icon name="chevron-down-outline"></ion-icon>
+                                  </div>`;
+            const content = document.createElement('div');
+            content.classList.add('dropdown');
+            const ul = document.createElement('ul');
+            program.points.forEach(title => {
+                ul.innerHTML += `<li>
+                                     <div class="dot"></div>
+                                     ${title}
+                                 </li>`;
+            });
+            const hours = document.createElement('h2');
+            hours.innerHTML = `<ion-icon name="time-outline"></ion-icon>
+                                ${program.hours}`;
+            content.appendChild(ul);
+            content.appendChild(hours);
+            dropdown.appendChild(content);
+            courseProgram.appendChild(dropdown);
+        });
+        priceForFullCourse.textContent = obj.priceForFullCourse;
+        pricePerMonth.textContent = obj.pricePerMonth;
+
+        const dropdowns = document.querySelectorAll('#dropdown');
+        dropdowns.forEach(dropdown => {
+            const select = dropdown.querySelector('.select');
+            select.addEventListener('click', () => {
+                dropdown.classList.toggle('active');
+            });
+        });
+    }
+</script>
 
 <script>
     function sendUserdata() {

@@ -1,31 +1,19 @@
-from django.conf import settings
-from django.conf.urls.static import static
-from django.contrib import admin
-from django.urls import include, path
+from django.urls import path
 
-from .views import page_not_found_view
+from .views import (LearnGroupViewSet, ScheduleGet, ScheduleViewSet,
+                    StudentQuestionView, StudentViewSet, ClassesTimetableView,
+                    ApplicationsForTrainingView, PaymentAmountView, MissingView,
+                    ClassesTimetableGingerView)
 
 urlpatterns = [
-    path('coursemc_control/', admin.site.urls),
-    path('accounts/', include('allauth.urls')),
-    path('ckeditor/', include('CourseMC.ckeditor_urls')),
-    path('api/v1/', include('api.urls')),
-    path('', include('social_django.urls')),
-    path('', include('Course.urls')),
-    path('reviews/', include('reviews.urls')),
-    path('questionnaire/', include('questionnaire.urls')),
-    path('blog/', include('blog.urls')),
-    path('interpreter/', include('py_interpreter.urls')),
-    # path('chatgpt/', include('chatgpt.urls')),
-    path('billing/', include('billing.urls')),
-    path('todo/', include('todolist.urls')),
-    path('certificate/', include('certificate.urls')),
-    path('interview/', include('interview.urls')),
-    path('<path:url>/', page_not_found_view),
+    path('schedule/', ScheduleViewSet.as_view()),
+    path('schedule/get_by_username/', ScheduleGet.as_view()),
+    path('student/', StudentViewSet.as_view()),
+    path('groups/', LearnGroupViewSet.as_view()),
+    path('student_question/', StudentQuestionView.as_view()),
+    path('classes_timetable/<str:user_name>/', ClassesTimetableView.as_view()),
+    path('app_training/', ApplicationsForTrainingView.as_view()),
+    path('payment/<str:username>/', PaymentAmountView.as_view()),
+    path('missing/', MissingView.as_view()),
+    path('classes_timetable_ginger/<int:group>/', ClassesTimetableGingerView.as_view()),
 ]
-
-from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-
-urlpatterns += staticfiles_urlpatterns()
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-urlpatterns.append( path('<path:url>', page_not_found_view))

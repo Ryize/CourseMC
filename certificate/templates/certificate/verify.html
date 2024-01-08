@@ -23,13 +23,29 @@
     input[type="number"]::-webkit-inner-spin-button {
         display: none;
     }
+
+    body.black label {
+        color: #fff;
+    }
+    body.black .white {
+        color: #fff;
+    }
+    .column {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    .expansion {
+        flex: 1 1 auto;
+    }
 </style>
 {% include 'template/header.html' %}
+<div class="column">
 <div class="mt-5 pt-3">
-    <p class="text-center h1 pt-5">Проверка сертификата</p>
+    <p class="white text-center h1 pt-5">Проверка сертификата</p>
 </div>
 <p class="text-center h4 mt-2">{{ msg }}</p>
-<div class="row mt-5">
+<div class="{% if not fio %}expansion{% endif %} row mt-5">
     <div class="col-xs-12 col-sm-12 col-md-1 col-lg-2"></div>
     <div class="col-xs-12 col-sm-12 col-md-10 col-lg-8">
         <form method="post">
@@ -44,16 +60,19 @@
     </div>
 </div>
 {% if fio %}
-    <p class="h3 mt-5 text-center">Данные сертификата</p>
+<div class="expansion">
+    <p class="white h3 mt-5 text-center">Данные сертификата</p>
     <div class="ml-3 mt-5">
         <label><strong>Выдан:</strong> {{ fio }}</label><br>
         <label><strong>Рекомендации:</strong> {{ recommendation|safe }}</label>
     </div>
+</div>
 {% elif fio == False %}
-    <p class="h2 mt-5">Сертификат с таким номером не найден!</p>
+    <p class="expansion white h2 mt-5">Сертификат с таким номером не найден!</p>
 {% endif %}
-<div style="display: none;">
+<div>
     {% include 'template/footer.html' %}
+</div>
 </div>
 </body>
 </html>
