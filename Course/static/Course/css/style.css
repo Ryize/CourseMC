@@ -368,8 +368,11 @@ header .menu.active ion-icon:nth-child(1) {
 .homeSection:nth-child(4) h2 span {
     background: linear-gradient(90deg, #FF977E 0%, #6F7BF0 100%);
     -webkit-background-clip: text;
-    background-clip: text;
     color: transparent;
+}
+
+.homeSection:nth-child(4) h2 span {
+    background-clip: text;
 }
 
 .homeSection:nth-child(4) p {
@@ -620,7 +623,65 @@ header .menu.active ion-icon:nth-child(1) {
 
 .homeSection:nth-child(8) {
     width: 1440px;
-    margin: 100px auto;
+    margin: 40px auto 100px auto;
+}
+
+.change-course-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 0 40px 0;
+}
+
+.change-course-buttons div {
+    padding: 15px;
+    color: #cccccc;
+    margin-right: 20px;
+    min-width: 45%;
+    text-align: center;
+    border: 2px solid #cccccc;
+    cursor: pointer;
+    font-size: 28px;
+    font-weight: 600;
+    border-radius: 15px;
+}
+
+.change-course-buttons div:last-child {
+    margin: 0;
+}
+
+.change-course-buttons div._active {
+    border: 2px solid #FF977E;
+}
+
+body .change-course-buttons div._active {
+    color: #000;
+}
+
+body.black .change-course-buttons div._active {
+    color: #fff;
+}
+
+@media (max-width: 761px) {
+    .change-course-buttons {
+        flex-direction: column;
+    }
+    .change-course-buttons div {
+        min-width: 100%;
+	font-size: 18px;
+    }
+    .change-course-buttons div:first-child {
+        margin: 0 0 20px 0;
+    }
+    .homeSection:nth-child(8) .container {
+        flex-direction: column;
+    }
+    .homeSection:nth-child(8) .left {
+        margin: 0 0 40px 0;
+    }
+}
+
+.homeSection:nth-child(8) .container {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -2700,7 +2761,6 @@ ul {
 	--modal-width: 480px;
 	--modal-padding: 20px;
 	--modal-margin: 0.5rem;
-	--modal-color: ;
 	--modal-bg: #fff;
 	--modal-border-color: var(--border-color-translucent);
 	--modal-border-width: 1px;
