@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'todolist.apps.TodolistConfig',
     'certificate.apps.CertificateConfig',
     'interview.apps.InterviewConfig',
+    'codereview.apps.CodereviewConfig',
 ]
 
 MIDDLEWARE = [

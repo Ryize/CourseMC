@@ -9,11 +9,19 @@
             <ion-icon name="chevron-down-outline"></ion-icon>
         </li>
         <ul>
-            <li><a href="{% url 'blog_home' %}">Твои Статьи</a></li>
-            <li style="--var: 100%;"><a href="{% url 'test_answer' %}">Твой
+                <li><a href="{% url 'blog_home' %}">Твои
+                    Статьи</a></li>
+                <li><a href="{% url 'test_answer' %}">Твой
                     Собес</a></li>
-            <li><a href="{% url 'questionnaireIndex' %}">Твой Опросник</a></li>
-            <li><a href="{% url 'todo' %}">Твои Напоминания</a></li>
+                <li><a href="{% url 'review_list' %}">Твоё
+                    Ревью</a></li>
+                <li><a
+                        href="{% url 'questionnaireIndex' %}">Твой Опросник</a>
+                </li>
+{#                <li style="--var: 95%;"><a href="{% url 'todo' %}">Твои#}
+{#                    Напоминания</a></li>#}
+                <li><a href="{% url 'py_interpreter' %}">Твой
+                    Интерпретатор</a></li>
         </ul>
         <li onclick="activeDropDownNavMob(1)" class="action">Действия
             <ion-icon name="chevron-down-outline"></ion-icon>
@@ -39,7 +47,6 @@
         <button type="button" data-modal-target="modal-auth">Авторизоваться
         </button>
     {% elif user.is_staff %}
-        <li><a href="{% url 'create_group' %}">Группы</a></li>
         <li><a href="{% url 'admin:index' %}">Настройки</a></li>
     {% endif %}
 </div>
