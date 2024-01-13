@@ -1,0 +1,106 @@
+{% load static %}
+{% load codereview_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Мои проекты</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'Course/css/style.css' %}">
+    <link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}">
+</head>
+<body>
+<style>
+    h1 {
+        margin-top: 45px;
+    }
+
+    .con-shadow {
+        box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+    }
+
+    .bullet li {
+        border: 3px solid rgb(241, 156, 132);
+    }
+
+    .link {
+        color: rgb(113, 123, 232);
+    }
+
+
+    body.black label {
+        color: #fff;
+    }
+
+    body.black .white {
+        color: #fff;
+    }
+
+    .column {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .expansion {
+        flex: 1 1 auto;
+    }
+
+    a:hover {
+        color: inherit;
+        text-decoration: none;
+    }
+</style>
+{% include 'template/header.html' %}
+<div class="mt-5 pt-3">
+    <center><h1 class="white">Код ревью на
+        проект {{ review.github|github }}</h1></center>
+</div>
+
+<div class="container con-shadow mt-4">
+    <div class="row" id="row" style="width: 100%;">
+        <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1"></div>
+        <div class="col-xs-10 col-sm-12 col-md-10 col-lg-10 p-2 white">
+            <p>Ссылка на проект: <a class="link" href="{{ review.github }}"
+                                    target="_blank">{{ review.github }}</a></p>
+            <h6>Кол-во строк: {{ review.lines }}</h6>
+            <h6>Когнитивная сложность: {{ review.cognetive }}</h6>
+            {% if review.code_review.first %}
+                {% if review.code_review.status %}
+                    <label class="mt-2">✅ Пройдено</label>
+                {% else %}
+                    <label class="mt-2">❌ Не пройдено</label>
+                {% endif %}
+            {% endif %}
+            <hr>
+            <strong>Минимальные требования к проекту:</strong>
+            <ul class="mt-1">
+                <li>Работоспособность. Проект должен корректно работать в
+                    рамках задания или требований
+                </li>
+                <li>Простой и понятный UX</li>
+                <li>Общая чистота кода(Соблюдение PEP8, DRY, KISS, YAGNI,
+                    SLAP)
+                </li>
+                <li>Аннотация типов и документация для каждого модуля, функции,
+                    класса
+                </li>
+                <li>Не менее {{ review.category.min_lines }} строк,
+                    от {{ review.category.min_cognetive }} единиц когнитивной
+                    сложности
+                </li>
+            </ul>
+            <br><br>
+            {{ review.code_review.first.review|safe }}
+            <p style="text-align:right"><small>Ревью провела
+                <em>SuOk</em></small></p>
+        </div>
+    </div>
+</div>
+{% include 'template/footer.html' %}
+
+</body>
+</html>

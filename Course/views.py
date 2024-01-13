@@ -169,13 +169,18 @@ class TimetableView(LoginRequiredMixin, ListView):
         months = self._months(d1, d2)
         if months <= 0:
             months = 1
+        amount_schedules = months * 22
+        max_amount_schedules = Schedule.objects.count()
+        amount_schedules = amount_schedules if amount_schedules < max_amount_schedules else max_amount_schedules
         additional_lessons = AdditionalLessons.objects.filter(
             group=group).first()
         if not additional_lessons:
             additional_lessons = 0
         else:
             additional_lessons = additional_lessons.amount
-        schedules = Schedule.objects.filter(direction__in=student.direction.all()).all()[:months * 22 + additional_lessons]
+        amount_schedules += additional_lessons
+        schedules = Schedule.objects.filter(
+            direction__in=student.direction.all()).all()[:amount_schedules]
 
         theme = self._get_param('theme')
         if theme:

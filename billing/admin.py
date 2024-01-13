@@ -15,16 +15,21 @@ class OnlyMyStudentMixin:
     Позволяет получать в поле user (ForeignKey связанное со Student) только
     своих студентов и которых идут занятия
     """
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "user" and not request.user.is_superuser:
-            teacher = Student.objects.filter(name=request.user.username).first()
-            kwargs["queryset"] = Student.objects.filter(is_learned=True, groups__teacher=teacher).order_by('-pk')
+            teacher = Student.objects.filter(
+                name=request.user.username).first()
+            kwargs["queryset"] = Student.objects.filter(is_learned=True,
+                                                        groups__teacher=teacher).order_by(
+                '-pk')
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         if not request.user.is_superuser:
-            queryset = queryset.filter(user__groups__teacher__name=request.user.username)
+            queryset = queryset.filter(
+                user__groups__teacher__name=request.user.username)
         return queryset
 
 
@@ -132,7 +137,8 @@ class EducationCostAdmin(OnlyMyStudentMixin, admin.ModelAdmin):
         queryset = super().get_queryset(request)
 
         if not request.user.is_superuser:
-            queryset = queryset.filter(user__groups__teacher__name=request.user.username)
+            queryset = queryset.filter(
+                user__groups__teacher__name=request.user.username)
 
         # Значения debt из _get_data для каждой записи
         debt_values_list = [self._get_debt(obj) for obj in queryset]

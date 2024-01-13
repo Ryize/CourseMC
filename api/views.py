@@ -9,13 +9,15 @@ from rest_framework.views import APIView
 from Course.models import (LearnGroup, Schedule, Student, StudentQuestion,
                            ClassesTimetable, ApplicationsForTraining)
 from billing.models import Absences, InformationPayments
+from codereview.models import ProjectForReview
 from billing.views import get_cost_classes
 
 from .serializers import (LearnGroupListSerializer, ScheduleListSerializer,
                           StudentListSerializer, StudentQuestionListSerializer,
                           ClassesTimetableListSerializer,
                           ApplicationsForTrainingSerializer,
-                          PaymentAmountSerializer, MissingSerializer)
+                          PaymentAmountSerializer, MissingSerializer,
+                          ProjectForReviewSerializer)
 
 
 class ScheduleViewSet(APIView):
@@ -251,3 +253,17 @@ class ClassesTimetableGingerView(GenericAPIView):
         """
         amount = ClassesTimetable.objects.filter(group=group).count()
         return JsonResponse({'amount': amount * 4})
+
+
+class ProjectForReviewView(GenericAPIView):
+    """
+    Список не проведённых ревью.
+    """
+
+    def get(self, request):
+        """
+        Возвращает в виде JsonResponse список ревью
+        """
+        reviews = ProjectForReview.objects.filter(status=False).all()
+        serialize = ProjectForReviewSerializer(reviews, many=True)
+        return JsonResponse({'reviews': serialize.data})

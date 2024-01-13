@@ -2,8 +2,9 @@ from django.urls import path
 
 from .views import (LearnGroupViewSet, ScheduleGet, ScheduleViewSet,
                     StudentQuestionView, StudentViewSet, ClassesTimetableView,
-                    ApplicationsForTrainingView, PaymentAmountView, MissingView,
-                    ClassesTimetableGingerView)
+                    ApplicationsForTrainingView, PaymentAmountView,
+                    MissingView,
+                    ClassesTimetableGingerView, ProjectForReviewView)
 
 urlpatterns = [
     path('schedule/', ScheduleViewSet.as_view()),
@@ -15,5 +16,8 @@ urlpatterns = [
     path('app_training/', ApplicationsForTrainingView.as_view()),
     path('payment/<str:username>/', PaymentAmountView.as_view()),
     path('missing/', MissingView.as_view()),
-    path('classes_timetable_ginger/<int:group>/', ClassesTimetableGingerView.as_view()),
+    path('classes_timetable_ginger/<int:group>/',
+         ClassesTimetableGingerView.as_view()),
+    path('project_for_review/',
+         ProjectForReviewView.as_view()),
 ]

@@ -1,0 +1,104 @@
+{% load static %}
+{% load codereview_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Мои проекты</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'Course/css/style.css' %}">
+    <link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}">
+    <link rel="stylesheet" href="{% static 'css/list_poll.css' %}">
+</head>
+<body>
+<style>
+    h1 {
+        margin-top: 45px;
+    }
+
+    .con-shadow {
+        box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+    }
+
+    .bullet li {
+        border: 3px solid rgb(241, 156, 132);
+    }
+
+    body.black label {
+        color: #fff;
+    }
+
+    body.black .white {
+        color: #fff;
+    }
+
+    a:hover {
+        color: inherit;
+        text-decoration: none;
+    }
+</style>
+{% include 'template/header.html' %}
+<div class="mt-5 pt-3">
+    <center><h1 class="white">Проекты отправленные на проверку</h1></center>
+</div>
+<button style='background: #FF977E;margin-left: 80%; display: inline;'
+        class="quizButton mt-3"
+        onclick="document.location=`{% url 'review_send' %}`">Отправить на
+    ревью
+</button>
+<div class="container con-shadow mt-1">
+    <div class="row" id="row" style="width: 100%;">
+        <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1"></div>
+        <div class="col-xs-10 col-sm-12 col-md-10 col-lg-10">
+            <ol class="bullet">
+                {% for review in reviews %}
+
+                    <li>
+                        <span>{{ review.github|github }} ({{ review.category }})</span>
+                        <br>
+                        {% if review.code_review.first %}
+                            {% if review.code_review.status %}
+                                <span class="mt-2 black">✅ Пройдено</span>
+                            {% else %}
+                                <span class="mt-2 black">❌ Не пройдено</span>
+                            {% endif %}
+                        {% endif %}
+                        <hr>
+                        <span class="black">{{ review.comment }}</span>
+                        <br>
+                        <span style="float: right"><small>Отправлено: {{ review.created_at }}</small></span>
+                        <p class="black"
+                           onclick="copyURL('copy_url-{{ poll.pk }}')">
+                            <small>
+                                {% if review.code_review.first %}
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                         width="16" height="16"
+                                         fill="currentColor" class="bi bi-book"
+                                         viewBox="0 0 16 16">
+                                        <path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783"/>
+                                    </svg>
+                                    <a href="{% url 'review_my' review.pk %}">
+                                        <span class="pointer">Посмотреть
+                                            ревью</span>
+                                    </a>
+                                {% else %}
+                                    <span>У этого проекта пока нет
+                                        ревью!</span>
+                                {% endif %}
+                            </small>
+                        </p>
+
+                    </li>
+
+                {% endfor %}
+
+            </ol>
+        </div>
+    </div>
+</div>
+{% include 'template/footer.html' %}
+</body>
+</html>

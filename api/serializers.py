@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from Course.models import (LearnGroup, Schedule, Student, StudentQuestion,
                            ClassesTimetable, ApplicationsForTraining)
+from codereview.models import ProjectForReview
 
 
 class ScheduleListSerializer(serializers.ModelSerializer):
@@ -82,3 +83,10 @@ class MissingSerializer(serializers.Serializer):
     """ Для пропуска занятий. """
     username = serializers.CharField(max_length=32)
     date = serializers.DateField()
+
+class ProjectForReviewSerializer(serializers.ModelSerializer):
+    """ Список проектов отправленных на ревью. """
+
+    class Meta:
+        model = ProjectForReview
+        fields = '__all__'
