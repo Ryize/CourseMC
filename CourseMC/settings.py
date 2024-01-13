@@ -30,7 +30,8 @@ LOGIN_REDIRECT_URL = "/"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["coursemc.ru", "www.coursemc.ru", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["coursemc.ru", "www.coursemc.ru", '2399571-yo82697.twc1.net',
+                 'www.2399571-yo82697.twc1.net', "localhost", "127.0.0.1"]
 
 # Application definition
 
@@ -79,7 +80,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "CourseMC.urls"
 
-TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
+TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            "templates")
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -167,7 +169,8 @@ CKEDITOR_CONFIGS = {
                     "Redo",
                 ],
             },
-            {"name": "editing", "items": ["Find", "Replace", "-", "SelectAll"]},
+            {"name": "editing",
+             "items": ["Find", "Replace", "-", "SelectAll"]},
             {
                 "name": "forms",
                 "items": [
@@ -233,7 +236,8 @@ CKEDITOR_CONFIGS = {
                 ],
             },
             "/",
-            {"name": "styles", "items": ["Styles", "Format", "Font", "FontSize"]},
+            {"name": "styles",
+             "items": ["Styles", "Format", "Font", "FontSize"]},
             {"name": "colors", "items": ["TextColor", "BGColor"]},
             {"name": "tools", "items": ["Maximize", "ShowBlocks"]},
             {"name": "about", "items": ["About"]},
@@ -247,7 +251,8 @@ CKEDITOR_CONFIGS = {
                 ],
             },
         ],
-        "toolbar": "YourCustomToolbarConfig",  # put selected toolbar config here
+        "toolbar": "YourCustomToolbarConfig",
+        # put selected toolbar config here
         "toolbarGroups": [
             {"name": "document", "groups": ["mode", "document", "doctools"]}
         ],
