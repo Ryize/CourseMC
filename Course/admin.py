@@ -23,7 +23,10 @@ class GroupListFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         if not self.value():
             return queryset
-        return queryset.filter(group__title=self.value())
+        try:
+            return queryset.filter(group__title=self.value())
+        except:
+            return queryset.filter(groups__title=self.value())
 
 
 @admin.register(Student)
@@ -103,7 +106,8 @@ class LearnGroupAdmin(admin.ModelAdmin):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "teacher":
-            kwargs["queryset"] = User.objects.filter(is_staff=True)
+            names = [user.username for user in User.objects.filter(is_staff=True)]
+            kwargs["queryset"] = Student.objects.filter(name__in=names)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
@@ -171,7 +175,7 @@ class CountryFilter(SimpleListFilter):
 class ClassesTimetableAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
-            'fields': ('weekday', 'time_lesson', 'duration',)
+            'fields': ('group', 'weekday', 'time_lesson', 'duration',)
         }),
 
     )
