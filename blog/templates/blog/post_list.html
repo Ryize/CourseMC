@@ -64,7 +64,7 @@
 
     const itemsMain = [
         {% for post in posts %}
-            {% if post.is_displayed %}
+            {% if post.is_displayed or post.author == user %}
                 {
                     id: {{ post.pk }},
                     categories: [{% for category in post.categories.all %}'{{ category|escapejs }}',{% endfor %}],
