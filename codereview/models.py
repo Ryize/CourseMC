@@ -59,16 +59,40 @@ class ProjectForReview(models.Model):
 
 
 class CodeReview(models.Model):
+    STYLES = (
+        ('Маслёнок', 'Маслёнок'),
+        ('Маслёнок+', 'Маслёнок+'),
+        ('Маслёнок++', 'Маслёнок++'),
+        ('Pre-Junior', 'Pre-Junior'),
+        ('Junior', 'Junior'),
+        ('Junior+', 'Junior+'),
+        ('Middle', 'Middle'),
+    )
+
     project = models.ForeignKey(
         ProjectForReview,
         on_delete=models.CASCADE,
         verbose_name='Проект',
         related_name='code_review',
     )
-    status = models.BooleanField(verbose_name='Пройдено', default=False)
-    review = RichTextUploadingField(
-        verbose_name='Ревью',
+    problems = RichTextUploadingField(verbose_name='Проблемы')
+    amount_problems = models.PositiveIntegerField(
+        verbose_name='Количество проблем')
+    code_quality = models.PositiveIntegerField(
+        verbose_name='Количество проблем')
+    code_architecture = models.PositiveIntegerField(
+        verbose_name='Качество кода')
+    code_standards = models.PositiveIntegerField(
+        verbose_name='Стандарты языка')
+    code_principles = models.PositiveIntegerField(
+        verbose_name='Принцип')
+    code_style = models.CharField(
+        max_length=64,
+        choices=STYLES,
+        default='Маслёнок',
+        verbose_name='Стиль разработки',
     )
+    status = models.BooleanField(verbose_name='Пройдено', default=False)
     created_at = models.DateTimeField(auto_now_add=True,
                                       verbose_name='Отправлено')
 

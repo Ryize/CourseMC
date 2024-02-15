@@ -71,8 +71,14 @@ class CodeReviewAdmin(admin.ModelAdmin):
     """
     fields = (
         'project',
+        'problems',
+        'amount_problems',
+        'code_quality',
+        'code_architecture',
+        'code_standards',
+        'code_principles',
+        'code_style',
         'status',
-        'review',
         'created_at',
     )
     list_display = (
