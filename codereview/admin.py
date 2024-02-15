@@ -90,3 +90,11 @@ class CodeReviewAdmin(admin.ModelAdmin):
     list_filter = ('status',)
     list_per_page = 64
     list_max_show_all = 8
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "project":
+            projects = ProjectForReview.objects.filter(
+                status=False,
+            ).order_by('-created_at')
+            kwargs["queryset"] = projects
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
