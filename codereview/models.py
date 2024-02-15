@@ -51,7 +51,7 @@ class ProjectForReview(models.Model):
                                       verbose_name='Отправлен')
 
     def __str__(self):
-        return f'{self.user}, {self.created_at}'
+        return f'{self.user}, {self.category}'
 
     class Meta:
         verbose_name = 'Заявка на ревью'
