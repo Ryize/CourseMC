@@ -28,7 +28,7 @@ SOCIAL_AUTH_VK_OAUTH2_SECRET = (
 LOGIN_REDIRECT_URL = "/"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", False)
 
 ALLOWED_HOSTS = ["coursemc.ru", "www.coursemc.ru", '2552309-yo82697.twc1.net', 'www.2552309-yo82697.twc1.net', "localhost", "127.0.0.1"]
 
