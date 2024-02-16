@@ -78,6 +78,7 @@ class CodeReviewAdmin(admin.ModelAdmin):
         'code_standards',
         'code_principles',
         'code_style',
+        'code_wishes',
         'status',
         'created_at',
     )

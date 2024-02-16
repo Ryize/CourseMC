@@ -53,6 +53,10 @@
         color: inherit;
         text-decoration: none;
     }
+
+    p {
+        margin: 3px;
+    }
 </style>
 {% include 'template/header.html' %}
 <div class="mt-5 pt-3">
@@ -94,7 +98,31 @@
                 </li>
             </ul>
             <br><br>
-            {{ review.code_review.first.review|safe }}
+            <h5>Проблемы проекта:</h5>
+            <p>{{ review.code_review.first.problems|safe }}</p>
+            <p class="mt-3">Всего проблем:
+                <strong>{{ review.code_review.first.amount_problems }}</strong>
+            </p>
+            <br>
+            <p>Общее качество кода:
+                <strong>{{ review.code_review.first.code_quality }}/10</strong>
+            </p>
+            <p>Уровень архитектуры:
+                <strong>{{ review.code_review.first.code_architecture }}/10</strong>
+            </p>
+            <p>Соблюдение стандартов языка:
+                <strong>{{ review.code_review.first.code_standards }}/10</strong>
+            </p>
+            <p>Принципы программирования:
+                <strong>{{ review.code_review.first.code_principles }}/10</strong>
+            </p>
+            <p>Стиль разработки: {{ review.code_review.first.code_style }}</p>
+            <p class="mt-4">
+                Общие пожелания: {{ review.code_review.first.code_wishes }}
+            </p>
+        <br>
+        <br>
+        <hr>
             <p style="text-align:right">
                 <small>Ревью провела
                     <em>

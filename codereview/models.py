@@ -77,21 +77,22 @@ class CodeReview(models.Model):
     )
     problems = RichTextUploadingField(verbose_name='Проблемы')
     amount_problems = models.PositiveIntegerField(
-        verbose_name='Количество проблем')
+        verbose_name='Всего проблем')
     code_quality = models.PositiveIntegerField(
-        verbose_name='Количество проблем')
+        verbose_name='Общее качество кода')
     code_architecture = models.PositiveIntegerField(
-        verbose_name='Качество кода')
+        verbose_name='Уровень архитектуры')
     code_standards = models.PositiveIntegerField(
-        verbose_name='Стандарты языка')
+        verbose_name='Соблюдение стандартов языка')
     code_principles = models.PositiveIntegerField(
-        verbose_name='Принцип')
+        verbose_name='Принципы программирования')
     code_style = models.CharField(
         max_length=64,
         choices=STYLES,
         default='Маслёнок',
         verbose_name='Стиль разработки',
     )
+    code_wishes = models.TextField(verbose_name='Общие пожелания')
     status = models.BooleanField(verbose_name='Пройдено', default=False)
     created_at = models.DateTimeField(auto_now_add=True,
                                       verbose_name='Отправлено')

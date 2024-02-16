@@ -69,7 +69,7 @@ def my_review(request, pk):
     if not user or not user.is_learned:
         return redirect('home')
     review = ProjectForReview.objects.filter(pk=pk).first()
-    if not review:
+    if not review or review.user != user:
         return redirect('review_list')
     return render(request, 'codereview/my_review.html',
                   context={'review': review})
