@@ -181,7 +181,6 @@ class TimetableView(LoginRequiredMixin, ListView):
         amount_schedules += additional_lessons
         schedules = Schedule.objects.filter(
             direction__in=student.direction.all()).all()[:amount_schedules]
-
         theme = self._get_param('theme')
         if theme:
             schedules = schedules.filter(theme__icontains=theme)

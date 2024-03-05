@@ -75,24 +75,28 @@ class CodeReview(models.Model):
         verbose_name='Проект',
         related_name='code_review',
     )
-    problems = RichTextUploadingField(verbose_name='Проблемы')
+    problems = RichTextUploadingField(verbose_name='Проблемы', null=True,
+                                      blank=True)
     amount_problems = models.PositiveIntegerField(
-        verbose_name='Всего проблем')
+        verbose_name='Всего проблем', null=True, blank=True)
     code_quality = models.PositiveIntegerField(
-        verbose_name='Общее качество кода')
+        verbose_name='Общее качество кода', null=True, blank=True)
     code_architecture = models.PositiveIntegerField(
-        verbose_name='Уровень архитектуры')
+        verbose_name='Уровень архитектуры', null=True, blank=True)
     code_standards = models.PositiveIntegerField(
-        verbose_name='Соблюдение стандартов языка')
+        verbose_name='Соблюдение стандартов языка', null=True, blank=True)
     code_principles = models.PositiveIntegerField(
-        verbose_name='Принципы программирования')
+        verbose_name='Принципы программирования', null=True, blank=True)
     code_style = models.CharField(
         max_length=64,
         choices=STYLES,
         default='Маслёнок',
         verbose_name='Стиль разработки',
+        null=True,
+        blank=True,
     )
-    code_wishes = models.TextField(verbose_name='Общие пожелания')
+    code_wishes = models.TextField(verbose_name='Общие пожелания', null=True,
+                                   blank=True)
     status = models.BooleanField(verbose_name='Пройдено', default=False)
     created_at = models.DateTimeField(auto_now_add=True,
                                       verbose_name='Отправлено')
