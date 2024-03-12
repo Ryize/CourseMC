@@ -22,6 +22,7 @@ urlpatterns = [
     path('certificate/', include('certificate.urls')),
     path('interview/', include('interview.urls')),
     path('code-review/', include('codereview.urls')),
+    path('statistic/', include('statistic.urls')),
     path('<path:url>/', page_not_found_view),
 ]
 

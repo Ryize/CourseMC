@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'certificate.apps.CertificateConfig',
     'interview.apps.InterviewConfig',
     'codereview.apps.CodereviewConfig',
+    'statistic.apps.StatisticConfig'
 ]
 
 MIDDLEWARE = [
