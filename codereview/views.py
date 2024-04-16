@@ -5,6 +5,7 @@ from .git_urls import GitError
 from .models import ProjectCategories, ProjectForReview, CodeReview
 
 
+# TODO: Сделать рефакторинг функции
 def send_review(request):
     user = Student.objects.filter(name=request.user.username).first()
     if not user or not user.is_learned:
@@ -69,13 +70,16 @@ def my_review(request, pk):
     if not user or not user.is_learned:
         return redirect('home')
     review = ProjectForReview.objects.filter(pk=pk).first()
-    if not review or review.user != user:
+    if not review or (review.user != user and not request.user.is_staff):
         return redirect('review_list')
     return render(request, 'codereview/my_review.html',
                   context={'review': review})
 
 
 def check_review(request):
+    """
+    !Не используется!
+    """
     if not request.user.is_staff:
         return redirect('home')
     if request.method == 'GET':
