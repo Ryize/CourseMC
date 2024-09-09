@@ -111,7 +111,8 @@ def my_poll(request):
 def go_poll(request):
     if request.method == "GET":
         return render(request, "questionnaire/go_poll.html")
-    if not request.POST.get("poll_id") or not request.POST.get("poll_id").isdigit():
+    if not request.POST.get("poll_id") or not request.POST.get(
+            "poll_id").isdigit():
         messages.error(request, "Значение поля id опроса не корректно!")
         return render(request, "questionnaire/go_poll.html")
     return redirect("take_poll", request.POST.get("poll_id"))
@@ -164,7 +165,8 @@ def take_poll(request, poll_id):
 
     number_iter = 1
     while True:
-        question = all_question.filter(pk=int(number_question) + number_iter).first()
+        question = all_question.filter(
+            pk=int(number_question) + number_iter).first()
 
         # Проверяем, есть ли вопрос, если нет, то сообщаем об успешном прохождении опроса
         if not question:
@@ -182,8 +184,10 @@ def take_poll(request, poll_id):
 @login_required
 def rating(request, poll_id: int):
     quiz = Quiz.objects.filter(pk=poll_id).first()
-    if not quiz or not PassedPolls.objects.filter(passed_user=request.user).first():
-        return HttpResponseNotFound("Указанный опрос не найден или вы его не прошли!")
+    if not quiz or not PassedPolls.objects.filter(
+            passed_user=request.user).first():
+        return HttpResponseNotFound(
+            "Указанный опрос не найден или вы его не прошли!")
     if request.method == "POST":
         try:
             rating_quiz = Rating.objects.get(user=request.user, quiz=quiz)
@@ -205,7 +209,7 @@ def rating(request, poll_id: int):
 
 
 def check_possibility_passing_poll(
-    request, poll: Quiz
+        request, poll: Quiz
 ) -> Union[Question, HttpResponseNotFound]:
     """
     Используется для проверки возможности пройти определённый опрос пользователем.

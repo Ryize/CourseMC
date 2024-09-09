@@ -133,6 +133,7 @@ class ScheduleAdmin(admin.ModelAdmin):
     fields = (
         # 'for_filter',
         'theme',
+        'plan',
         'lesson_materials',
         'lesson_type',
         'direction',

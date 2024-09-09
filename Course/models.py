@@ -80,6 +80,11 @@ class Schedule(models.Model):
     theme = models.CharField(
         max_length=128, verbose_name='Тема урока', default='Тема не задана!'
     )
+    plan = RichTextUploadingField(
+        verbose_name='План урока',
+        unique=False,
+        default='План не указан!',
+    )
     lesson_materials = RichTextUploadingField(
         verbose_name='Материалы к уроку',
         unique=False,
