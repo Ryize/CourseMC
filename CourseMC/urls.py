@@ -16,7 +16,7 @@ urlpatterns = [
     path('questionnaire/', include('questionnaire.urls')),
     path('blog/', include('blog.urls')),
     path('interpreter/', include('py_interpreter.urls')),
-    # path('chatgpt/', include('chatgpt.urls')),
+    # path('chatgpt/', include('chatgpt.urls')),  # Не используется
     path('billing/', include('billing.urls')),
     path('todo/', include('todolist.urls')),
     path('certificate/', include('certificate.urls')),
