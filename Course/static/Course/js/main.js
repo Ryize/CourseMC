@@ -53,7 +53,7 @@ const paginationContainer = document.querySelector(".pagination-container");
 const listItems = document.querySelectorAll("#dropdown");
 const back = document.querySelector(".back");
 const next = document.querySelector(".next");
-
+ 
 let paginationLimit = 20;
 const pageCount = Math.ceil(listItems.length / paginationLimit);
 let currentPage = 1;
