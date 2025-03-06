@@ -26,7 +26,7 @@ class InterviewQuestion(models.Model):
         verbose_name='Вероятность встретить (%)'
     )
     complexity = models.IntegerField(choices=hard_level, default=1,
-                                  verbose_name='Сложность')
+                                     verbose_name='Сложность')
 
     def __str__(self):
         return f'{self.title}'
