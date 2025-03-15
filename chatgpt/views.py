@@ -1,3 +1,6 @@
+"""
+Приложение архивировано
+"""
 import random
 
 import openai
