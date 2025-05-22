@@ -30,7 +30,7 @@ LOGIN_REDIRECT_URL = "/"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["coursemc.ru", "www.coursemc.ru", '2552309-yo82697.twc1.net', 'www.2552309-yo82697.twc1.net', "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
