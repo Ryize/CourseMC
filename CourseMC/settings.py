@@ -28,7 +28,7 @@ SOCIAL_AUTH_VK_OAUTH2_SECRET = (
 LOGIN_REDIRECT_URL = "/"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -68,6 +68,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "CourseMC.middleware.FilterIPMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -318,5 +319,15 @@ STATICFILES_DIRS = [
 APPEND_SLASH = False
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Вместо CompressedManifestStaticFilesStorage
+STORAGES = {
+            "staticfiles": {
+                        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+                            },
+            }
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
