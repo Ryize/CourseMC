@@ -34,4 +34,4 @@ COPY --from=build /app /app
 ENV PYTHONUNBUFFERED=1 \
     DJANGO_SETTINGS_MODULE=CourseMC.settings
 EXPOSE 8000
-CMD ["gunicorn", "CourseMC.wsgi:application", "--bind", "0.0.0.0:8000", "--workeers", "3"]
+CMD ["gunicorn", "CourseMC.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
