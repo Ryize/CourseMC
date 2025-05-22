@@ -41,3 +41,4 @@ openai~=0.27.2
 django-colorfield==0.10.1
 yookassa==2.3.5
 radon~=6.0.1
+gunicorn>=20.1.0
