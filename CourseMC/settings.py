@@ -27,6 +27,9 @@ SOCIAL_AUTH_VK_OAUTH2_SECRET = (
 )
 LOGIN_REDIRECT_URL = "/"
 
+# Preserve the primary key type used by the existing Django 3.2 migrations.
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -42,7 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
-    "social_django",
+    "CourseMC.apps.LocalizedPythonSocialAuthConfig",
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
@@ -62,6 +65,7 @@ INSTALLED_APPS = [
     'certificate.apps.CertificateConfig',
     'interview.apps.InterviewConfig',
     'codereview.apps.CodereviewConfig',
+    'ai_assistant.apps.AiAssistantConfig',
 ]
 
 MIDDLEWARE = [
@@ -73,7 +77,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "CourseMC.middleware.LastSessionMiddleware",
     "CourseMC.middleware.IPVisitorsMiddleware",
 ]
 

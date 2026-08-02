@@ -113,21 +113,24 @@
                 <label for="inp-1">
                     {% for answer in question.answers.all %}
                         <input type="radio"
-                               name="answers" value="{{ answer.pk }}" id="number-{{ answer.pk }}" class="m-2">
+                               name="answers" value="{{ answer.pk }}" id="number-{{ answer.pk }}" class="m-2" required>
                         <label style='display: inline;' for='number-{{ answer.pk }}'>{{ answer.answer }}</label><br>
+                    {% empty %}
+                        <p>У этого вопроса пока нет вариантов ответа.</p>
                     {% endfor %}
                 </label>
             </div>
 
-            <button type="submit" value="submit">
+            <button type="submit" value="submit"
+                    {% if not question.answers.exists %}disabled{% endif %}>
                 Сохранить ответ
             </button>
         </div>
     </form>
-    {% if poll.questions.all.0.pk != question.pk %}
-        <form method="post" action="{% url 'take_poll' poll.pk %}" onclick="this.submit()" id="back">
+    {% if previous_question %}
+        <form method="post" action="{% url 'take_poll' poll.pk %}" id="back">
             {% csrf_token %}
-            <input type="hidden" name="number_question" value="{{ question.pk|add:-1 }}" form="back">
+            <input type="hidden" name="number_question" value="{{ previous_question.pk }}" form="back">
             <input type="hidden" name="redirect" value="1" form="back">
             <button type="submit" name="your_name" value="your_value" class="btn-link">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
@@ -144,4 +147,3 @@
 </body>
 
 </html>
-

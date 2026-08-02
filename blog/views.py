@@ -2,7 +2,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.http import JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DetailView, ListView
 
 from .forms import PostForm
@@ -101,23 +102,40 @@ class PostView(DetailView):
         context['descry'] = Post.objects.filter(is_displayed=False).all()
         return context
 
+    def get_queryset(self):
+        queryset = Post.objects.select_related("author").prefetch_related(
+            "categories"
+        )
+        if self.request.user.is_staff:
+            return queryset
+        if self.request.user.is_authenticated:
+            return queryset.filter(
+                Q(is_displayed=True) | Q(author=self.request.user)
+            )
+        return queryset.filter(is_displayed=True)
+
 
 @login_required
+@require_POST
 def create_comment(request):
-    if request.is_ajax():
-        content = request.POST.get("content")
-        post_id = int(request.POST.get("post_id"))
-        post = Post.objects.filter(pk=post_id).first()
-        comment = Comment(comment=content, author=request.user, post=post)
-        comment.save()
-        return JsonResponse({"success": True})
+    content = request.POST.get("content", "").strip()
+    post_id = request.POST.get("post_id", "")
+    if not content or not post_id.isdigit():
+        return JsonResponse({"success": False}, status=400)
+
+    post_queryset = Post.objects.filter(is_displayed=True)
+    if request.user.is_staff:
+        post_queryset = Post.objects.all()
+    post = get_object_or_404(post_queryset, pk=int(post_id))
+    Comment.objects.create(comment=content, author=request.user, post=post)
+    return JsonResponse({"success": True})
 
 
 @login_required
 def change_post(request, post_id):
     if request.method == "GET":
         return _change_post_get(request, post_id)
-    post = Post.objects.get(id=post_id)
+    post = get_object_or_404(Post, id=post_id)
     if post.author != request.user and not request.user.is_staff:
         return redirect(reverse_lazy("blog_home"))
 
@@ -136,7 +154,7 @@ def change_post(request, post_id):
 
 
 def _change_post_get(request, post_id):
-    post = Post.objects.get(id=post_id)
+    post = get_object_or_404(Post, id=post_id)
     if post.author != request.user and not request.user.is_staff:
         return redirect(reverse_lazy("blog_home"))
     form = PostForm()

@@ -1,7 +1,7 @@
 import os
 import random
 
-from django.core.exceptions import PermissionDenied
+from django.contrib.admin.views.decorators import staff_member_required
 from django.db import IntegrityError
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
@@ -11,11 +11,10 @@ from certificate.cert import create_certificate, CERTIFICATES_PATH
 from certificate.models import Certificate
 
 
+@staff_member_required
 def generate(request):
     students = Student.objects.exclude(
         pk__in=Certificate.objects.all().values_list('student__pk'))[::-1]
-    if not request.user.is_staff:
-        raise PermissionDenied()
     if request.method == 'GET':
         return render(request, 'certificate/generate.html',
                       {'students': students})

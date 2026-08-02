@@ -4,6 +4,7 @@
 {% block head %}
     <link rel="stylesheet" href="{% static 'css/dynamic_background.css' %}">
     <link rel="stylesheet" href="{% static 'css/list_poll.css' %}">
+    <script src="{% static 'js/my_polls.js' %}" defer></script>
 {% endblock %}
 
 {% block content %}
@@ -23,11 +24,17 @@
                         <br>
                         <span><small>{{ poll.description }}</small></span>
                         <hr>
-                        <p><label class="pointer" id="{{ forloop.counter }}"
-                                  onclick="showQuestion(this, 'quest-'+this.id, 2)"><strong><i>Нажмите
-                            для
-                            отображения вопросов и ответов</i></strong></label></p>
-                        <div id="quest-{{ forloop.counter }}" style="display: none;">
+                        <p>
+                            <button type="button"
+                                    class="pointer poll-toggle btn btn-link p-0"
+                                    data-target="questions-{{ poll.pk }}"
+                                    data-show-label="Нажмите для отображения вопросов и ответов"
+                                    data-hide-label="Нажмите для скрытия вопросов и ответов"
+                                    aria-expanded="false">
+                                <strong><i>Нажмите для отображения вопросов и ответов</i></strong>
+                            </button>
+                        </p>
+                        <div id="questions-{{ poll.pk }}" hidden>
                             {% for question in poll.questions.all %}
 
                                 <p>Вопрос: <strong>{{ question.question|safe }}</strong></p>
@@ -43,15 +50,24 @@
                                 <br>
                                 <hr>
 
+                            {% empty %}
+                                <p>В этом опросе пока нет вопросов.</p>
                             {% endfor %}
                             <label style="float: right"><small>Можно пройти до: {{ poll.lifetime }}</small></label>
                             <br>
                         </div>
                         <br>
-                        <p><label class="pointer" id="press_show_statistic"
-                                  onclick="showQuestion(this, 'poll-info-{{ forloop.counter }}', 1)"><strong><i>Нажмите
-                            для отображения статистики опроса</i></strong></label></p>
-                        <div id="poll-info-{{ forloop.counter }}" style="display: none;">
+                        <p>
+                            <button type="button"
+                                    class="pointer poll-toggle btn btn-link p-0"
+                                    data-target="poll-info-{{ poll.pk }}"
+                                    data-show-label="Нажмите для отображения статистики опроса"
+                                    data-hide-label="Нажмите для скрытия статистики опроса"
+                                    aria-expanded="false">
+                                <strong><i>Нажмите для отображения статистики опроса</i></strong>
+                            </button>
+                        </p>
+                        <div id="poll-info-{{ poll.pk }}" hidden>
                             Прошли опрос: {{ poll.passed_quiz.all|length }}
                             {% if poll.passed_quiz.all|length > 0 %}
                                 <div class="row">
@@ -87,20 +103,27 @@
                         </div>
                         <br>
                         <label style="float: right"><small>Создан: {{ poll.created_at }}</small></label>
-                        <p onclick="copyURL('copy_url-{{ poll.pk }}')">
-                            <input type="hidden" value="http://{{ request.get_host }}{% url 'take_poll' poll.pk %}"
-                                   id="copy_url-{{ poll.pk }}">
+                        <p>
                             <small>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                      class="bi bi-subtract" viewBox="0 0 16 16">
                                     <path d="M0 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2H2a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H2z"/>
                                 </svg>
-                                <label class="pointer">Скопировать ссылку</label>
+                                <button type="button"
+                                        class="pointer poll-copy btn btn-link p-0"
+                                        data-url="{{ request.scheme }}://{{ request.get_host }}{% url 'take_poll' poll.pk %}">
+                                    Скопировать ссылку
+                                </button>
                             </small>
                         </p>
 
                     </li>
 
+                {% empty %}
+                    <li>
+                        <span>У вас пока нет опросов.</span>
+                        <p><a href="{% url 'create_poll' %}">Создать первый опрос</a></p>
+                    </li>
                 {% endfor %}
 
             </ol>
@@ -108,48 +131,5 @@
     </div>
 
     {% include 'questionnaire/includes/pagination.html' %}
-
-    <script>
-        function showQuestion(element, id, statusSend) {
-            el = document.getElementById(id)
-            console.log(el, id, statusSend)
-            text = {
-                1: '<strong>Нажмите для отображения статистики опроса</strong>',
-                2: '<strong>Нажмите для отображения вопросов и ответов</strong>',
-                3: 'Нажмите для скрытия статистики опроса',
-                4: 'Нажмите для скрытия вопросов и ответов',
-            }
-            if (el.style.display === 'none') {
-                el.style = 'display: block;'
-                element.textContent = text[statusSend + 2]
-            } else {
-                el.style = 'display: none;'
-                element.innerHTML = text[statusSend]
-            }
-        }
-
-        function copyURL(id) {
-            const str = document.getElementById(id).value;
-            const el = document.createElement('textarea');
-            el.value = str;
-            el.setAttribute('readonly', '');
-            el.style.position = 'absolute';
-            el.style.left = '-9999px';
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-
-            const ul = document.getElementById('messages-list')
-            const li = document.createElement('li')
-            const div = document.createElement('div')
-            div.textContent = 'Ссылка успешно скопирована!'
-            div.classList = 'alert alert-info msg fade show'
-            div.role = 'alert'
-            li.appendChild(div)
-            ul.appendChild(li)
-            fade_alerts()
-        }
-    </script>
 
 {% endblock %}

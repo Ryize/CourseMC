@@ -20,35 +20,43 @@ class Interview:
 
     client = None
     description = """
-                   Ты проводишь собеседование на знание языка программирования Python.
-                   На вход получаешь два ответа на вопрос, эталонный и ответ, который нужно проверить.
-                   Сравни их по смыслу. Выстави оценку за правильность ответа по 10-бальной шкале.
-                   Будь снисходителен: ответ не должен точно повторять эталонный, должны быть похожи основные мысли.
-                   Не снижай оценку за структуру ответа, его краткость или многословность.
-                   Главное, чтобы в представленном ответе хоть как-то упоминались тезисы из эталонного ответа!
+                   Ты проводишь собеседование на знание языка программирования
+                   Python.
+                   На вход получаешь вопрос и ответ,
+                   который нужно проверить.
+                   Сравни ответ пользователя с тем, который бы дал специалист.
+                    Выстави оценку за правильность ответа
+                   по 10-бальной шкале.
+                   Будь снисходителен: ответ не должен точно повторять
+                   эталонный, должны быть похожи основные мысли. Но не будь и
+                   слишком мягким, ведь это собеседование.
+                   Не снижай оценку за структуру ответа, его краткость или
+                   многословность.
+                   Главное, чтобы в представленном ответе
+                   упоминались тезисы из эталонного ответа!
                    Если все мысли похожи — это максимальный балл.
                    Не снижай оценку за грамотность и форматирование ответа.
                    Полное несовпадение — 0 баллов.
                    Верна основная мысль — от 2 до 6 баллов.
-                   Верна основная мысль и дополнительные мысли — от 6 до 10 баллов.
+                   Верна основная мысль и дополнительные мысли — от 6 до 10
+                   баллов.
                    Не пиши о сравнении с эталонным ответом.
                    Не снижай оценку за отсутствие второстепенных данных.
-                   Начни без вступления — сразу с оценки и того, что можно добавить к ответу.
-                   Оценку пиши одним числом.
+                   Начни без вступления — сразу с оценки и того, что можно
+                   добавить к ответу.
+                   Оценку пиши так: "Ваша оценка: число(оценка)"
                   """
                   
-    def __init__(self, question, reference_question, user_question) -> None:
+    def __init__(self, question, user_question) -> None:
         """
         Инициализация объекта класса Interview.
 
         Args:
             question (str): Вопрос для собеседования.
-            reference_question (str): Эталонный ответ на вопрос.
             user_question (str): Ответ пользователя, который необходимо оценить.
         """
         token = 'sk-59J1nXyKKDgwIt31fmxhoLn1JnoLHPdw'
         self.question = question
-        self.reference_question = reference_question
         self.user_question = user_question
 
 # interview = Interview('Что такое переменная в Python?',
@@ -67,17 +75,16 @@ class InterviewThisOutOfOpenAI(Interview):
     """
 
 
-    def __init__(self, question, reference_question, user_question) -> None:
+    def __init__(self, question, user_question) -> None:
         """
         Инициализация объекта класса InterviewThisOutOfOpenAI.
 
         Args:
             question (str): Вопрос для собеседования.
-            reference_question (str): Эталонный ответ на вопрос.
             user_question (str): Ответ пользователя, который необходимо оценить.
         """
         self.token = 'sk-59J1nXyKKDgwIt31fmxhoLn1JnoLHPdw'
-        super().__init__(question, reference_question, user_question)
+        super().__init__(question, user_question)
 
     def get_response(self) -> str:
         """
@@ -89,7 +96,6 @@ class InterviewThisOutOfOpenAI(Interview):
             str: Оценка ответа пользователя, сгенерированная OpenAI.
         """
         user_request = (f'Вопрос: {self.question}.'
-                        f'Эталонный ответ: {self.reference_question}'
                         f'Ответ: {self.user_question}')
 
         # Заголовки запроса
@@ -105,16 +111,12 @@ class InterviewThisOutOfOpenAI(Interview):
                 {"role": "system", "content": self.description},
                 {"role": "user", "content": user_request}
             ],
-            "max_tokens": 150,
+            "max_tokens": 250,
             "temperature": 0.7
-        }
-        
-        proxies = {
-            "https": "http://1zhPU6Rq:aafJcerK@194.87.117.211:63692"
         }
 
         # Отправка POST-запроса к API
-        response = requests.post('https://api.proxyapi.ru/openai/v1/chat/completions', headers=headers, data=json.dumps(data), proxies=proxies)
+        response = requests.post('https://api.proxyapi.ru/openai/v1/chat/completions', headers=headers, data=json.dumps(data))
 
         # Обработка ответа
         if response.status_code == 200:

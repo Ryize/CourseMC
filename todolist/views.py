@@ -2,6 +2,7 @@ from typing import Optional
 
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect
 
 from Course.models import Student
@@ -18,7 +19,10 @@ def todo_user(request):
                                         user=request.user,
                                         )
         if "task_delete" in request.POST:
-            task_delete(request, TodoListUser)
+            task_delete(
+                request,
+                TodoListUser.objects.filter(user=request.user),
+            )
         return redirect("todo")
     todos = TodoListUser.objects.filter(user=request.user).all()
     return request_GET(request, todos)
@@ -26,7 +30,10 @@ def todo_user(request):
 
 @login_required
 def todo_group(request):
-    group = Student.objects.filter(name=request.user.username).first().groups
+    student = Student.objects.filter(name=request.user.username).first()
+    if student is None:
+        raise PermissionDenied
+    group = student.groups
     if request.method == "POST":
         if "task_add" in request.POST:
             if not valid_params(request):
@@ -35,7 +42,10 @@ def todo_group(request):
                                          group=group,
                                          )
         if "task_delete" in request.POST:
-            task_delete(request, TodoListGroup)
+            task_delete(
+                request,
+                TodoListGroup.objects.filter(group=group),
+            )
         return redirect("todo_group")
     todos = TodoListGroup.objects.filter(group=group).all()
     return request_GET(request, todos, group.title)
@@ -63,13 +73,12 @@ def get_request_data(request):
     return context
 
 
-def task_delete(request, model):
-    checked_list = request.POST.get("checked_box", [])
-    for todo_id in checked_list:
-        todo = model.objects.filter(pk=int(todo_id)).first()
-        if not todo:
-            messages.error(request, "Напоминание не найдено!")
-        todo.delete()
+def task_delete(request, queryset):
+    checked_list = request.POST.getlist("checked_box")
+    valid_ids = [todo_id for todo_id in checked_list if todo_id.isdigit()]
+    deleted_count, _ = queryset.filter(pk__in=valid_ids).delete()
+    if not deleted_count:
+        messages.error(request, "Напоминание не найдено!")
 
 
 def request_GET(request, todos, group_title: Optional[str] = None):

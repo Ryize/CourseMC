@@ -3,7 +3,6 @@ View для приложения Course.
 
 Обрабатывает главную страницу сайта, расписания.
 """
-import datetime
 import os
 
 from django.contrib.auth import get_user
@@ -13,6 +12,7 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+from django.utils import timezone
 from django.views.generic import ListView
 from django.views.generic.edit import FormView
 
@@ -142,13 +142,18 @@ class TimetableView(LoginRequiredMixin, ListView):
     """
     Выводит расписание курса на сайте.
 
-    Расписания выводятся по модели Schedule, по 16 на странице.
+    Расписания выводятся по модели Schedule, по 20 на странице.
     """
 
     model = Schedule
     template_name = 'Course/timetable.html'
     context_object_name = 'schedules'
-    queryset = Schedule.objects.all()
+    paginate_by = 20
+
+    def get_template_names(self):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return ['Course/includes/schedule_results.html']
+        return [self.template_name]
 
     def get_queryset(self):
         """
@@ -163,19 +168,42 @@ class TimetableView(LoginRequiredMixin, ListView):
             name=self.request.user.username).first()
         group = student.groups
 
-        d1 = datetime.datetime.now()
+        d1 = timezone.now()
         d2 = group.created_at
 
         months = self._months(d1, d2)
         if months <= 0:
             months = 1
+        amount_schedules = months * 22
         additional_lessons = AdditionalLessons.objects.filter(
             group=group).first()
         if not additional_lessons:
             additional_lessons = 0
         else:
             additional_lessons = additional_lessons.amount
-        schedules = Schedule.objects.filter(direction__in=student.direction.all()).all()[:months * 22 + additional_lessons]
+        amount_schedules = max(0, amount_schedules + additional_lessons)
+        available_schedules = (
+            Schedule.objects
+            .filter(direction__in=student.direction.all())
+            .distinct()
+            .order_by('pk')
+        )
+
+        start_index = 45 if group.title == 'Денис Особый' else 0
+        accessible_ids = list(
+            available_schedules
+            .values_list('pk', flat=True)[start_index:amount_schedules]
+        )
+        self.lesson_numbers = {
+            schedule_id: number
+            for number, schedule_id in enumerate(accessible_ids, start=1)
+        }
+        schedules = (
+            Schedule.objects
+            .filter(pk__in=accessible_ids)
+            .select_related('direction')
+            .order_by('-pk')
+        )
 
         theme = self._get_param('theme')
         if theme:
@@ -202,10 +230,14 @@ class TimetableView(LoginRequiredMixin, ListView):
         """
         context = super().get_context_data(**kwargs)
         context['reviews_count'] = Review.objects.all().count()
-        context['create_report'] = Schedule.objects.all()
         student = Student.objects.filter(
             name=self.request.user.username).first()
         context['absences'] = Absences.objects.filter(user=student).count()
+        for schedule in context['schedules']:
+            schedule.lesson_number = self.lesson_numbers[schedule.pk]
+        query_params = self.request.GET.copy()
+        query_params.pop('page', None)
+        context['pagination_query'] = query_params.urlencode()
         return context
 
     def dispatch(self, request, *args, **kwargs):
@@ -418,3 +450,7 @@ def create_group(request):
             is_display=False,
         )
     return redirect('/')
+
+
+def life(request):
+    return render(request, 'Course/life.html')

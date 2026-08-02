@@ -5,6 +5,10 @@ from django.contrib.auth.models import User
 from django.db import models
 
 
+def generate_student_password():
+    return random.randint(1111, 9999)
+
+
 class Student(models.Model):
     name = models.CharField(max_length=32, verbose_name='Имя')
     contact = models.CharField(max_length=128, verbose_name='Контакты')
@@ -14,7 +18,7 @@ class Student(models.Model):
                               )
     password = models.CharField(
         max_length=128, verbose_name='Пароль',
-        default=random.randint(1111, 9999)
+        default=generate_student_password,
     )
     groups = models.ForeignKey(
         'LearnGroup',
@@ -79,6 +83,11 @@ class Schedule(models.Model):
     )
     theme = models.CharField(
         max_length=128, verbose_name='Тема урока', default='Тема не задана!'
+    )
+    plan = RichTextUploadingField(
+        verbose_name='План урока',
+        unique=False,
+        default='План не указан!',
     )
     lesson_materials = RichTextUploadingField(
         verbose_name='Материалы к уроку',

@@ -1,49 +1,40 @@
-from typing import Union
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import (HttpResponseNotFound)
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseNotFound
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import ListView
 
 from .forms import AnswerForm, QuestionForm, QuizForm
-from .models import (AnswerQuestion, PassedPolls, Question, Quiz, Rating,
-                     UserAnswer)
-from .service import process_form, _check_poll_lifetime, get_standart_render
+from .models import (
+    AnswerQuestion,
+    PassedPolls,
+    Question,
+    Quiz,
+    Rating,
+    UserAnswer,
+)
+from .service import poll_is_active
 
 
-class QuizListView(ListView):
+class QuizListView(LoginRequiredMixin, ListView):
     model = Quiz
     template_name = "questionnaire/my_poll.html"
     context_object_name = "my_polls"
     paginate_by = 16
 
     def get_queryset(self):
-        if self.request.user.is_authenticated:
-            my_polls = (
-                Quiz.objects.filter(user=self.request.user)
-                .order_by("-created_at")
-                .prefetch_related()
+        return (
+            Quiz.objects
+            .filter(user=self.request.user)
+            .order_by("-created_at")
+            .prefetch_related(
+                "questions__answers",
+                "passed_quiz__passed_user",
+                "user_quiz__answers",
+                "rating",
             )
-            return my_polls
-
-    def get_context_data(self, *, object_list=None, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["UserAnswer"] = UserAnswer
-        context["PassedPolls"] = PassedPolls
-
-        return context
-
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return redirect("account_login")
-        if request.method.lower() in self.http_method_names:
-            handler = getattr(
-                self, request.method.lower(), self.http_method_not_allowed
-            )
-        else:
-            handler = self.http_method_not_allowed
-        return handler(request, *args, **kwargs)
+        )
 
 
 def index(request):
@@ -52,173 +43,196 @@ def index(request):
 
 @login_required
 def create_poll(request):
-    if request.method == "GET":
-        context = {"form": QuizForm()}
-        return render(request, "questionnaire/create_poll.html", context)
-    form = QuizForm(request.POST)
-    if form.is_valid():
-        form_with_user = form.save(commit=False)
-        form_with_user.user = request.user
-        form_with_user.save()
+    form = QuizForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        quiz = form.save(commit=False)
+        quiz.user = request.user
+        quiz.save()
         messages.success(request, "Вы успешно создали опрос!")
-        return redirect("create_question", form_with_user.pk)
-    messages.error(request, "Хм, что-то не то!")
-    return redirect("create_poll")
+        return redirect("create_question", quiz.pk)
+
+    return render(request, "questionnaire/create_poll.html", {"form": form})
 
 
 @login_required
 def create_question(request, quiz_id):
-    quiz = Quiz.objects.filter(pk=quiz_id).all()
-    if request.method == "GET":
-        context = {
-            "form": QuestionForm(quiz),
-        }
-        return render(request, "questionnaire/create_question.html", context)
-    form = QuestionForm(None, request.POST)
-    return process_form(request, form, quiz_id)
+    quiz = get_object_or_404(Quiz, pk=quiz_id, user=request.user)
+    form = QuestionForm(quiz, request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.info(request, "Вы создали вопрос!")
+        return redirect("create_question", quiz.pk)
+
+    return render(
+        request,
+        "questionnaire/create_question.html",
+        {"form": form, "quiz": quiz},
+    )
 
 
 @login_required
 def create_answer(request):
-    if request.method == "GET":
-        context = {"form": AnswerForm(user=request.user)}
-        return render(request, "questionnaire/create_answer.html", context)
-    form = AnswerForm(request.user, request.POST)
-    return process_form(
-        request,
-        form,
-        message_success="Вы создали ответ на вопрос!",
-        func_redirect="create_answer",
-    )
+    form = AnswerForm(request.user, request.POST or None)
 
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.info(request, "Вы создали ответ на вопрос!")
+        return redirect("create_answer")
 
-@login_required
-def my_poll(request):
-    my_polls = (
-        Quiz.objects.filter(user=request.user)
-        .order_by("-created_at")
-        .prefetch_related()
-    )
-    context = {
-        "my_polls": my_polls,
-        "UserAnswer": UserAnswer,
-        "PassedPolls": PassedPolls,
-    }
-    return render(request, "questionnaire/my_poll.html", context)
+    return render(request, "questionnaire/create_answer.html", {"form": form})
 
 
 @login_required
 def go_poll(request):
     if request.method == "GET":
         return render(request, "questionnaire/go_poll.html")
-    if not request.POST.get("poll_id") or not request.POST.get("poll_id").isdigit():
-        messages.error(request, "Значение поля id опроса не корректно!")
+
+    poll_id = request.POST.get("poll_id", "")
+    if not poll_id.isdigit():
+        messages.error(request, "Значение поля id опроса некорректно!")
         return render(request, "questionnaire/go_poll.html")
-    return redirect("take_poll", request.POST.get("poll_id"))
+
+    return redirect("take_poll", int(poll_id))
+
+
+def available_questions(poll):
+    return list(
+        poll.questions
+        .filter(answers__isnull=False)
+        .distinct()
+        .prefetch_related("answers")
+        .order_by("pk")
+    )
+
+
+def render_question(request, poll, questions, question):
+    index = questions.index(question)
+    previous_question = questions[index - 1] if index > 0 else None
+    return render(
+        request,
+        "questionnaire/take_poll.html",
+        {
+            "poll": poll,
+            "question": question,
+            "previous_question": previous_question,
+        },
+    )
 
 
 @login_required
 def take_poll(request, poll_id):
-    try:
-        poll = Quiz.objects.get(pk=poll_id)
-    except Quiz.DoesNotExist:
-        messages.error(request, "Вы указали не верный id опроса!")
-        return redirect("go_poll")
-    question = check_possibility_passing_poll(request, poll)
-    if isinstance(question, HttpResponseNotFound):
-        return question
-    if request.method == "GET":
-        return get_standart_render(request, poll, question)
-    number_question = request.POST.get("number_question")
-    answers = request.POST.get("answers")
-
-    all_question = poll.questions.all()
-    # Обрабатываем кнопку "Назад". Если нажата, возвращаем предыдущий вопрос
-    if request.POST.get("redirect") and number_question:
-        question = all_question.filter(pk=int(number_question)).first()
-        return get_standart_render(request, poll, question)
-
-    if not (number_question and answers):
-        messages.error(request, "Вы передали не все параметры!")
-        return get_standart_render(request, poll, question)
-
-    for i in request.POST.lists():
-        answers = (
-            i[1] if i[0] == "answers" else []
-        )  # Получаем ответ, который дал пользователь
-    try:
-        UserAnswer.objects.get(
-            quiz=poll,
-            question=get_object_or_404(Question, pk=int(number_question)),
-            user=request.user,
-        ).delete()
-    except:
-        pass
-    answer = UserAnswer(
+    poll = get_object_or_404(Quiz, pk=poll_id)
+    if not poll_is_active(poll):
+        return HttpResponseNotFound("Срок действия опроса истёк!")
+    if PassedPolls.objects.filter(
         quiz=poll,
-        question=get_object_or_404(Question, pk=int(number_question)),
-        answers=AnswerQuestion.objects.filter(pk=int(answers[0]))[0],
-        user=request.user,
+        passed_user=request.user,
+    ).exists():
+        return HttpResponseNotFound("Вы уже прошли этот опрос!")
+
+    questions = available_questions(poll)
+    if not questions:
+        return HttpResponseNotFound("В этом опросе нет вопросов с ответами")
+
+    if request.method == "GET":
+        return render_question(request, poll, questions, questions[0])
+
+    question_id = request.POST.get("number_question", "")
+    if not question_id.isdigit():
+        messages.error(request, "Не удалось определить текущий вопрос.")
+        return render_question(request, poll, questions, questions[0])
+
+    question = next(
+        (item for item in questions if item.pk == int(question_id)),
+        None,
     )
-    answer.save()
+    if question is None:
+        return HttpResponseNotFound("Вопрос не принадлежит этому опросу.")
 
-    number_iter = 1
-    while True:
-        question = all_question.filter(pk=int(number_question) + number_iter).first()
+    if request.POST.get("redirect"):
+        return render_question(request, poll, questions, question)
 
-        # Проверяем, есть ли вопрос, если нет, то сообщаем об успешном прохождении опроса
-        if not question:
-            passed_quiz = PassedPolls(quiz=poll, passed_user=request.user)
-            passed_quiz.save()
-            messages.info(request, "Вы успешно прошли опрос!")
-            return redirect("rating", poll_id)
-        if not question.answers.all():
-            number_iter += 1
-            continue
-        break
-    return get_standart_render(request, poll, question)
+    answer_id = request.POST.get("answers", "")
+    if not answer_id.isdigit():
+        messages.error(request, "Выберите один из вариантов ответа.")
+        return render_question(request, poll, questions, question)
+
+    answer = question.answers.filter(pk=int(answer_id)).first()
+    if answer is None:
+        return HttpResponseNotFound("Ответ не принадлежит этому вопросу.")
+
+    user_answer = (
+        UserAnswer.objects
+        .filter(quiz=poll, question=question, user=request.user)
+        .order_by("pk")
+        .first()
+    )
+    if user_answer is None:
+        UserAnswer.objects.create(
+            quiz=poll,
+            question=question,
+            answers=answer,
+            user=request.user,
+        )
+    elif user_answer.answers_id != answer.pk:
+        user_answer.answers = answer
+        user_answer.save(update_fields=("answers",))
+
+    current_index = questions.index(question)
+    if current_index + 1 < len(questions):
+        return render_question(
+            request,
+            poll,
+            questions,
+            questions[current_index + 1],
+        )
+
+    PassedPolls.objects.get_or_create(
+        quiz=poll,
+        passed_user=request.user,
+    )
+    messages.info(request, "Вы успешно прошли опрос!")
+    return redirect("rating", poll.pk)
 
 
 @login_required
-def rating(request, poll_id: int):
-    quiz = Quiz.objects.filter(pk=poll_id).first()
-    if not quiz or not PassedPolls.objects.filter(passed_user=request.user).first():
-        return HttpResponseNotFound("Указанный опрос не найден или вы его не прошли!")
+def rating(request, poll_id):
+    quiz = get_object_or_404(Quiz, pk=poll_id)
+    if not PassedPolls.objects.filter(
+        quiz=quiz,
+        passed_user=request.user,
+    ).exists():
+        return HttpResponseNotFound(
+            "Указанный опрос не найден или вы его не прошли!"
+        )
+
     if request.method == "POST":
-        try:
-            rating_quiz = Rating.objects.get(user=request.user, quiz=quiz)
-            rating_quiz.delete()
-            rating_quiz = Rating(
-                answer_number=request.POST.get("rating"),
-                comment=request.POST.get("comment"),
+        rating_value = request.POST.get("rating", "")
+        if not rating_value.isdigit() or not 1 <= int(rating_value) <= 5:
+            messages.error(request, "Выберите оценку от 1 до 5.")
+            return render(request, "questionnaire/rating.html", {"poll": quiz})
+
+        comment = request.POST.get("comment", "").strip()[:750]
+        saved_rating = (
+            Rating.objects
+            .filter(user=request.user, quiz=quiz)
+            .order_by("pk")
+            .first()
+        )
+        if saved_rating is None:
+            Rating.objects.create(
+                answer_number=int(rating_value),
+                comment=comment,
                 quiz=quiz,
                 user=request.user,
             )
-            rating_quiz.save()
-            messages.success(request, "Вы успешно оставили отзыв!")
-        except:
-            pass
-        finally:
-            return redirect("questionnaireIndex")
-    context = {"poll": quiz}
-    return render(request, "questionnaire/rating.html", context)
+        else:
+            saved_rating.answer_number = int(rating_value)
+            saved_rating.comment = comment
+            saved_rating.save(update_fields=("answer_number", "comment"))
 
+        messages.success(request, "Вы успешно оставили отзыв!")
+        return redirect("questionnaireIndex")
 
-def check_possibility_passing_poll(
-    request, poll: Quiz
-) -> Union[Question, HttpResponseNotFound]:
-    """
-    Используется для проверки возможности пройти определённый опрос пользователем.
-    request: WSGIRequest
-    return: Question (вопрос на который пользователь будет отвечать)
-            or HttpResponseNotFound (сообщение о невозможности пройти опрос).
-    """
-    check_poll_lifetime = _check_poll_lifetime(poll)
-    if not isinstance(check_poll_lifetime, bool):
-        return check_poll_lifetime
-    if PassedPolls.objects.filter(quiz=poll, passed_user=request.user):
-        return HttpResponseNotFound("Вы уже прошли этот опрос!")
-    for question in poll.questions.all():
-        if len(question.answers.all()) > 0:
-            return question
-    return HttpResponseNotFound("В этом опросе нет вопросов с ответами")
+    return render(request, "questionnaire/rating.html", {"poll": quiz})

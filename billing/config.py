@@ -1,0 +1,2 @@
+SECRET_KEY = 'live_5Zj3vmnudl9EHm7SW4iuNUQk0Hh0izHhaODyFk2wJe4'
+SHOP_ID = '986660'

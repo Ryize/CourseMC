@@ -168,11 +168,14 @@ class EducationCostAdmin(OnlyMyStudentMixin, admin.ModelAdmin):
         student = Student.objects.filter(name=obj.user.name).first()
         group = student.groups
         if student:
-            cost_one_lesson = EducationCost.objects.filter(
-                user=student).first()
-            number_classes = ClassesTimetable.objects.filter(
-                group=group).count()
-            return cost_one_lesson.amount * number_classes * 4
+            try:
+                cost_one_lesson = EducationCost.objects.filter(
+                    user=student).first()
+                number_classes = ClassesTimetable.objects.filter(
+                    group=group).count()
+                return cost_one_lesson.amount * number_classes * 4
+            except:
+                return '?'
 
     def calculate_amount(self, request, queryset):
         """

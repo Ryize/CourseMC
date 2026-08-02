@@ -2,6 +2,11 @@ from rest_framework import serializers
 
 from Course.models import (LearnGroup, Schedule, Student, StudentQuestion,
                            ClassesTimetable, ApplicationsForTraining)
+from codereview.models import ProjectForReview
+
+from interview.models import InterviewQuestion, InterviewQuestionCategory
+
+from ai_assistant.models import QuestionAnswer
 
 
 class ScheduleListSerializer(serializers.ModelSerializer):
@@ -56,10 +61,11 @@ class StudentQuestionListSerializer(serializers.ModelSerializer):
 
 class ClassesTimetableListSerializer(serializers.ModelSerializer):
     """Список всех расписаний занятий. """
+    group = serializers.StringRelatedField()
 
     class Meta:
         model = ClassesTimetable
-        fields = '__all__'
+        fields = ('group', 'weekday', 'time_lesson', 'duration')
 
 
 class ApplicationsForTrainingSerializer(serializers.ModelSerializer):
@@ -82,3 +88,34 @@ class MissingSerializer(serializers.Serializer):
     """ Для пропуска занятий. """
     username = serializers.CharField(max_length=32)
     date = serializers.DateField()
+
+
+class ProjectForReviewSerializer(serializers.ModelSerializer):
+    """ Список проектов отправленных на ревью. """
+
+    class Meta:
+        model = ProjectForReview
+        fields = '__all__'
+
+
+class InterviewQuestionCategorySerializer(serializers.ModelSerializer):
+    """ Список категорий с 'Твой собес'. """
+    class Meta:
+        model = InterviewQuestionCategory
+        fields = '__all__'
+
+
+class InterviewQuestionSerializer(serializers.ModelSerializer):
+    """ Список всех вопросов с 'Твой собес'. """
+
+    theme = serializers.StringRelatedField()
+
+    class Meta:
+        model = InterviewQuestion
+        fields = ('id', 'title', 'complexity', 'percent', 'theme')
+        
+
+class QuestionAnswerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionAnswer
+        fields = ['question', 'answer']
