@@ -12,6 +12,12 @@ class ReviewView(ListView):
     context_object_name = "reviews"
     paginate_by = 16
 
+    def get_queryset(self):
+        return Review.objects.select_related("author_id").order_by(
+            "-pub_date",
+            "-pk",
+        )
+
     def post(self, *args, **kwargs):
         content = self.request.POST.get("content", "").strip()
         user = get_user(self.request)

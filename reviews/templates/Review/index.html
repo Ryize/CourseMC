@@ -26,51 +26,63 @@
 			<h2>Отзывы наших учеников</h2>
 		</div>
 
-		<div class="list review"></div>
-
-		<nav class="pagination-container">
-			<button class="back">
-				<ion-icon name="chevron-back-outline"></ion-icon>
-			</button>
-			<div id="pagination-numbers"></div>
-			<button class="next">
-				<ion-icon name="chevron-forward-outline"></ion-icon>
-			</button>
-		</nav>
-	</section>
-
-	<script>
-		const box = document.querySelector('.list')
-
-		const itemsMain = [
+		<div class="list review">
 			{% for review in reviews %}
-		{
-			name: '{{ review.author_id.get_full_name|default:review.author_id.username }}',
-				date: '{{ review.pub_date }}',
-					text: `
-                    {{ review.content|safe }}
-            `
-		},
-		{% endfor %}
-    ].reverse()
+				<article class="item">
+					<div class="top">
+						<h3>{{ review.author_id.get_full_name|default:review.author_id.username }}</h3>
+						<time datetime="{{ review.pub_date|date:'c' }}">
+							{{ review.pub_date|date:"d.m.Y" }}
+						</time>
+					</div>
+					<div class="bottom">{{ review.content|safe }}</div>
+				</article>
+			{% empty %}
+				<div class="item">
+					<div class="bottom">Отзывов пока нет.</div>
+				</div>
+			{% endfor %}
+		</div>
 
-		function setMark(elem) {
-			if (elem === undefined) return ''
-			if (elem === 'new') return 'Новая тема'
-			if (elem === 'primary') return 'Ключевая тема'
-		}
+		{% if is_paginated %}
+			<nav class="server-pagination" aria-label="Страницы отзывов">
+				{% if page_obj.has_previous %}
+					<a class="server-pagination-arrow"
+					   aria-label="Предыдущая страница"
+					   href="?page={{ page_obj.previous_page_number }}">
+						<ion-icon name="chevron-back-outline"></ion-icon>
+					</a>
+				{% else %}
+					<span class="server-pagination-arrow disabled"
+					      aria-label="Предыдущая страница недоступна">
+						<ion-icon name="chevron-back-outline"></ion-icon>
+					</span>
+				{% endif %}
 
-		box.innerHTML = itemsMain.map(item => (
-			`<div id="dropdown" class="item">
-                <div class="top">
-                    <h3>${item.name}</h3>
-                    ${item.date}
-                </div>
+				<div class="server-pagination-pages">
+					{% for page_number in page_obj.paginator.page_range %}
+						<a class="server-pagination-number{% if page_number == page_obj.number %} active{% endif %}"
+						   {% if page_number == page_obj.number %}aria-current="page"{% endif %}
+						   aria-label="Страница {{ page_number }}"
+						   href="?page={{ page_number }}">{{ page_number }}</a>
+					{% endfor %}
+				</div>
 
-                <div class="bottom">${item.text}</div>
-            </div>`
-		)).join(' ')
-	</script>
+				{% if page_obj.has_next %}
+					<a class="server-pagination-arrow"
+					   aria-label="Следующая страница"
+					   href="?page={{ page_obj.next_page_number }}">
+						<ion-icon name="chevron-forward-outline"></ion-icon>
+					</a>
+				{% else %}
+					<span class="server-pagination-arrow disabled"
+					      aria-label="Следующая страница недоступна">
+						<ion-icon name="chevron-forward-outline"></ion-icon>
+					</span>
+				{% endif %}
+			</nav>
+		{% endif %}
+	</section>
 
 	{% include 'template/footer.html' %}
 </body>
