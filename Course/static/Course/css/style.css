@@ -1367,6 +1367,29 @@ body.black .scheduleSection .title.blog .dropdown-filter.active {
     transition: 0.5s;
 }
 
+.scheduleSection .options .right .dropdown-filter div {
+    padding: 0;
+}
+
+.scheduleSection .options .right .dropdown-filter div a,
+.scheduleSection .options .right .dropdown-filter div button {
+    width: 100%;
+    padding: 15px 20px;
+    display: block;
+    color: inherit;
+    text-decoration: none;
+}
+
+.scheduleSection .options .right .dropdown-filter div button {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+}
+
 body.black .scheduleSection .options .right .dropdown-filter div,
 body.black .scheduleSection .title.blog .dropdown-filter div {
     color: #fff;
@@ -1461,7 +1484,7 @@ body.black .scheduleSection .title.blog .dropdown-filter div:hover {
     font-weight: 600;
 }
 
-.scheduleSection .item.active span {
+.scheduleSection .item.active .mark span {
     background: #fff !important;
 }
 
@@ -1821,6 +1844,228 @@ body.black .scheduleSection .title.blog .dropdown-filter div:hover {
 .pagination-container #pagination-numbers button.active {
     background: #FF977E;
     color: #fff;
+}
+
+.server-pagination {
+    width: 100%;
+    margin-top: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.server-pagination-pages {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(52px, auto);
+    gap: 5px;
+}
+
+.server-pagination-arrow,
+.server-pagination-number {
+    min-width: 52px;
+    min-height: 52px;
+    padding: 13px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    line-height: 1;
+    text-decoration: none;
+    box-shadow: 0 0 20px rgba(30, 30, 30, 0.10);
+}
+
+.server-pagination-arrow {
+    background: #717bea;
+    color: #fff;
+    font-size: 25px;
+}
+
+.server-pagination-number {
+    background: #fff;
+    color: #1E1E1E;
+}
+
+.server-pagination-number.active {
+    background: #FF977E;
+    color: #fff;
+}
+
+.server-pagination-arrow:hover {
+    color: #fff;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.server-pagination-number:hover {
+    color: #1E1E1E;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.server-pagination-number.active:hover {
+    color: #fff;
+}
+
+.server-pagination-arrow.disabled {
+    cursor: default;
+}
+
+.server-pagination-arrow ion-icon {
+    pointer-events: none;
+}
+
+#schedule-results {
+    transition: opacity 160ms ease;
+}
+
+#schedule-results.loading {
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.schedule-request-error {
+    margin: 20px 0;
+    padding: 14px 18px;
+    border-radius: 10px;
+    background: #f8d7da;
+    color: #842029;
+    text-align: center;
+}
+
+.schedule-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.schedule-message {
+    padding: 14px 18px;
+    border-radius: 10px;
+    background: #e8f5e9;
+    color: #1b5e20;
+}
+
+.schedule-message.error {
+    background: #f8d7da;
+    color: #842029;
+}
+
+.lesson-solution {
+    width: 100%;
+    padding-top: 24px;
+    border-top: 1px solid rgba(30, 30, 30, 0.12);
+}
+
+.lesson-solution-status {
+    width: fit-content;
+    margin-bottom: 12px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #fff4d7;
+    color: #7a5600;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.lesson-solution-status.accepted {
+    background: #e8f5e9;
+    color: #1b5e20;
+}
+
+.lesson-solution-status.needs_revision {
+    background: #fce5df;
+    color: #a13b24;
+}
+
+.lesson-solution-comment {
+    padding: 14px;
+    border-radius: 8px;
+    background: rgba(111, 123, 240, 0.10);
+}
+
+.lesson-solution-comment strong {
+    color: #1e1e1e;
+}
+
+.lesson-solution-files {
+    margin: 0;
+    padding-left: 10px;
+}
+
+.lesson-solution-file {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    color: inherit;
+}
+
+.lesson-solution-file ion-icon {
+    color: var(--color-accent);
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
+body.black .lesson-solution-file {
+    color: var(--color-accent);
+}
+
+.lesson-solution-form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+}
+
+.lesson-solution-form input[type="file"] {
+    max-width: 100%;
+    background: transparent;
+    border: 0;
+    color: #1e1e1e;
+}
+
+.lesson-solution-form input[type="file"]::file-selector-button {
+    margin-right: 10px;
+    padding: 8px 12px;
+    border: 1px solid var(--color-accent);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--color-accent);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.lesson-solution-empty {
+    color: rgba(30, 30, 30, 0.7);
+    font-size: 14px;
+    line-height: 20px;
+}
+
+body.black .lesson-solution {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+body.black .lesson-solution-comment strong,
+body.black .lesson-solution-form input[type="file"] {
+    color: #fff;
+}
+
+body.black .lesson-solution-empty {
+    color: rgba(255, 255, 255, 0.72);
+}
+
+@media screen and (max-width: 650px) {
+    .lesson-solution-form button {
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 .chat {
@@ -2203,6 +2448,7 @@ body.black footer p {
     opacity: 0;
     pointer-events: none;
     user-select: none;
+    text-align: left;
 }
 
 .drop.active {
@@ -2234,12 +2480,22 @@ body.black footer p {
     flex-direction: column;
     gap: 15px;
     font-size: 14px;
+    text-align: left;
 }
 
 .drop li {
     cursor: default;
     transition: 0.3s;
     position: relative;
+}
+
+header .right .header-dropdown-trigger {
+    cursor: pointer;
+}
+
+.drop a {
+    display: block;
+    text-align: left;
 }
 
 .drop li:hover {
@@ -2443,6 +2699,11 @@ body.black footer p {
     .pagination-container.grid #pagination-numbers {
         grid-template-columns: repeat(5, 1fr);
     }
+
+    .server-pagination-pages {
+        grid-auto-flow: row;
+        grid-template-columns: repeat(5, minmax(46px, 1fr));
+    }
 }
 
 @media screen and (max-width: 650px) {
@@ -2517,6 +2778,19 @@ body.black footer p {
 
     .pagination-container.grid #pagination-numbers {
         grid-template-columns: repeat(3, 1fr);
+    }
+
+    .server-pagination-pages {
+        flex: 1;
+        grid-template-columns: repeat(3, minmax(42px, 1fr));
+    }
+
+    .server-pagination-arrow,
+    .server-pagination-number {
+        min-width: 42px;
+        min-height: 44px;
+        padding: 10px;
+        border-radius: 8px;
     }
 }
 

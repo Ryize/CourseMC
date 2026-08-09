@@ -1,7 +1,6 @@
-from django.forms import DateTimeInput, ModelForm, Select
-from django.http import QueryDict
+from django.forms import DateTimeInput, HiddenInput, ModelForm, Select
 
-from .models import *
+from .models import AnswerQuestion, Question, Quiz
 
 
 class DateTimeInput(DateTimeInput):
@@ -25,15 +24,8 @@ class QuizForm(ModelForm):
 class QuestionForm(ModelForm):
     def __init__(self, quiz, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["quiz"].empty_label = "Не выбрано!"
-
-        if quiz is not None:
-            if isinstance(quiz, QueryDict):
-                qs = Quiz.objects.filter(pk=quiz["quiz"]).all()
-            else:
-                qs = Quiz.objects.filter(pk=quiz[0].pk).all()
-            self.initial["quiz"] = qs[0].pk
-            self.fields["quiz"].queryset = qs
+        self.fields["quiz"].queryset = Quiz.objects.filter(pk=quiz.pk)
+        self.fields["quiz"].initial = quiz.pk
 
     class Meta:
         model = Question
@@ -42,17 +34,18 @@ class QuestionForm(ModelForm):
             "quiz",
         )
         widgets = {
-            "quiz": Select(attrs={"class": "form-control"}),
+            "quiz": HiddenInput(),
         }
 
 
 class AnswerForm(ModelForm):
-    def __init__(self, user, *args, **kwargs):
+    def __init__(self, quiz, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        quiz = Quiz.objects.filter(user=user).last()
         self.fields["question"].empty_label = "Не выбрано!"
-        self.fields["question"].queryset = self.fields["question"].queryset.filter(quiz=quiz).order_by(
-            "-pk"
+        self.fields["question"].queryset = Question.objects.filter(
+            quiz=quiz
+        ).order_by(
+            "-pk",
         )
 
     class Meta:

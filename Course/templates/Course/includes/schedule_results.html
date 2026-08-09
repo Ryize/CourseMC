@@ -1,0 +1,120 @@
+<div id="schedule-results" aria-live="polite">
+    <div class="schedule-request-error" role="alert" hidden></div>
+
+    <div class="list">
+        {% for schedule in schedules %}
+            <div class="item schedule-item{% if schedule.lesson_type == 'Новая тема' %} new{% elif schedule.lesson_type == 'Ключевой урок' %} primary{% endif %}">
+                <div class="select"
+                     role="button"
+                     tabindex="0"
+                     data-schedule-toggle
+                     aria-expanded="false">
+                    <div>
+                        <p>{{ schedule.lesson_number }} урок</p>
+                        <h3>{{ schedule.theme }}</h3>
+                        {% if schedule.lesson_type == 'Новая тема' %}
+                            <div class="mark"><span></span><p>Новая тема</p></div>
+                        {% elif schedule.lesson_type == 'Ключевой урок' %}
+                            <div class="mark"><span></span><p>Ключевая тема</p></div>
+                        {% endif %}
+                    </div>
+                    <ion-icon name="chevron-down-outline"></ion-icon>
+                </div>
+                <div class="dropdown">
+                    <div>{{ schedule.lesson_materials|safe }}</div>
+                    <section class="lesson-solution">
+                        {% if schedule.lesson_solution %}
+                            <p class="lesson-solution-status {{ schedule.lesson_solution.status }}">
+                                {{ schedule.lesson_solution.get_status_display }}
+                            </p>
+                            {% if schedule.lesson_solution.teacher_comment %}
+                                <div class="lesson-solution-comment">
+                                    <strong>Комментарий преподавателя</strong>
+                                    <p>{{ schedule.lesson_solution.teacher_comment|linebreaksbr }}</p>
+                                </div>
+                            {% endif %}
+                            <ul class="lesson-solution-files">
+                                {% for solution_file in schedule.lesson_solution.files.all %}
+                                    <li>
+                                        <a class="lesson-solution-file"
+                                           href="{% url 'lesson_solution_file_download' solution_file.pk %}">
+                                            <ion-icon name="logo-python" aria-hidden="true"></ion-icon>
+                                            <span>{{ solution_file.original_name }}</span>
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="lesson-solution-empty">Решение ещё не отправлено.</p>
+                        {% endif %}
+                        <form class="lesson-solution-form"
+                              method="post"
+                              action="{% url 'lesson_solution_upload' schedule.pk %}"
+                              enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ schedule_return_url }}">
+                            <input id="solution-files-{{ schedule.pk }}"
+                                   name="files"
+                                   type="file"
+                                   multiple
+                                   required
+                                   accept=".py,.ipynb,.txt,.md,.pdf,.zip,.rar,.png,.jpg,.jpeg,.docx"
+                                   aria-label="Файлы решения">
+                            <button type="submit">Отправить решение</button>
+                        </form>
+                    </section>
+                </div>
+            </div>
+        {% empty %}
+            <div class="item">
+                <div class="select">
+                    <div>
+                        <h3>По выбранным условиям занятий пока нет.</h3>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+        <nav class="server-pagination" aria-label="Страницы расписания">
+            {% if page_obj.has_previous %}
+                <a class="server-pagination-arrow"
+                   data-schedule-page
+                   aria-label="Предыдущая страница"
+                   href="?{% if pagination_query %}{{ pagination_query }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">
+                    <ion-icon name="chevron-back-outline"></ion-icon>
+                </a>
+            {% else %}
+                <span class="server-pagination-arrow disabled"
+                      aria-label="Предыдущая страница недоступна">
+                    <ion-icon name="chevron-back-outline"></ion-icon>
+                </span>
+            {% endif %}
+            <div class="server-pagination-pages">
+                {% for page_number in page_obj.paginator.page_range %}
+                    <a class="server-pagination-number{% if page_number == page_obj.number %} active{% endif %}"
+                       data-schedule-page
+                       {% if page_number == page_obj.number %}aria-current="page"{% endif %}
+                       aria-label="Страница {{ page_number }}"
+                       href="?{% if pagination_query %}{{ pagination_query }}&amp;{% endif %}page={{ page_number }}">
+                        {{ page_number }}
+                    </a>
+                {% endfor %}
+            </div>
+            {% if page_obj.has_next %}
+                <a class="server-pagination-arrow"
+                   data-schedule-page
+                   aria-label="Следующая страница"
+                   href="?{% if pagination_query %}{{ pagination_query }}&amp;{% endif %}page={{ page_obj.next_page_number }}">
+                    <ion-icon name="chevron-forward-outline"></ion-icon>
+                </a>
+            {% else %}
+                <span class="server-pagination-arrow disabled"
+                      aria-label="Следующая страница недоступна">
+                    <ion-icon name="chevron-forward-outline"></ion-icon>
+                </span>
+            {% endif %}
+        </nav>
+    {% endif %}
+</div>

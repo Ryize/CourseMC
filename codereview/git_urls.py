@@ -1,10 +1,21 @@
 import requests
+from urllib.parse import quote
 from functools import reduce
 import operator
 from itertools import chain, repeat, islice
 
 
-class GitError(Exception): pass
+class GitError(Exception):
+    pass
+
+
+def _get_json(url):
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        return response.json()
+    except (requests.RequestException, ValueError) as error:
+        raise GitError('GitHub request failed') from error
 
 
 def intersperse(delimiter, seq):
@@ -21,25 +32,41 @@ def _append_in_dict(dataDict, mapList, value):
 
 
 def _get_sha(author, repo):
+    repository_url = (
+        f'https://api.github.com/repos/{quote(author)}/{quote(repo)}'
+    )
+    repository = _get_json(repository_url)
     try:
-        return requests.get(
-            'https://api.github.com/repos/{}/{}/branches/master'.format(author,
-                                                                        repo)).json()[
-            'commit']['commit']['tree']['sha']
-    except KeyError as ex:
-        raise GitError("Invalid author or repo name") from ex
+        branch = repository['default_branch']
+        branch_data = _get_json(
+            f'{repository_url}/branches/{quote(branch, safe="")}'
+        )
+        return branch_data['commit']['commit']['tree']['sha'], branch
+    except (KeyError, TypeError) as error:
+        raise GitError('Invalid repository response') from error
 
 
 def _get_git_tree(author, repo):
-    return requests.get(
-        "https://api.github.com/repos/{}/{}/git/trees/{}?recursive=1".format(
-            author, repo, _get_sha(author, repo))).json()["tree"]
+    sha, branch = _get_sha(author, repo)
+    data = _get_json(
+        f'https://api.github.com/repos/{quote(author)}/{quote(repo)}'
+        f'/git/trees/{sha}?recursive=1'
+    )
+    try:
+        return data['tree'], branch
+    except (KeyError, TypeError) as error:
+        raise GitError('Invalid repository tree') from error
 
 
 def git_tree(repostring):
-    author, repo = repostring.split("/")
+    try:
+        author, repo = repostring.split("/")
+    except ValueError as error:
+        raise GitError('Invalid repository name') from error
+
+    tokens, branch = _get_git_tree(author, repo)
     tree = {repo: {"files": [], "dirs": {}}}
-    for token in _get_git_tree(author, repo):
+    for token in tokens:
         if token["type"] == "tree" and "/" not in token["path"]:
             tree[repo]["dirs"].update({token["path"]: {}})
             tree[repo]["dirs"][token["path"]].update({"files": [], "dirs": {}})
@@ -57,12 +84,12 @@ def git_tree(repostring):
                 dict_path = [repo, "dirs"] + intersperse("dirs", path[:-1]) + [
                     "files", path[-1]]
                 _append_in_dict(tree, dict_path, dict_path[-1])
-    return tree
+    return tree, branch
 
 
-def tree_to_urls(tree, repo):
+def tree_to_urls(tree, repo, branch):
     urls = []
-    base_url = f"https://raw.githubusercontent.com/{repo}/master/"
+    base_url = f"https://raw.githubusercontent.com/{repo}/{branch}/"
 
     def traverse_tree(tree_dict, path=""):
         for key, value in tree_dict.items():
@@ -76,7 +103,6 @@ def tree_to_urls(tree, repo):
                         base_url + new_path + file)  # формируем ссылку для каждого файла
             traverse_tree(value.get("dirs", {}),
                           new_path)  # рекурсивно обходим вложенные директории
-
     for i in tree[repo.split('/')[-1]]["files"]:
         urls.append(base_url + i)
     traverse_tree(

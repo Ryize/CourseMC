@@ -8,151 +8,71 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
     <title>Вопросы для интервью</title>
-    <link rel="stylesheet" href="{% static 'interview/style.css' %}">
-    <link rel="stylesheet" href="{% static 'Course/css/style.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'interview/style.css' %}?v=20260808-4">
+    <link rel="stylesheet"
+          href="{% static 'Course/css/style.css' %}?v=20260808-2">
     <link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}"
           type="image/x-icon">
+    <script src="{% static 'interview/questions.js' %}?v=20260808-2" defer></script>
 </head>
 
-<body>
-<style>
-    label {
-        font-size: 125%;
-    }
-
-    form {
-        background-color: #fff;
-        max-width: 75%;
-        margin: 50px auto;
-        padding: 30px 20px;
-        box-shadow: 2px 5px 10px rgba(0, 0, 0, 0.5);
-    }
-
-    a {
-        text-decoration: none;
-    }
-
-    i {
-        cursor: pointer;
-    }
-
-    label {
-        cursor: auto;
-    }
-
-    header {
-        background-color: white;
-        height: 60px;
-        top: 0px;
-        padding-top: 10px;
-    }
-
-    h1 {
-        margin-top: 100px;
-        font-size: 52px;
-    }
-
-    button {
-        outline: none;
-        height: 40px;
-        text-align: center;
-        width: 270px;
-        border-radius: 40px;
-        background: #fff;
-        border: 2px solid #1ECD97;
-        color: #1ECD97;
-        letter-spacing: 1px;
-        font-size: 14px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.25s ease;
-        padding-top: 7px;
-        padding-left: 27px;
-    }
-
-</style>
-<div>
-    {% include 'template/header.html' %}
+<body class="interview-page interview-questions-page">
+{% include 'template/header.html' %}
+<main class="interview-content">
     <h1>Вопросы для собеседования</h1>
     <form id="form">
+        {% csrf_token %}
         <div class="form-control">
             <input type="hidden"
-                   id="name"
                    value="{{ amount }}"
-                   name="amount"
-                   min=10
-                   max=50
-                   onchange="imposeMinMax(this)"
-                   required/>
+                   name="amount">
 
-            <input style="width: 37px; display: inline;"
-                   type="hidden" value="{{ start }}" max="10"
-                   name="start" oninput="controlNumber()">
-            <input style="width: 37px; display: inline;"
-                   type="hidden" value="{{ end }}" max="10"
-                   name="end"
-                   oninput="controlNumber()">
+            <input type="hidden" value="{{ start }}" name="start">
+            <input type="hidden" value="{{ end }}" name="end">
         </div>
         <div class="form-control">
-            {% if 'random' in technologies %}
-                <label><input type="checkbox" name="technologies"
-                              value="random">Случайные</label>
+            {% if random_mode %}
+                <input type="hidden" name="technologies" value="random">
+            {% else %}
+                {% for i in categories %}
+                    {% if i in technologies %}
+                        <input type="hidden" name="technologies"
+                               value="{{ i }}">
+                    {% endif %}
+                {% endfor %}
             {% endif %}
-            {% for i in categories %}
-                {% if i in technologies %}
-                    <input type="hidden" name="technologies"
-                           value="{{ i }}" checked>
-                {% endif %}
-            {% endfor %}
-            <small>Нажми на номер вопроса, чтобы найти ответ в
-                Google</small><br><br>
+            <small>
+                Нажми на вопрос, если правильно ответил.<br>
+                Неотмеченные вопросы попадут на повторение.<br>
+                Нажатие на номер вопроса откроет поиск в Google.
+            </small><br><br>
             {% for i in question %}
-                <label title="{{ i.complexity }}"><i
-                        onclick="window.open('https://www.google.com/search?q=Python+{{ i.title }}')">{{ forloop.counter }})</i> {{ i.title }}
-                </label>
+                <article class="interview-question" data-question-id="{{ i.pk }}">
+                    <a class="question-search"
+                       href="https://www.google.com/search?q=Python+{{ i.title|urlencode }}"
+                       target="_blank"
+                       rel="noopener noreferrer">{{ forloop.counter }})</a>
+                    <div class="interview-question-content">
+                        <button type="button"
+                                class="interview-question-toggle"
+                                title="Сложность: {{ i.complexity }}. Нажмите, если ответили на вопрос"
+                                aria-pressed="false"
+                                data-action="answered"
+                                data-url="{% url 'interview_question_progress' i.pk %}">{{ i.title }}</button>
+                        <span class="question-action-status" aria-live="polite"></span>
+                    </div>
+                </article>
             {% endfor %}
         </div>
 
-        <center>
-            <button id="button">Сгенерировать заново</button>
+        <div class="interview-submit">
+            <button id="button" type="submit">Сгенерировать заново</button>
             <br>
             <a href="javascript:history.back()">⏎ Назад</a>
-        </center>
+        </div>
     </form>
-</div>
-<script type="text/javascript">
-    function imposeMinMax(el) {
-        if (el.value != "") {
-            if (parseInt(el.value) < parseInt(el.min)) {
-                el.value = el.min;
-            }
-            if (parseInt(el.value) > parseInt(el.max)) {
-                el.value = el.max;
-            }
-        }
-    }
-
-    $(function () {
-        $("#button").click(function () {
-            $("#button").addClass("onclic", 250, validate);
-        });
-
-        function validate() {
-            setTimeout(function () {
-                $("#button").removeClass("onclic");
-                $("#button").addClass("validate", 450, callback);
-            }, 2250);
-        }
-
-        function callback() {
-            setTimeout(function () {
-                $("#button").removeClass("validate");
-            }, 1250);
-        }
-    });
-</script>
-<div style="display: none;">
-    {% include 'template/footer.html' %}
-</div>
+</main>
+{% include 'template/footer.html' %}
 </body>
 </html>

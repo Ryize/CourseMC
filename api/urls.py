@@ -4,7 +4,10 @@ from .views import (LearnGroupViewSet, ScheduleGet, ScheduleViewSet,
                     StudentQuestionView, StudentViewSet, ClassesTimetableView,
                     ApplicationsForTrainingView, PaymentAmountView,
                     MissingView,
-                    ClassesTimetableGingerView, ProjectForReviewView)
+                    ClassesTimetableGingerView, ProjectForReviewView,
+                    InterviewQuestionCategoryViewSet, InterviewQuestionViewSet,
+                    ClassesTimetableWeekdayView,
+                    GetQuestionView, CheckAnswerView)
 
 urlpatterns = [
     path('schedule/', ScheduleViewSet.as_view()),
@@ -20,4 +23,13 @@ urlpatterns = [
          ClassesTimetableGingerView.as_view()),
     path('project_for_review/',
          ProjectForReviewView.as_view()),
+    path('interview_category/',
+         InterviewQuestionCategoryViewSet.as_view()),
+    path('interview_question/',
+         InterviewQuestionViewSet.as_view()),
+    path('classes_timetable_weekday/<str:weekday>/',
+         ClassesTimetableWeekdayView.as_view()),
+         
+    path('ai_get_question/', GetQuestionView.as_view(), name='ai_get_question'),
+    path('ai_check_question/', CheckAnswerView.as_view(), name='ai_check_question'),
 ]

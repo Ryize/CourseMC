@@ -122,51 +122,54 @@
 					</section>
         {% endfor %}
         <script>
-            var textarea = document.querySelector('textarea');
-            var counter = 0;
-						if (textarea) {
-							textarea.addEventListener('keyup', function () {
-                if (this.scrollTop > 0 && counter < 6) {
-                    counter++;
-                    this.style.height = this.scrollHeight + "px";
+            const commentTextarea = document.querySelector('#content');
+            let commentResizeCount = 0;
+            commentTextarea?.addEventListener('input', function () {
+                if (this.scrollTop > 0 && commentResizeCount < 6) {
+                    commentResizeCount += 1;
+                    this.style.height = `${this.scrollHeight}px`;
                 }
             });
-						}
-            
 
             function create_comment() {
+                const content = document.getElementById('content');
+                const submit = document.getElementById('review_button');
+                if (!content?.value.trim()) {
+                    content?.focus();
+                    content?.setCustomValidity('Введите текст комментария.');
+                    content?.reportValidity();
+                    return;
+                }
+                content.setCustomValidity('');
+                submit.disabled = true;
+                submit.value = 'Отправляем…';
+
                 $.ajax({
                     method: "POST",
                     url: "{% url 'create_comment' %}",
                     dataType: 'json',
                     data: {
-                        content: document.getElementById('content').value,
+                        content: content.value,
                         post_id: document.getElementById('post_id').value,
-                        csrfmiddlewaretoken: document.getElementsByName('csrfmiddlewaretoken')[0].value,
+                        csrfmiddlewaretoken: document.getElementsByName(
+                            'csrfmiddlewaretoken',
+                        )[0].value,
                     },
-                    success: function (msgBackFromServer) {
-                        data = JSON.stringify(msgBackFromServer)
-                        data = JSON.parse(data)
-                        alert_if_status(data)
+                    success: function (data) {
+                        if (data.success === true) {
+                            window.location.reload();
+                            return;
+                        }
+                        alert(data.error_msg);
+                        submit.disabled = false;
+                        submit.value = 'Отправить';
                     },
-                    error: function (msgBackFromServer) {
-                        data = JSON.stringify(msgBackFromServer)
-                        data = JSON.parse(data)
-                        alert_if_status(data)
-                    }
-                })
-
-            }
-
-            function alert_if_status(data) {
-                if (data['success'] === true) {
-                    document.getElementById('content').textContent = '';
-                    document.getElementById('content').style = 'display: none;';
-                    document.getElementById('review_button').style = 'display: none;';
-                    location.reload();
-                } else {
-                    alert(data['error_msg'])
-                }
+                    error: function () {
+                        alert('Не удалось отправить комментарий. Попробуйте ещё раз.');
+                        submit.disabled = false;
+                        submit.value = 'Отправить';
+                    },
+                });
             }
         </script>
         <style>

@@ -1,16 +1,27 @@
 from collections import Counter
 
 from django import template
-from django.db.models import Avg
-
-from questionnaire.models import Quiz
+from django.utils.html import conditional_escape
+from django.utils.safestring import mark_safe
 
 register = template.Library()
+
+
+@register.filter(name="questionnaire_text")
+def questionnaire_text(value):
+    """Экранирует пользовательский текст, сохраняя старые переносы <br>."""
+    escaped = conditional_escape(value or "")
+    for old_break in ("&lt;br&gt;", "&lt;br/&gt;", "&lt;br /&gt;"):
+        escaped = escaped.replace(old_break, "<br>")
+    return mark_safe(escaped.replace("\n", "<br>"))
 
 
 @register.filter(name="statistic")
 def get_statistic(poll, user_id):
     user_quiz = poll.user_quiz.all()
+    if not user_quiz:
+        return "На вопросы пока никто не ответил."
+
     wrong_answer = [i.answers for i in user_quiz if not i.answers.correct]
     result_number = round(
         (len(user_quiz) - len(wrong_answer)) / len(user_quiz) * 100, 1
@@ -27,14 +38,17 @@ def get_statistic(poll, user_id):
     rating_number = 0
     for i in poll.rating.all():
         rating_number += i.answer_number
-    try:
+    if poll.rating.count():
         avg_rating = f"<br>Средняя оценка: {rating_number / poll.rating.count()}/5<br"
-    except:
+    else:
         avg_rating = ""
-    try:
-        answer_with_most_errors = list(
-            reversed(sorted(Counter(wrong_answer).items(), key=lambda x: x[1]))
-        )[0]
-        return f"Правильных ответов: <strong>{result}</strong><br>Больше всего ошибок ({answer_with_most_errors[1]}): {answer_with_most_errors[0].question}<br>{avg_rating}"
-    except:
+
+    if not wrong_answer:
         return f"Правильных ответов: <strong>{result}</strong>{avg_rating}"
+
+    answer_with_most_errors = Counter(wrong_answer).most_common(1)[0]
+    return (
+        f"Правильных ответов: <strong>{result}</strong><br>"
+        f"Больше всего ошибок ({answer_with_most_errors[1]}): "
+        f"{answer_with_most_errors[0].question}<br>{avg_rating}"
+    )

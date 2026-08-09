@@ -1,8 +1,40 @@
+import os
 import random
+import uuid
 
 from ckeditor_uploader.fields import RichTextUploadingField
 from django.contrib.auth.models import User
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
 from django.db import models
+from django.db.models import Max
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
+
+
+def generate_student_password():
+    return random.randint(1111, 9999)
+
+
+class PrivateLessonSolutionStorage(FileSystemStorage):
+    """Хранилище вне MEDIA_ROOT: файлы выдаются только защищённым view."""
+
+    @property
+    def base_location(self):
+        return str(settings.PRIVATE_SOLUTION_MEDIA_ROOT)
+
+    @property
+    def location(self):
+        return os.path.abspath(self.base_location)
+
+
+def lesson_solution_upload_to(instance, filename):
+    """Сохраняет работы в непредсказуемом пути без исходного имени файла."""
+    extension = os.path.splitext(filename)[1].lower()
+    return (
+        f'solution_uploads/{instance.solution.student_id}/'
+        f'{uuid.uuid4().hex}{extension}'
+    )
 
 
 class Student(models.Model):
@@ -14,7 +46,7 @@ class Student(models.Model):
                               )
     password = models.CharField(
         max_length=128, verbose_name='Пароль',
-        default=random.randint(1111, 9999)
+        default=generate_student_password,
     )
     groups = models.ForeignKey(
         'LearnGroup',
@@ -105,11 +137,45 @@ class Schedule(models.Model):
         default=1,
     )
 
+    position = models.PositiveIntegerField(
+        default=0,
+        db_index=True,
+        verbose_name='Порядок в программе',
+        help_text='Назначается автоматически. Изменяйте порядок через админку.',
+    )
+    is_archived = models.BooleanField(
+        default=False,
+        verbose_name='В архиве',
+        help_text='Архивный урок не показывается ученикам и не удаляет их работы.',
+    )
+
     for_filter = models.IntegerField(default=100)
 
     class Meta:
         verbose_name = 'Расписание'
         verbose_name_plural = 'Расписания'
+        ordering = ('direction_id', 'position', 'pk')
+        indexes = [
+            models.Index(
+                fields=('direction', 'position'),
+                name='course_sched_dir_pos_idx',
+            ),
+        ]
+
+    def save(self, *args, **kwargs):
+        """Новые уроки без позиции добавляются в конец своего направления."""
+        if not self.position and self.direction_id:
+            last_position = (
+                type(self).objects
+                .filter(
+                    direction_id=self.direction_id,
+                    is_archived=self.is_archived,
+                )
+                .aggregate(last_position=Max('position'))['last_position']
+                or 0
+            )
+            self.position = last_position + 1
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.theme}'
@@ -207,3 +273,93 @@ class AdditionalLessons(models.Model):
     class Meta:
         verbose_name = 'Сдвиг расписания'
         verbose_name_plural = 'Сдвиг расписаний'
+
+
+class LessonSolution(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'На проверке'
+        ACCEPTED = 'accepted', 'Принято'
+        NEEDS_REVISION = 'needs_revision', 'Нужна доработка'
+
+    schedule = models.ForeignKey(
+        Schedule,
+        on_delete=models.CASCADE,
+        related_name='solutions',
+        verbose_name='Урок',
+    )
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,
+        related_name='lesson_solutions',
+        verbose_name='Ученик',
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+        verbose_name='Статус проверки',
+    )
+    teacher_comment = models.TextField(
+        blank=True,
+        verbose_name='Комментарий преподавателя',
+    )
+    reviewed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_lesson_solutions',
+        verbose_name='Проверил',
+    )
+    reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Проверено',
+    )
+    submitted_at = models.DateTimeField(auto_now_add=True, verbose_name='Отправлено')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Обновлено')
+
+    class Meta:
+        verbose_name = 'Решение урока'
+        verbose_name_plural = 'Решения уроков'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('schedule', 'student'),
+                name='one_solution_per_lesson_and_student',
+            ),
+        ]
+        ordering = ('status', '-updated_at')
+
+    def __str__(self):
+        return f'{self.student}: {self.schedule}'
+
+
+class LessonSolutionFile(models.Model):
+    solution = models.ForeignKey(
+        LessonSolution,
+        on_delete=models.CASCADE,
+        related_name='files',
+        verbose_name='Решение урока',
+    )
+    file = models.FileField(
+        upload_to=lesson_solution_upload_to,
+        storage=PrivateLessonSolutionStorage(),
+        verbose_name='Файл',
+    )
+    original_name = models.CharField(max_length=255, verbose_name='Имя файла')
+    uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name='Загружен')
+
+    class Meta:
+        verbose_name = 'Файл решения'
+        verbose_name_plural = 'Файлы решений'
+        ordering = ('uploaded_at',)
+
+    def __str__(self):
+        return self.original_name
+
+
+@receiver(post_delete, sender=LessonSolutionFile)
+def delete_lesson_solution_file(sender, instance, **kwargs):
+    """Удаляет файл из закрытого хранилища вслед за записью в базе."""
+    if instance.file:
+        instance.file.delete(save=False)

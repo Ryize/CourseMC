@@ -3,6 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Отправить проект на ревью</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
           rel="stylesheet"
@@ -60,53 +61,52 @@
     <div class="row">
         <div class="col-xs-12 col-sm-12 col-md-1 col-lg-2"></div>
         <div class="col-xs-12 col-sm-12 col-md-10 col-lg-8">
-            <div id="emailHelp" class="form-text">
-                <center><label class="text-danger mt-1">{{ error }}</label>
-                </center>
-            </div>
-            <form method="post">
+            <form method="post" id="review-form">
                 {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
                 <div class="mb-3">
-                    <label for="disabledSelect" class="form-label">Категория
+                    <label for="{{ form.category.id_for_label }}" class="form-label">Категория
                         проекта</label>
-                    <select id="select" class="form-select"
-                            name="category" onchange="changeCategoryHelp()">
-                        {% for category in categories %}
-                            <option id="{{ category.pk }}">{{ category }}</option>
+                    <select id="{{ form.category.id_for_label }}"
+                            class="form-select" name="{{ form.category.html_name }}"
+                            required>
+                        {% for value, label in form.category.field.choices %}
+                            <option value="{{ value }}"{% if form.category.value|stringformat:"s" == value|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
-                    {% for category in categories %}
-                        <div style="display: none"
-                             id="category-help_{{ category.pk }}"
-                             class="form-text">
-                            Не менее {{ category.min_lines }} строк.
-                            Сложность от {{ category.min_cognetive }}
-                            {% if category.max_cognetive < 9000 %}
-                                до {{ category.max_cognetive }}
-                            {% endif %}
-                        </div>
-                    {% endfor %}
+                    <div class="text-danger">
+                        {{ form.category.errors }}
+                    </div>
                 </div>
                 <div class="mb-3">
-                    <label for="exampleInputEmail1" class="form-label">Ссылка
+                    <label for="{{ form.github.id_for_label }}" class="form-label">Ссылка
                         на репозиторий</label>
                     <input type="url" class="form-control"
-                           aria-describedby="emailHelp"
-                           name="github">
-                    <div id="emailHelp" class="form-text">Пример:
+                           id="{{ form.github.id_for_label }}"
+                           name="{{ form.github.html_name }}"
+                           value="{{ form.github.value|default:'' }}"
+                           required>
+                    <div class="text-danger">{{ form.github.errors }}</div>
+                    <div class="form-text">Пример:
                         https://github.com/Ryize/CourseMC
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label for="exampleInputPassword1" class="form-label">Комментарий</label>
-                    <input type="text" class="form-control"
-                           name="comment">
-                    <div id="emailHelp" class="form-text">Информация которая
+                    <label for="{{ form.comment.id_for_label }}" class="form-label">Комментарий</label>
+                    <textarea class="form-control"
+                              id="{{ form.comment.id_for_label }}"
+                              name="{{ form.comment.html_name }}"
+                              maxlength="2000"
+                              rows="4">{{ form.comment.value|default:'' }}</textarea>
+                    <div class="text-danger">{{ form.comment.errors }}</div>
+                    <div class="form-text">Информация, которая
                         может помочь при проверке вашего проекта
                     </div>
                 </div>
                 <center>
-                    <button type="submit">
+                    <button type="submit" id="review-submit">
                         Отправить на проверку
                     </button>
                 </center>
@@ -117,16 +117,12 @@
 <div class="fixed-bottom">
     {% include 'template/footer.html' %}
 </div>
-<script type="text/javascript">
-    function changeCategoryHelp() {
-        for (let i = 1; i < {{categories.count}} +1; i++) {
-            document.getElementById(`category-help_${i}`).style = 'display: none';
-        }
-        let select = document.getElementById("select");
-        categoryPk = select.options[select.selectedIndex].id;
-        document.getElementById(`category-help_${categoryPk}`).style = 'display: inline';
-
-    }
+<script>
+    document.getElementById('review-form').addEventListener('submit', function () {
+        const button = document.getElementById('review-submit');
+        button.disabled = true;
+        button.textContent = 'Проверяем репозиторий…';
+    });
 </script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user
 from django.http import HttpResponse, JsonResponse
+from django.views.decorators.http import require_POST
 from django.views.generic import ListView
 
 from reviews.models import Review
@@ -11,14 +12,34 @@ class ReviewView(ListView):
     context_object_name = "reviews"
     paginate_by = 16
 
+    def get_queryset(self):
+        return Review.objects.select_related("author_id").order_by(
+            "-pub_date",
+            "-pk",
+        )
+
     def post(self, *args, **kwargs):
-        content = self.request.POST.get("content")
+        content = self.request.POST.get("content", "").strip()
         user = get_user(self.request)
-        if not user:
+        if not user.is_authenticated:
             return JsonResponse(
-                {"success": False, "error_code": 0, "error_msg": "Вы не авторизованны!"}
+                {
+                    "success": False,
+                    "error_code": 0,
+                    "error_msg": "Вы не авторизованы!",
+                },
+                status=401,
             )
-        if Review.objects.filter(author_id=user).first():
+        if not content:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error_code": 2,
+                    "error_msg": "Напишите текст отзыва.",
+                },
+                status=400,
+            )
+        if Review.objects.filter(author_id=user).exists():
             return JsonResponse(
                 {
                     "success": False,
@@ -35,8 +56,11 @@ class ReviewView(ListView):
         return context
 
 
+@require_POST
 def check_left_review(request):
-    if request.method == "POST":
-        if Review.objects.filter(author_id=get_user(request)).first():
-            return JsonResponse({"success": True})
+    user = get_user(request)
+    if not user.is_authenticated:
         return JsonResponse({"success": False})
+    return JsonResponse(
+        {"success": Review.objects.filter(author_id=user).exists()}
+    )

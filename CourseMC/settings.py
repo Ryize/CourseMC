@@ -26,11 +26,15 @@ SOCIAL_AUTH_VK_OAUTH2_SECRET = (
     "ab825789ab825789ab82578950abfb048aaab82ab825789cac22c88943e5f898833038e"
 )
 LOGIN_REDIRECT_URL = "/"
+ACCOUNT_AUTHENTICATION_METHOD = "username_email"
+
+# Preserve the primary key type used by the existing Django 3.2 migrations.
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["coursemc.ru", "www.coursemc.ru", "localhost", "127.0.0.1"]
 
 # Application definition
 
@@ -42,7 +46,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
-    "social_django",
+    "CourseMC.apps.LocalizedPythonSocialAuthConfig",
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
@@ -62,27 +66,24 @@ INSTALLED_APPS = [
     'certificate.apps.CertificateConfig',
     'interview.apps.InterviewConfig',
     'codereview.apps.CodereviewConfig',
-    'statistic.apps.StatisticConfig'
+    'ai_assistant.apps.AiAssistantConfig',
 ]
 
 MIDDLEWARE = [
     "CourseMC.middleware.FilterIPMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "CourseMC.middleware.LastSessionMiddleware",
     "CourseMC.middleware.IPVisitorsMiddleware",
 ]
 
 ROOT_URLCONF = "CourseMC.urls"
 
-TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                            "templates")
+TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -135,6 +136,7 @@ AUTHENTICATION_BACKENDS = (
     "social_core.backends.vk.VKOAuth2",  # бекенд авторизации через ВКонтакте
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
+    "Course.auth_backends.StudentEmailAuthenticationBackend",
     # бекенд классической аутентификации, чтобы работала авторизация через обычный логин и пароль
 )
 
@@ -170,8 +172,7 @@ CKEDITOR_CONFIGS = {
                     "Redo",
                 ],
             },
-            {"name": "editing",
-             "items": ["Find", "Replace", "-", "SelectAll"]},
+            {"name": "editing", "items": ["Find", "Replace", "-", "SelectAll"]},
             {
                 "name": "forms",
                 "items": [
@@ -237,8 +238,7 @@ CKEDITOR_CONFIGS = {
                 ],
             },
             "/",
-            {"name": "styles",
-             "items": ["Styles", "Format", "Font", "FontSize"]},
+            {"name": "styles", "items": ["Styles", "Format", "Font", "FontSize"]},
             {"name": "colors", "items": ["TextColor", "BGColor"]},
             {"name": "tools", "items": ["Maximize", "ShowBlocks"]},
             {"name": "about", "items": ["About"]},
@@ -252,8 +252,7 @@ CKEDITOR_CONFIGS = {
                 ],
             },
         ],
-        "toolbar": "YourCustomToolbarConfig",
-        # put selected toolbar config here
+        "toolbar": "YourCustomToolbarConfig",  # put selected toolbar config here
         "toolbarGroups": [
             {"name": "document", "groups": ["mode", "document", "doctools"]}
         ],
@@ -287,6 +286,11 @@ CKEDITOR_CONFIGS = {
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
+PRIVATE_SOLUTION_MEDIA_ROOT = os.path.join(
+    BASE_DIR,
+    "private_media",
+    "lesson_solutions",
+)
 
 CKEDITOR_UPLOAD_PATH = "uploads/"
 
@@ -319,15 +323,3 @@ STATICFILES_DIRS = [
 APPEND_SLASH = False
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
-
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# Вместо CompressedManifestStaticFilesStorage
-STORAGES = {
-            "staticfiles": {
-                        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
-                            },
-            }
-
-
-DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'

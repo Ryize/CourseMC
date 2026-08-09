@@ -1,8 +1,10 @@
+import random
 from urllib.parse import unquote
 
 from django.contrib.auth.models import User
 from django.http import JsonResponse
-from rest_framework.generics import GenericAPIView
+from rest_framework import status
+from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -17,7 +19,14 @@ from .serializers import (LearnGroupListSerializer, ScheduleListSerializer,
                           ClassesTimetableListSerializer,
                           ApplicationsForTrainingSerializer,
                           PaymentAmountSerializer, MissingSerializer,
-                          ProjectForReviewSerializer)
+                          ProjectForReviewSerializer,
+                          InterviewQuestionCategorySerializer, InterviewQuestionSerializer,
+                          QuestionAnswerSerializer)
+from interview.models import InterviewQuestionCategory, InterviewQuestion
+
+from ai_assistant.models import QuestionAnswer
+
+from ai_assistant.interview import InterviewThisOutOfOpenAI
 
 
 class ScheduleViewSet(APIView):
@@ -267,3 +276,140 @@ class ProjectForReviewView(GenericAPIView):
         reviews = ProjectForReview.objects.filter(status=False).all()
         serialize = ProjectForReviewSerializer(reviews, many=True)
         return JsonResponse({'reviews': serialize.data})
+
+
+class InterviewQuestionCategoryViewSet(APIView):
+    """
+    Список категорий вопросов.
+    """
+
+    def get(self, request):
+        """
+        Возвращает в виде Response список всех категорий
+        """
+        categories = InterviewQuestionCategory.objects.all()
+        serializer = InterviewQuestionCategorySerializer(categories, many=True)
+        return Response({'categories': serializer.data})
+
+
+class InterviewQuestionViewSet(APIView):
+    """
+    Список всех вопросов.
+    """
+
+    def get(self, request):
+        """
+        Возвращает в виде Response список всех вопросов в зависимости от запроса
+        """
+
+        category_title = request.query_params.get('category')
+        amount = request.query_params.get('amount')
+        level = request.query_params.get('level')
+
+        if not category_title or not amount:
+            return Response({"error": "Отсутствует параметр «категория» или «количество»"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            amount = int(amount)
+            if not (1 <= amount <= 50):
+                return Response({"error": "'Количество' должно быть от 1 до 50"},
+                                status=status.HTTP_400_BAD_REQUEST)
+        except ValueError:
+            return Response({"error": "'Количество' должен быть числом"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        category = get_object_or_404(InterviewQuestionCategory, title=category_title)
+
+        questions = InterviewQuestion.objects.filter(theme=category)
+
+        if category_title.lower() == 'python' and level:
+            try:
+                min_level, max_level = map(int, level.split('-'))
+
+                # Проверка диапазона
+                if not (1 <= min_level <= 10 and 1 <= max_level <= 10 and min_level <= max_level):
+                    return Response({"error": "'Сложность' должен быть в диапазоне 1 до 10"},
+                                    status=status.HTTP_400_BAD_REQUEST)
+                questions = questions.filter(complexity__range=(min_level, max_level))
+            except ValueError:
+                return Response({"error": "'Сложность' должен быть в формате «мин-макс» с допустимыми целыми числами"},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        questions = questions.order_by('?')[:amount]
+
+        serializer = InterviewQuestionSerializer(questions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        
+class ClassesTimetableWeekdayView(GenericAPIView):
+    """
+    Занятия в указанный день недели
+    """
+
+    def get(self, request, weekday: str):
+        """
+        Возвращает в виде JsonResponse список занятий в указанный день недели.
+        Формат дня недели: Понедельник, Вторник, Среда и т.д.
+        """
+        if weekday.find('%') == 0:
+            weekday = unquote(weekday, 'utf-8')
+        classes_timetable = ClassesTimetable.objects.filter(
+            weekday=weekday
+        ).all()
+        serialize = ClassesTimetableListSerializer(
+            classes_timetable, many=True
+        )
+        return JsonResponse({'timetables': serialize.data})
+        
+        
+
+class GetQuestionView(APIView):
+    """
+    Представление для получения случайного вопроса
+    """
+    def get(self, request):
+        """
+        Обрабатывает GET запрос для получения случайного вопроса
+        """
+        #
+        question = QuestionAnswer.objects.order_by('?').first()
+        if question:
+            serializer = QuestionAnswerSerializer(question)
+            return Response(serializer.data)  # Возвращаем сериализованные данные
+        else:
+            return Response({"error": "Нет доступных вопросов"}, status=status.HTTP_404_NOT_FOUND)
+
+
+# Представление для проверки ответа пользователя
+class CheckAnswerView(APIView):
+    """
+    Представление для проверки ответа пользователя.
+    """
+    def get(self, request):
+        """
+        Обрабатывает GET запрос для проверки ответа пользователя.
+        """
+        # Получаем ответ пользователя и текст вопроса из запроса
+        user_answer = request.query_params.get('answer')
+        question_text = request.query_params.get('question')
+
+        if user_answer.find('%') == 0:
+           user_answer = unquote(user_answer.upper(), 'utf-8')
+        if question_text.find('%') == 0:
+            question_text = unquote(question_text.upper(), 'utf-8')
+        # Как разбить список
+        try:
+            # Создаем объект InterviewThisOutOfOpenAI для оценки ответа
+            interview = InterviewThisOutOfOpenAI(
+                question=question_text,
+                user_question=user_answer
+            )
+
+            # Получаем оценку от OpenAI API
+            score = interview.get_response()
+
+            return Response({'score': score})  # Возвращаем оценку ответа пользователя
+
+        except QuestionAnswer.DoesNotExist:
+            return Response({'error': 'Вопрос не найден'}, status=status.HTTP_404_NOT_FOUND)

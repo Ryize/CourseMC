@@ -1,4 +1,2 @@
-import os
-
-SECRET_KEY = os.getenv('SECRET_KEY')
-SHOP_ID = os.getenv('SHOP_ID')
+SECRET_KEY = 'live_5Zj3vmnudl9EHm7SW4iuNUQk0Hh0izHhaODyFk2wJe4'
+SHOP_ID = '986660'

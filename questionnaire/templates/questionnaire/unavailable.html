@@ -1,0 +1,13 @@
+{% extends 'questionnaire/template/base.html' %}
+
+{% block title %}Опрос недоступен — CourseMC{% endblock %}
+
+{% block content %}
+    <section class="questionnaire-card questionnaire-unavailable">
+        <p class="questionnaire-kicker">Опрос недоступен</p>
+        <h1>{{ error_message }}</h1>
+        <p>Проверь ссылку или попроси автора прислать актуальный номер опроса.</p>
+        <a class="questionnaire-link-button questionnaire-link-button--secondary"
+           href="{% url 'questionnaireIndex' %}">К опроснику</a>
+    </section>
+{% endblock %}

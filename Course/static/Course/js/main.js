@@ -98,6 +98,16 @@ function activeDropDownNav(num) {
 	}
 }
 
+document.addEventListener("click", (event) => {
+	const clickedDropdown = event.target.closest("header .drop");
+	const clickedTrigger = event.target.closest("[data-dropdown-trigger]");
+	if (!clickedDropdown && !clickedTrigger) {
+		drop.forEach((dropdownItem) => {
+			dropdownItem.classList.remove("active");
+		});
+	}
+}, true);
+
 function activeFilter() {
 	if (filterDropdown) {
 		filterDropdown.classList.toggle("active");

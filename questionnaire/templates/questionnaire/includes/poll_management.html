@@ -1,0 +1,17 @@
+<section class="questionnaire-poll-management" aria-labelledby="poll-management-title">
+    {% if quiz.is_archived %}
+        <h3 id="poll-management-title">Опрос в архиве</h3>
+        <p>Участники не могут открыть опрос. Все вопросы и результаты сохранены.</p>
+        <form method="post" action="{% url 'restore_poll' quiz.pk %}">
+            {% csrf_token %}
+            <button class="questionnaire-button" type="submit">Вернуть в активные</button>
+        </form>
+    {% else %}
+        <h3 id="poll-management-title">Настройки опроса</h3>
+        <p>Архивный опрос останется у тебя со всеми результатами, но участники больше не смогут его пройти.</p>
+        <form method="post" action="{% url 'archive_poll' quiz.pk %}">
+            {% csrf_token %}
+            <button class="questionnaire-button questionnaire-button--danger" type="submit">Архивировать опрос</button>
+        </form>
+    {% endif %}
+</section>

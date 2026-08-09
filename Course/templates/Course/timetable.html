@@ -7,15 +7,20 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Расписания - CourseMC</title>
-    <link rel="stylesheet" href="{% static 'Course/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'Course/css/style.css' %}?v=20260805-1">
     <link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}"
           type="image/x-icon">
+    <script src="{% static 'Course/js/schedule.js' %}?v=20260729-4" defer></script>
 </head>
 <style>
     html,
     body {
         max-width: 100%;
         overflow-x: hidden;
+    }
+
+    li {
+        margin-top: 0;
     }
 </style>
 
@@ -41,78 +46,35 @@
                 </div>
 
                 <div class="dropdown-filter">
-                    <div onclick="activeFilterItem(0)" class="active">Все</div>
-                    <div onclick="activeFilterItem(1)">Новая тема</div>
-                    <div onclick="activeFilterItem(2)">Ключевая тема</div>
+                    <div>
+                        <button type="button"
+                                data-schedule-filter
+                                data-url="{% url 'schedule' %}">Все</button>
+                    </div>
+                    <div>
+                        <button type="button"
+                                data-schedule-filter
+                                data-url="?lesson_type=Новая+тема">Новая тема</button>
+                    </div>
+                    <div>
+                        <button type="button"
+                                data-schedule-filter
+                                data-url="?lesson_type=Ключевой+урок">Ключевая тема</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     <h3> Кол-во пропусков: <span>{{ absences }}</span></h3>
-    <div class="list"></div>
-
-    {% if schedules|length > 20  %}
-    <nav class="pagination-container">
-        <button class="back">
-            <ion-icon name="chevron-back-outline"></ion-icon>
-        </button>
-        <div id="pagination-numbers"></div>
-        <button class="next">
-            <ion-icon name="chevron-forward-outline"></ion-icon>
-        </button>
-    </nav>
-    {% endif %}
-</section>
-
-<script>
-    const box = document.querySelector('.list')
-
-    const itemsMain = [
-        {% for schedule in schedules %}
-            {
-                lesson: {{ forloop.counter }},
-                name: '{{ schedule.theme|safe }}',
-                content: `
-        <div>
-            {{ schedule.lesson_materials|safe }}
+    {% if messages %}
+        <div class="schedule-messages" aria-live="polite">
+            {% for message in messages %}
+                <p class="schedule-message {{ message.tags }}">{{ message }}</p>
+            {% endfor %}
         </div>
-    `,
-                {% if schedule.lesson_type == 'Новая тема' %}
-                    mark: 'new',
-                {% elif schedule.lesson_type == 'Ключевой урок' %}
-                    mark: 'primary',
-                {% endif %}
-            },
-        {% endfor %}
-    ].reverse()
-
-    function setMark(elem) {
-        if (elem === undefined) return ''
-        if (elem === 'new') return 'Новая тема'
-        if (elem === 'primary') return 'Ключевая тема'
-    }
-
-    box.innerHTML = itemsMain.map(item => (
-        `<div id="dropdown" class="item ${item.mark != undefined ? item.mark : ''}">
-                <div class="select" onclick="activeDropDown(${itemsMain.indexOf(item)})">
-                    <div>
-                        <p>${item.lesson} урок</p>
-                        <h3>${item.name}</h3>
-                        ${item.mark !== undefined ? `<div class='mark'>
-                            <span></span>
-                            <p>${setMark(item.mark)}</p>
-                        </div>` : ''}
-                    </div>
-
-                    <ion-icon name="chevron-down-outline"></ion-icon>
-                </div>
-
-                <div class="dropdown">
-                    ${item.content}
-                </div>
-            </div>`
-    )).join(' ')
-</script>
+    {% endif %}
+    {% include 'Course/includes/schedule_results.html' %}
+</section>
 {% include 'template/footer.html' %}
 </body>
 </html>

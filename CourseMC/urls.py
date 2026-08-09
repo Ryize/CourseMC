@@ -16,13 +16,12 @@ urlpatterns = [
     path('questionnaire/', include('questionnaire.urls')),
     path('blog/', include('blog.urls')),
     path('interpreter/', include('py_interpreter.urls')),
-    # path('chatgpt/', include('chatgpt.urls')),  # Не используется
+    # path('chatgpt/', include('chatgpt.urls')),
     path('billing/', include('billing.urls')),
     path('todo/', include('todolist.urls')),
     path('certificate/', include('certificate.urls')),
     path('interview/', include('interview.urls')),
     path('code-review/', include('codereview.urls')),
-    path('statistic/', include('statistic.urls')),
     path('<path:url>/', page_not_found_view),
 ]
 
@@ -30,4 +29,4 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns += staticfiles_urlpatterns()
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-urlpatterns.append(path('<path:url>', page_not_found_view))
+urlpatterns.append( path('<path:url>', page_not_found_view))

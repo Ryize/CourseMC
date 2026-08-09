@@ -32,9 +32,6 @@
                 сертификат</a></li>
             <li><a href="{% url 'billing_index' %}">Оплатить занятия</a></li>
         </ul>
-        <li onclick="activeDropDownNavMob(2)" class="action">Контакты
-            <ion-icon name="chevron-down-outline"></ion-icon>
-        </li>
         <ul>
             <li><a href="https://vk.com/matvey.chekashov">ВК</a></li>
             <li><a href="https://t.me/mchekashov">Телеграм</a></li>
@@ -52,7 +49,7 @@
 </div>
 
 <footer class='change'>
-    <p>© 2023 CourseMC – Обучение Python разработке</p>
+    <p>© {% now "Y" %} CourseMC – Обучение Python разработке</p>
     <div onclick="changeTheme()">
         <ion-icon name="sunny"></ion-icon>
         <ion-icon name="moon"></ion-icon>
@@ -76,9 +73,9 @@
                         {% csrf_token %}
                         <!-- {{ form.as_p }} -->
                         <div class="input-box">
-                            <label for="id_login">Имя пользователя:</label>
+                            <label for="id_login">Логин или e-mail:</label>
                             <input type="text" name="login"
-                                   placeholder="Имя пользователя"
+                                   placeholder="Логин или e-mail"
                                    autocomplete="username" maxlength="150"
                                    required="" id="id_login">
                         </div>
@@ -119,4 +116,4 @@
         src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
 <script src="{% static 'Course/js/gsap.min.js' %}"></script>
 <script src="{% static 'Course/js/ScrollTrigger.min.js' %}"></script>
-<script src="{% static 'Course/js/main.js' %}"></script>
+<script src="{% static 'Course/js/main.js' %}?v=20260808-2"></script>

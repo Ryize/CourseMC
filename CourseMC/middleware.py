@@ -1,24 +1,6 @@
 from django.core.exceptions import PermissionDenied
-from django.utils import timezone
 
-from Course.models import Student
 from security.models import IPVisitors, BlockedIPAddress
-
-
-class LastSessionMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-
-        response = self.get_response(request)
-        if request.user.is_authenticated:
-            student = Student.objects.filter(name=request.user.username).first()
-            if student:
-                student.last_session = timezone.now()
-                student.save()
-
-        return response
 
 
 class IPVisitorsMiddleware:
@@ -27,18 +9,25 @@ class IPVisitorsMiddleware:
 
     def __call__(self, request):
         ip = request.META.get('REMOTE_ADDR')
-        user = request.user
-        visitors = IPVisitors.objects.filter(ip=ip).all()
-        if visitors:
-            visitors.delete()
-        if user.is_authenticated:
-            IPVisitors.objects.create(ip=ip, user=user)
-        else:
-            IPVisitors.objects.create(ip=ip)
+        if ip:
+            user_id = (
+                request.user.pk if request.user.is_authenticated else None
+            )
+            visitor = (
+                IPVisitors.objects
+                .filter(ip=ip)
+                .only('id', 'user_id')
+                .first()
+            )
 
-        response = self.get_response(request)
+            if visitor is None:
+                IPVisitors.objects.create(ip=ip, user_id=user_id)
+            elif visitor.user_id != user_id:
+                IPVisitors.objects.filter(pk=visitor.pk).update(
+                    user_id=user_id
+                )
 
-        return response
+        return self.get_response(request)
 
 
 class FilterIPMiddleware:
@@ -46,12 +35,8 @@ class FilterIPMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        blocked_ips = BlockedIPAddress.objects.all()
         ip = request.META.get('REMOTE_ADDR')
-        for blocked_ip in blocked_ips:
-            if ip == blocked_ip.ip:
-                raise PermissionDenied
+        if ip and BlockedIPAddress.objects.filter(ip=ip).exists():
+            raise PermissionDenied
 
-        response = self.get_response(request)
-
-        return response
+        return self.get_response(request)

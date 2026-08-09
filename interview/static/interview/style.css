@@ -187,6 +187,170 @@ input[type="number"]::-webkit-inner-spin-button {
     font-family: "Roboto", sans-serif;
 }
 
+body.interview-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+body.interview-page header {
+    background-color: #fff;
+    height: 60px;
+    top: 0;
+    padding-top: 10px;
+}
+
+body.interview-page.black header {
+    background-color: var(--color-dark);
+}
+
+body.interview-page h1 {
+    margin-top: 100px;
+    font-size: 52px;
+}
+
+body.interview-page .interview-content {
+    flex: 1 0 auto;
+    width: 100%;
+}
+
+body.interview-page #button {
+    width: 270px;
+    height: 40px;
+    padding: 0 20px;
+    margin: 50px auto 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #1ECD97;
+    border-radius: 40px;
+    background: #fff;
+    color: #1ECD97;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    transform: none;
+    transition: all 0.25s ease;
+}
+
+body.interview-page #button:hover {
+    background: #1ECD97;
+    color: #fff;
+    transform: none;
+}
+
+body.interview-page #button:active {
+    letter-spacing: 2px;
+}
+
+body.interview-page footer {
+    flex: 0 0 auto;
+}
+
+/* Старые стили интервью центрируют весь body. В хедере это недопустимо. */
+body.interview-page header .drop,
+body.interview-page header .drop ul,
+body.interview-page header .drop li,
+body.interview-page header .drop a {
+    text-align: left;
+}
+
+body.interview-questions-page form {
+    max-width: 75%;
+}
+
+body.interview-questions-page .question-search {
+    cursor: pointer;
+}
+
+body.interview-questions-page .interview-question {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: start;
+    column-gap: 8px;
+    margin-bottom: 16px;
+    font-size: 125%;
+    line-height: 1.45;
+}
+
+body.interview-questions-page .interview-question-content {
+    min-width: 0;
+}
+
+body.interview-questions-page .interview-question-toggle {
+    display: inline;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: inherit;
+    letter-spacing: 0;
+    text-align: left;
+    vertical-align: baseline;
+    transform: none;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+body.interview-questions-page .interview-question-toggle:hover {
+    background: transparent;
+    color: #5668de;
+    text-decoration: none;
+    transform: none;
+}
+
+body.interview-questions-page .interview-question-toggle:focus-visible {
+    outline: 2px solid #6875ef;
+    outline-offset: 3px;
+    background: transparent;
+    color: #5668de;
+}
+
+body.interview-questions-page .interview-question-toggle.is-answered,
+body.interview-questions-page .interview-question-toggle.is-answered:hover {
+    color: #15966f;
+    text-decoration: none;
+    cursor: default;
+}
+
+body.interview-questions-page .question-action-status {
+    display: inline;
+    margin-left: 6px;
+    font-size: 13px;
+    color: #15966f;
+    white-space: nowrap;
+}
+
+body.interview-questions-page .question-action-status:not(:empty)::before {
+    content: '✓';
+    margin-right: 3px;
+}
+
+body.interview-questions-page .interview-question-toggle:disabled {
+    cursor: wait;
+    opacity: 1;
+}
+
+body.interview-page.black .interview-question-toggle:hover,
+body.interview-page.black .interview-question-toggle:focus-visible {
+    color: #8c97ff;
+}
+
+body.interview-page .range-block {
+    box-shadow: rgba(0, 0, 0, 0.16) 0 10px 36px 0,
+                rgba(0, 0, 0, 0.06) 0 0 0 1px;
+    padding: 10px;
+    border-radius: 10px;
+}
+
 button {
     outline: none;
     height: 40px;
@@ -211,52 +375,4 @@ button:hover {
 
 button:active {
     letter-spacing: 2px;
-}
-
-.onclic {
-    width: 40px;
-    border-color: #bbbbbb;
-    border-width: 3px;
-    font-size: 0;
-    border-left-color: #1ECD97;
-    -webkit-animation: rotating 2s 0.25s linear infinite;
-    animation: rotating 2s 0.25s linear infinite;
-}
-
-.onclic:after {
-    content: "";
-}
-
-.onclic:hover {
-    color: #1ECD97;
-    background: white;
-}
-
-.validate {
-    font-size: 13px;
-    color: white;
-    background: #1ECD97;
-}
-
-.validate:after {
-    font-family: "FontAwesome";
-    content: "";
-}
-
-@-webkit-keyframes rotating {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-@keyframes rotating {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
 }

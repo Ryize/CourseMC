@@ -68,11 +68,11 @@
                 {
                     id: {{ post.pk }},
                     categories: [{% for category in post.categories.all %}'{{ category|escapejs }}',{% endfor %}],
-                    name: '{{post.title}}',
-                    text: '{{post.description}}',
-                    autor: '{{post.author}}',
-                    date: '{{post.created_at}}',
-                    image: '{{post.image.url}}',
+                    name: '{{ post.title|escapejs }}',
+                    text: '{{ post.description|escapejs }}',
+                    autor: '{{ post.author|escapejs }}',
+                    date: '{{ post.created_at|escapejs }}',
+                    image: '{{ post.image.url|escapejs }}',
                     url: 'onclick="document.location=`{% url 'post_view' post.pk %}`"'
                 },
             {% endif %}

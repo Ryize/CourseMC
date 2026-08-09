@@ -15,21 +15,16 @@ class OnlyMyStudentMixin:
     Позволяет получать в поле user (ForeignKey связанное со Student) только
     своих студентов и которых идут занятия
     """
-
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "user" and not request.user.is_superuser:
-            teacher = Student.objects.filter(
-                name=request.user.username).first()
-            kwargs["queryset"] = Student.objects.filter(is_learned=True,
-                                                        groups__teacher=teacher).order_by(
-                '-pk')
+            teacher = Student.objects.filter(name=request.user.username).first()
+            kwargs["queryset"] = Student.objects.filter(is_learned=True, groups__teacher=teacher).order_by('-pk')
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         if not request.user.is_superuser:
-            queryset = queryset.filter(
-                user__groups__teacher__name=request.user.username)
+            queryset = queryset.filter(user__groups__teacher__name=request.user.username)
         return queryset
 
 
@@ -57,13 +52,18 @@ class UserListFilter(admin.SimpleListFilter):
             [i][1] - удобочитаемое имя параметра, которое появится на правой
             боковой панели.
         """
-        students = set(
-            [chat.user for chat in InformationPayments.objects.all() if
-             chat.user.is_learned])
-        result_data = []
-        for student in students:
-            result_data.append((student.name, student.name,))
-        return tuple(result_data)
+        students = {
+            payment.user
+            for payment in InformationPayments.objects.select_related('user')
+            if payment.user.is_learned
+        }
+        return tuple(
+            (student.name, student.name)
+            for student in sorted(
+                students,
+                key=lambda student: (student.name.casefold(), student.pk),
+            )
+        )
 
     def queryset(self, request, queryset):
         """
@@ -137,8 +137,7 @@ class EducationCostAdmin(OnlyMyStudentMixin, admin.ModelAdmin):
         queryset = super().get_queryset(request)
 
         if not request.user.is_superuser:
-            queryset = queryset.filter(
-                user__groups__teacher__name=request.user.username)
+            queryset = queryset.filter(user__groups__teacher__name=request.user.username)
 
         # Значения debt из _get_data для каждой записи
         debt_values_list = [self._get_debt(obj) for obj in queryset]
@@ -174,11 +173,14 @@ class EducationCostAdmin(OnlyMyStudentMixin, admin.ModelAdmin):
         student = Student.objects.filter(name=obj.user.name).first()
         group = student.groups
         if student:
-            cost_one_lesson = EducationCost.objects.filter(
-                user=student).first()
-            number_classes = ClassesTimetable.objects.filter(
-                group=group).count()
-            return cost_one_lesson.amount * number_classes * 4
+            try:
+                cost_one_lesson = EducationCost.objects.filter(
+                    user=student).first()
+                number_classes = ClassesTimetable.objects.filter(
+                    group=group).count()
+                return cost_one_lesson.amount * number_classes * 4
+            except:
+                return '?'
 
     def calculate_amount(self, request, queryset):
         """

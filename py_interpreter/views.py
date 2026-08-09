@@ -1,10 +1,7 @@
 from django.shortcuts import render
+from django.views.decorators.http import require_GET
 
-from reviews.models import Review
 
-
+@require_GET
 def py_interpreter(request):
-    data = {
-        'reviews_count': Review.objects.all().count()
-    }
-    return render(request, 'py_interpreter/py_interpreter.html', data)
+    return render(request, 'py_interpreter/py_interpreter.html')
