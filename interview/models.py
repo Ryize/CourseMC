@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -35,3 +36,55 @@ class InterviewQuestion(models.Model):
         verbose_name = 'Вопрос'
         verbose_name_plural = 'Вопросы'
         ordering = ('-percent',)
+
+
+class InterviewQuestionProgress(models.Model):
+    """Личная история показа вопросов для тренировки собеседования."""
+
+    class Status(models.TextChoices):
+        UNRATED = 'unrated', 'Не оценен'
+        ANSWERED = 'answered', 'Ответил'
+        REPEAT = 'repeat', 'Повторить'
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='interview_question_progress',
+        verbose_name='Пользователь',
+    )
+    question = models.ForeignKey(
+        InterviewQuestion,
+        on_delete=models.CASCADE,
+        related_name='progress_entries',
+        verbose_name='Вопрос',
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.REPEAT,
+        verbose_name='Статус',
+    )
+    last_shown_at = models.DateTimeField(verbose_name='Последний показ')
+    next_available_at = models.DateTimeField(
+        db_index=True,
+        verbose_name='Можно показать снова',
+    )
+    shown_count = models.PositiveIntegerField(default=1, verbose_name='Показов')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создан')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Обновлён')
+
+    class Meta:
+        verbose_name = 'Прогресс вопроса собеседования'
+        verbose_name_plural = 'Прогресс вопросов собеседования'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'question'),
+                name='interview_progress_user_question_uniq',
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=('user', 'status', 'next_available_at'),
+                name='intrv_prog_user_stat_idx',
+            ),
+        ]

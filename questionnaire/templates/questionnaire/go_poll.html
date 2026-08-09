@@ -1,22 +1,24 @@
 {% extends 'questionnaire/template/base.html' %}
-{% load static %}
+
+{% block title %}Пройти опрос — CourseMC{% endblock %}
+
 {% block content %}
-    <title>Пройти опрос - YourQuestionnaire</title>
-    <link rel="stylesheet" href="{% static 'css/form.css' %}">
-
-    <form class="decor" method="post" action="{% url 'go_poll' %}">
-        <div class="form-left-decoration"></div>
-        <div class="form-right-decoration"></div>
-        <div class="circle"></div>
-        <div class="form-inner">
-            <h3>Пройти опрос</h3>
+    <section class="questionnaire-card questionnaire-form-card questionnaire-form-card--narrow">
+        <p class="questionnaire-kicker">Прохождение опроса</p>
+        <h1>Открой опрос</h1>
+        <p>Вставь номер, который прислал автор. Если у тебя есть ссылка, просто открой её — номер вводить не понадобится.</p>
+        <form class="questionnaire-form" method="post">
             {% csrf_token %}
-            <br>
-            <label>Введите id опроса:</label>
-                <input oninput="this.value = this.value.replace(/[^0-9]/g, '');" type="text" placeholder="Введите id опроса" name="poll_id" required>
-            <input type="submit" value="Перейти">
-        </div>
-    </form>
-
-    </div>
+            <div class="questionnaire-field">
+                <label for="poll-id">Номер опроса</label>
+                <input id="poll-id" type="text" inputmode="numeric" pattern="[0-9]*"
+                       placeholder="Например, 128" name="poll_id" required>
+            </div>
+            <div class="questionnaire-form-actions">
+                <button class="questionnaire-button questionnaire-button--warm" type="submit">Начать</button>
+                <a class="questionnaire-link-button questionnaire-link-button--secondary"
+                   href="{% url 'questionnaireIndex' %}">Назад</a>
+            </div>
+        </form>
+    </section>
 {% endblock %}

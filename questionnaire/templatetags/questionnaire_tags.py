@@ -1,7 +1,19 @@
 from collections import Counter
 
 from django import template
+from django.utils.html import conditional_escape
+from django.utils.safestring import mark_safe
+
 register = template.Library()
+
+
+@register.filter(name="questionnaire_text")
+def questionnaire_text(value):
+    """Экранирует пользовательский текст, сохраняя старые переносы <br>."""
+    escaped = conditional_escape(value or "")
+    for old_break in ("&lt;br&gt;", "&lt;br/&gt;", "&lt;br /&gt;"):
+        escaped = escaped.replace(old_break, "<br>")
+    return mark_safe(escaped.replace("\n", "<br>"))
 
 
 @register.filter(name="statistic")

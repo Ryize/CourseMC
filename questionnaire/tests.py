@@ -54,6 +54,98 @@ class QuestionnaireAccessTests(TestCase):
         self.assertEqual(post_response.status_code, 404)
         self.assertFalse(Question.objects.filter(question="Чужой вопрос").exists())
 
+    def test_answer_builder_rejects_question_from_another_quiz(self):
+        other_quiz = Quiz.objects.create(
+            title="Другой опрос",
+            description="Описание",
+            topic="Django",
+            lifetime=timezone.now() + timedelta(days=1),
+            user=self.owner,
+        )
+        other_question = Question.objects.create(
+            question="Чужой вопрос",
+            quiz=other_quiz,
+        )
+        self.client.force_login(self.owner)
+
+        response = self.client.post(
+            reverse("create_answer", args=(self.quiz.pk,)),
+            {
+                "answer": "Неверный вариант",
+                "question": other_question.pk,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            AnswerQuestion.objects.filter(answer="Неверный вариант").exists()
+        )
+
+    def test_internal_pages_use_the_common_coursemc_header(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.get(reverse("create_poll"))
+
+        self.assertContains(response, "CourseMC")
+        self.assertContains(response, "Расписания")
+        self.assertNotContains(response, "navbar-expand-lg")
+
+    def test_only_owner_can_archive_a_poll(self):
+        self.client.force_login(self.other)
+
+        response = self.client.post(reverse("archive_poll", args=(self.quiz.pk,)))
+
+        self.assertEqual(response.status_code, 404)
+        self.quiz.refresh_from_db()
+        self.assertFalse(self.quiz.is_archived)
+
+
+class QuestionnaireArchiveTests(TestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user("owner", password="password")
+        self.participant = User.objects.create_user(
+            "participant",
+            password="password",
+        )
+        self.quiz = Quiz.objects.create(
+            title="Опрос в архив",
+            description="Описание",
+            topic="Python",
+            lifetime=timezone.now() + timedelta(days=1),
+            user=self.owner,
+        )
+
+    def test_archiving_hides_poll_from_active_list_and_closes_it(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.post(reverse("archive_poll", args=(self.quiz.pk,)))
+
+        self.assertRedirects(response, reverse("my_poll"))
+        self.quiz.refresh_from_db()
+        self.assertTrue(self.quiz.is_archived)
+        self.assertIsNotNone(self.quiz.archived_at)
+
+        dashboard = self.client.get(reverse("my_poll"))
+        self.assertEqual(list(dashboard.context["my_polls"]), [])
+        self.assertEqual(list(dashboard.context["archived_polls"]), [self.quiz])
+
+        self.client.force_login(self.participant)
+        closed_poll = self.client.get(reverse("take_poll", args=(self.quiz.pk,)))
+        self.assertEqual(closed_poll.status_code, 404)
+
+    def test_owner_can_restore_archived_poll(self):
+        self.quiz.is_archived = True
+        self.quiz.archived_at = timezone.now()
+        self.quiz.save(update_fields=("is_archived", "archived_at"))
+        self.client.force_login(self.owner)
+
+        response = self.client.post(reverse("restore_poll", args=(self.quiz.pk,)))
+
+        self.assertRedirects(response, reverse("my_poll"))
+        self.quiz.refresh_from_db()
+        self.assertFalse(self.quiz.is_archived)
+        self.assertIsNone(self.quiz.archived_at)
+
 
 class QuestionnaireFlowTests(TestCase):
     def setUp(self):
@@ -119,6 +211,42 @@ class QuestionnaireFlowTests(TestCase):
         self.assertContains(first_response, "Первый вопрос")
         self.assertContains(second_response, "Второй вопрос")
         self.assertContains(back_response, "Первый вопрос")
+
+    def test_back_button_returns_to_previous_question_without_saving_current(self):
+        url = reverse("take_poll", args=(self.quiz.pk,))
+        self.client.post(
+            url,
+            {
+                "number_question": self.question_one.pk,
+                "answers": self.answer_one.pk,
+            },
+        )
+
+        response = self.client.post(
+            url,
+            {
+                "number_question": self.question_two.pk,
+                "previous_question": self.question_one.pk,
+            },
+        )
+
+        self.assertContains(response, "Первый вопрос")
+        self.assertFalse(
+            UserAnswer.objects.filter(
+                quiz=self.quiz,
+                question=self.question_two,
+                user=self.participant,
+            ).exists()
+        )
+
+    def test_question_text_allows_legacy_breaks_but_escapes_html(self):
+        self.question_one.question = "Первая строка<br><script>bad()</script>"
+        self.question_one.save(update_fields=("question",))
+
+        response = self.client.get(reverse("take_poll", args=(self.quiz.pk,)))
+
+        self.assertContains(response, "Первая строка<br>", html=False)
+        self.assertContains(response, "&lt;script&gt;bad()&lt;/script&gt;", html=False)
 
     def test_answer_from_another_question_is_rejected(self):
         response = self.client.post(

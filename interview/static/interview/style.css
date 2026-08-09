@@ -249,17 +249,99 @@ body.interview-page footer {
     flex: 0 0 auto;
 }
 
+/* Старые стили интервью центрируют весь body. В хедере это недопустимо. */
+body.interview-page header .drop,
+body.interview-page header .drop ul,
+body.interview-page header .drop li,
+body.interview-page header .drop a {
+    text-align: left;
+}
+
 body.interview-questions-page form {
     max-width: 75%;
 }
 
-body.interview-questions-page form label {
-    cursor: auto;
-    font-size: 125%;
-}
-
 body.interview-questions-page .question-search {
     cursor: pointer;
+}
+
+body.interview-questions-page .interview-question {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: start;
+    column-gap: 8px;
+    margin-bottom: 16px;
+    font-size: 125%;
+    line-height: 1.45;
+}
+
+body.interview-questions-page .interview-question-content {
+    min-width: 0;
+}
+
+body.interview-questions-page .interview-question-toggle {
+    display: inline;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: inherit;
+    letter-spacing: 0;
+    text-align: left;
+    vertical-align: baseline;
+    transform: none;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+body.interview-questions-page .interview-question-toggle:hover {
+    background: transparent;
+    color: #5668de;
+    text-decoration: none;
+    transform: none;
+}
+
+body.interview-questions-page .interview-question-toggle:focus-visible {
+    outline: 2px solid #6875ef;
+    outline-offset: 3px;
+    background: transparent;
+    color: #5668de;
+}
+
+body.interview-questions-page .interview-question-toggle.is-answered,
+body.interview-questions-page .interview-question-toggle.is-answered:hover {
+    color: #15966f;
+    text-decoration: none;
+    cursor: default;
+}
+
+body.interview-questions-page .question-action-status {
+    display: inline;
+    margin-left: 6px;
+    font-size: 13px;
+    color: #15966f;
+    white-space: nowrap;
+}
+
+body.interview-questions-page .question-action-status:not(:empty)::before {
+    content: '✓';
+    margin-right: 3px;
+}
+
+body.interview-questions-page .interview-question-toggle:disabled {
+    cursor: wait;
+    opacity: 1;
+}
+
+body.interview-page.black .interview-question-toggle:hover,
+body.interview-page.black .interview-question-toggle:focus-visible {
+    color: #8c97ff;
 }
 
 body.interview-page .range-block {

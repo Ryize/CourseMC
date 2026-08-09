@@ -9,11 +9,12 @@
           content="width=device-width, initial-scale=1.0">
     <title>Вопросы для интервью</title>
     <link rel="stylesheet"
-          href="{% static 'interview/style.css' %}">
+          href="{% static 'interview/style.css' %}?v=20260808-4">
     <link rel="stylesheet"
-          href="{% static 'Course/css/style.css' %}">
+          href="{% static 'Course/css/style.css' %}?v=20260808-2">
     <link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}"
           type="image/x-icon">
+    <script src="{% static 'interview/questions.js' %}?v=20260808-2" defer></script>
 </head>
 
 <body class="interview-page interview-questions-page">
@@ -21,6 +22,7 @@
 <main class="interview-content">
     <h1>Вопросы для собеседования</h1>
     <form id="form">
+        {% csrf_token %}
         <div class="form-control">
             <input type="hidden"
                    value="{{ amount }}"
@@ -40,16 +42,27 @@
                     {% endif %}
                 {% endfor %}
             {% endif %}
-            <small>Нажми на номер вопроса, чтобы найти ответ в
-                Google</small><br><br>
+            <small>
+                Нажми на вопрос, если правильно ответил.<br>
+                Неотмеченные вопросы попадут на повторение.<br>
+                Нажатие на номер вопроса откроет поиск в Google.
+            </small><br><br>
             {% for i in question %}
-                <label title="{{ i.complexity }}">
+                <article class="interview-question" data-question-id="{{ i.pk }}">
                     <a class="question-search"
                        href="https://www.google.com/search?q=Python+{{ i.title|urlencode }}"
                        target="_blank"
                        rel="noopener noreferrer">{{ forloop.counter }})</a>
-                    {{ i.title }}
-                </label>
+                    <div class="interview-question-content">
+                        <button type="button"
+                                class="interview-question-toggle"
+                                title="Сложность: {{ i.complexity }}. Нажмите, если ответили на вопрос"
+                                aria-pressed="false"
+                                data-action="answered"
+                                data-url="{% url 'interview_question_progress' i.pk %}">{{ i.title }}</button>
+                        <span class="question-action-status" aria-live="polite"></span>
+                    </div>
+                </article>
             {% endfor %}
         </div>
 

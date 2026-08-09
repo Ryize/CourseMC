@@ -26,6 +26,7 @@ SOCIAL_AUTH_VK_OAUTH2_SECRET = (
     "ab825789ab825789ab82578950abfb048aaab82ab825789cac22c88943e5f898833038e"
 )
 LOGIN_REDIRECT_URL = "/"
+ACCOUNT_AUTHENTICATION_METHOD = "username_email"
 
 # Preserve the primary key type used by the existing Django 3.2 migrations.
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
@@ -135,6 +136,7 @@ AUTHENTICATION_BACKENDS = (
     "social_core.backends.vk.VKOAuth2",  # бекенд авторизации через ВКонтакте
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
+    "Course.auth_backends.StudentEmailAuthenticationBackend",
     # бекенд классической аутентификации, чтобы работала авторизация через обычный логин и пароль
 )
 
@@ -284,6 +286,11 @@ CKEDITOR_CONFIGS = {
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
+PRIVATE_SOLUTION_MEDIA_ROOT = os.path.join(
+    BASE_DIR,
+    "private_media",
+    "lesson_solutions",
+)
 
 CKEDITOR_UPLOAD_PATH = "uploads/"
 

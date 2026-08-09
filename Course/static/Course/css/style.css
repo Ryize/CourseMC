@@ -1484,7 +1484,7 @@ body.black .scheduleSection .title.blog .dropdown-filter div:hover {
     font-weight: 600;
 }
 
-.scheduleSection .item.active span {
+.scheduleSection .item.active .mark span {
     background: #fff !important;
 }
 
@@ -1935,6 +1935,139 @@ body.black .scheduleSection .title.blog .dropdown-filter div:hover {
     text-align: center;
 }
 
+.schedule-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.schedule-message {
+    padding: 14px 18px;
+    border-radius: 10px;
+    background: #e8f5e9;
+    color: #1b5e20;
+}
+
+.schedule-message.error {
+    background: #f8d7da;
+    color: #842029;
+}
+
+.lesson-solution {
+    width: 100%;
+    padding-top: 24px;
+    border-top: 1px solid rgba(30, 30, 30, 0.12);
+}
+
+.lesson-solution-status {
+    width: fit-content;
+    margin-bottom: 12px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #fff4d7;
+    color: #7a5600;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.lesson-solution-status.accepted {
+    background: #e8f5e9;
+    color: #1b5e20;
+}
+
+.lesson-solution-status.needs_revision {
+    background: #fce5df;
+    color: #a13b24;
+}
+
+.lesson-solution-comment {
+    padding: 14px;
+    border-radius: 8px;
+    background: rgba(111, 123, 240, 0.10);
+}
+
+.lesson-solution-comment strong {
+    color: #1e1e1e;
+}
+
+.lesson-solution-files {
+    margin: 0;
+    padding-left: 10px;
+}
+
+.lesson-solution-file {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    color: inherit;
+}
+
+.lesson-solution-file ion-icon {
+    color: var(--color-accent);
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
+body.black .lesson-solution-file {
+    color: var(--color-accent);
+}
+
+.lesson-solution-form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+}
+
+.lesson-solution-form input[type="file"] {
+    max-width: 100%;
+    background: transparent;
+    border: 0;
+    color: #1e1e1e;
+}
+
+.lesson-solution-form input[type="file"]::file-selector-button {
+    margin-right: 10px;
+    padding: 8px 12px;
+    border: 1px solid var(--color-accent);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--color-accent);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.lesson-solution-empty {
+    color: rgba(30, 30, 30, 0.7);
+    font-size: 14px;
+    line-height: 20px;
+}
+
+body.black .lesson-solution {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+body.black .lesson-solution-comment strong,
+body.black .lesson-solution-form input[type="file"] {
+    color: #fff;
+}
+
+body.black .lesson-solution-empty {
+    color: rgba(255, 255, 255, 0.72);
+}
+
+@media screen and (max-width: 650px) {
+    .lesson-solution-form button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 .chat {
     width: 1440px;
     margin: 144px auto 60px auto;
@@ -2315,6 +2448,7 @@ body.black footer p {
     opacity: 0;
     pointer-events: none;
     user-select: none;
+    text-align: left;
 }
 
 .drop.active {
@@ -2346,12 +2480,22 @@ body.black footer p {
     flex-direction: column;
     gap: 15px;
     font-size: 14px;
+    text-align: left;
 }
 
 .drop li {
     cursor: default;
     transition: 0.3s;
     position: relative;
+}
+
+header .right .header-dropdown-trigger {
+    cursor: pointer;
+}
+
+.drop a {
+    display: block;
+    text-align: left;
 }
 
 .drop li:hover {

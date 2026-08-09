@@ -1,97 +1,97 @@
+{% extends 'questionnaire/template/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="ru">
 
-<head>
-	<meta charset="UTF-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Твой опросник</title>
-	<link rel="stylesheet" href="{% static 'Course/css/style.css' %}">
-	<link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}" type="image/x-icon">
-</head>
-<style>
-    html,
-    body {
-        max-width: 100%;
-        /* overflow-x: hidden; */
-    }
-</style>
+{% block title %}Твой Опросник — CourseMC{% endblock %}
 
-<body onclick="closeAll()">
-	{% include 'template/header.html' %}
+{% block content %}
+    <section class="questionnaire-home-hero">
+        <div>
+            <p class="questionnaire-kicker">Инструмент для практики и обратной связи</p>
+            <h1 class="questionnaire-title">Твой <span>опросник</span></h1>
+            <p class="questionnaire-subtitle">
+                Создавай короткие опросы и тесты, делись ими с учениками
+                и смотри, как они справляются с заданиями.
+            </p>
+        </div>
+        {% if user.is_authenticated %}
+            <div class="questionnaire-home-actions" aria-label="Действия с опросами">
+                <a class="questionnaire-action questionnaire-action--warm"
+                   href="{% url 'create_poll' %}">
+                    <span class="questionnaire-action-icon">+</span>
+                    <span>
+                        <strong>Создать опрос</strong>
+                        <small>Начни с названия, темы и срока действия</small>
+                    </span>
+                </a>
+                <a class="questionnaire-action" href="{% url 'my_poll' %}">
+                    <span class="questionnaire-action-icon">≡</span>
+                    <span>
+                        <strong>Мои опросы</strong>
+                        <small>Вопросы, ссылки и результаты прохождений</small>
+                    </span>
+                </a>
+                <a class="questionnaire-action" href="{% url 'go_poll' %}">
+                    <span class="questionnaire-action-icon">→</span>
+                    <span>
+                        <strong>Пройти опрос</strong>
+                        <small>Введи номер опроса или открой полученную ссылку</small>
+                    </span>
+                </a>
+            </div>
+        {% else %}
+            <div class="questionnaire-home-actions">
+                <div class="questionnaire-action">
+                    <span class="questionnaire-action-icon">!</span>
+                    <span>
+                        <strong>Нужна авторизация</strong>
+                        <small>Войди в CourseMC, чтобы создавать и проходить опросы</small>
+                    </span>
+                </div>
+            </div>
+        {% endif %}
+    </section>
 
-<section class="scheduleSection">
-    <h2><span>Твой</span> опросник</h2>
-
-    <div class="box">
-        <div class="imageBox">
+    <section class="questionnaire-guide" aria-labelledby="questionnaire-guide-title">
+        <div class="questionnaire-guide-visual" aria-hidden="true">
             <img src="{% static 'Course/assets/6.png' %}" alt="">
             <img src="{% static 'Course/assets/7.png' %}" alt="">
         </div>
-
-        <div class="contentBox">
-            <div class="top">
-                <h3>Как создать опрос</h3>
-                <p>Составить интересную анкету, заполнить которую будет не в тягость, а в радость, довольно просто.
-                    Но нужно знать несколько основных правил:</p>
-            </div>
-
-            <div class="stepline">
-                <div class="line"></div>
-
-                <div class="step">
-                    <div>1</div>
-                    <p>Определитесь с целью анкеты. Сфокусируйтесь на одной конкретной цели. Так вы сможете собрать
-                        релевантную информацию и не запутать пользователя.</p>
-                </div>
-                <div class="step">
-                    <div>2</div>
-                    <p>Поймите, какую информацию собирать. Как только станет понятна цель, выберете, какие именно
-                        данные и в каком формате собирать.</p>
-                </div>
-                <div class="step">
-                    <div>3</div>
-                    <p>Будьте объективны. Убедитесь, что задаёте только прямые вопросы, избегая наводящих
-                        конструкций. Некоторые слова — такие, как «запретить» могут повлиять на результат вопроса. К
-                        примеру, вопрос «Мы получаем множество положительных отзывов от наших счастливых клиентов.
-                        Как вы считаете, на сколько хорош наш сервис?» — пример того, как вопрос подталкивает
-                        отвечающего быть более благосклонным к вашей компании. Попробуйте попросить «Оцените
-                        удобство нашего сервиса по 5-балльной шкале» и предложите эту шкалу. И ещё. Не позволяйте
-                        себе строить догадки и включать их в вопросы.</p>
-                </div>
-                <div class="step">
-                    <div>4</div>
-                    <p>Следите за порядком вопросов. Логичная последовательность вопросов важна, как для вас, так и
-                        для проходящего опрос. Самый оптимальный вариант — «от общего к частному».</p>
-                </div>
-                <div class="step">
-                    <div>5</div>
-                    <p>Избегайте двойных вопросов. Один блок — один вопрос. Иначе вы получите искажённую информацию.
-                    </p>
-                </div>
-                <div class="step">
-                    <div>6</div>
-                    <p>Пишите простым языком. В опросниках не стоит использовать жаргон и сложные обороты. Сделайте
-                        свою анкету простой и понятной и тогда каждый респондент наверняка дойдёт до финального
-                        вопроса.</p>
-                </div>
-                <div class="step">
-                    <div>7</div>
-                    <p>Протестируйте опросник. Пришлите готовую анкету друзьям и коллегам, чтобы ещё раз проверить
-                        логику опроса и разглядеть возможные ошибки.</p>
-                </div>
+        <div class="questionnaire-guide-copy">
+            <h2 id="questionnaire-guide-title">Как создать хороший опрос</h2>
+            <p>
+                Интересную анкету, которую действительно хочется заполнить,
+                легко собрать, если заранее продумать её цель и порядок вопросов.
+            </p>
+            <div class="questionnaire-steps">
+                <article class="questionnaire-step">
+                    <span class="questionnaire-step-number">1</span>
+                    <p>Определитесь с одной конкретной целью — так ответы будут действительно полезными.</p>
+                </article>
+                <article class="questionnaire-step">
+                    <span class="questionnaire-step-number">2</span>
+                    <p>Выберите только те данные, которые нужны для этой цели, и понятный формат ответа.</p>
+                </article>
+                <article class="questionnaire-step">
+                    <span class="questionnaire-step-number">3</span>
+                    <p>Задавайте прямые нейтральные вопросы — без подсказки «правильного» ответа.</p>
+                </article>
+                <article class="questionnaire-step">
+                    <span class="questionnaire-step-number">4</span>
+                    <p>Выстраивайте вопросы от общего к частному: так проходить опрос легче и быстрее.</p>
+                </article>
+                <article class="questionnaire-step">
+                    <span class="questionnaire-step-number">5</span>
+                    <p>Один вопрос — одна мысль. Двойные вопросы дают неточные результаты.</p>
+                </article>
+                <article class="questionnaire-step">
+                    <span class="questionnaire-step-number">6</span>
+                    <p>Пишите простым языком и избегайте жаргона, если он не нужен для цели опроса.</p>
+                </article>
+                <article class="questionnaire-step">
+                    <span class="questionnaire-step-number">7</span>
+                    <p>Перед отправкой пройдите опрос сами: это помогает заметить неточности и лишние шаги.</p>
+                </article>
             </div>
         </div>
-    </div>
-</section>
-    {% if user.is_authenticated %}
-        <button style='background: #FF977E;margin-left: 30%; display: inline;' class="quizButton" onclick="document.location=`{% url 'go_poll' %}`">Пройти опрос</button>
-        <button style='background: #FF977E;margin-left: 25px; display: inline;' class="quizButton" onclick="document.location=`{% url 'create_poll' %}`">Создать опрос</button>
-        <button style='background: #FF977E;margin-left: 25px; display: inline;' class="quizButton" onclick="document.location=`{% url 'my_poll' %}`">Мои опросы</button>
-    {% endif %}
-
-{% include 'template/footer.html' %}
-</body>
-
-</html>
+    </section>
+{% endblock %}

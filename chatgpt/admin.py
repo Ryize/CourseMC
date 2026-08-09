@@ -18,11 +18,18 @@ class DecadeBornListFilter(admin.SimpleListFilter):
         Второй элемент — это удобочитаемое имя параметра,
         которое появится на правой боковой панели.
         """
-        users = set([chat.user for chat in RequestsGPT.objects.all()])
-        result_data = []
-        for user in users:
-            result_data.append((user.username, user.username,))
-        return tuple(result_data)
+        users = {
+            request_item.user
+            for request_item in RequestsGPT.objects.select_related('user')
+            if request_item.user is not None
+        }
+        return tuple(
+            (user.username, user.username)
+            for user in sorted(
+                users,
+                key=lambda user: (user.username.casefold(), user.pk),
+            )
+        )
 
     def queryset(self, request, queryset):
         """

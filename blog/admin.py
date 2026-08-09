@@ -32,11 +32,13 @@ class AuthorListFilter(admin.SimpleListFilter):
             [i][1] - удобочитаемое имя параметра, которое появится на правой
             боковой панели.
         """
-        authors = set([el.author for el in self.model.objects.all()])
-        result_data = []
-        for author in authors:
-            result_data.append((author.username, author.username,))
-        return tuple(result_data)
+        authors = (
+            self.model.objects
+            .order_by('author__username')
+            .values_list('author__username', flat=True)
+            .distinct()
+        )
+        return tuple((username, username) for username in authors)
 
     def queryset(self, request, queryset):
         """
@@ -80,11 +82,13 @@ class PostListFilter(admin.SimpleListFilter):
             [i][1] - удобочитаемое имя параметра, которое появится на правой
             боковой панели.
         """
-        posts = set([el.post for el in Comment.objects.all()])
-        result_data = []
-        for post in posts:
-            result_data.append((post.title, post.title,))
-        return tuple(result_data)
+        posts = (
+            Comment.objects
+            .order_by('post__title')
+            .values_list('post__title', flat=True)
+            .distinct()
+        )
+        return tuple((title, title) for title in posts)
 
     def queryset(self, request, queryset):
         """

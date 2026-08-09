@@ -1,12 +1,14 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponseNotFound
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.generic import ListView
+from django.views.decorators.http import require_POST
+from django.utils import timezone
 
-from .forms import AnswerForm, QuestionForm, QuizForm
-from .models import (
+from questionnaire.forms import AnswerForm, QuestionForm, QuizForm
+from questionnaire.models import (
     AnswerQuestion,
     PassedPolls,
     Question,
@@ -14,7 +16,7 @@ from .models import (
     Rating,
     UserAnswer,
 )
-from .service import poll_is_active
+from questionnaire.service import poll_is_active
 
 
 class QuizListView(LoginRequiredMixin, ListView):
@@ -23,10 +25,10 @@ class QuizListView(LoginRequiredMixin, ListView):
     context_object_name = "my_polls"
     paginate_by = 16
 
-    def get_queryset(self):
+    def get_poll_queryset(self, is_archived):
         return (
             Quiz.objects
-            .filter(user=self.request.user)
+            .filter(user=self.request.user, is_archived=is_archived)
             .order_by("-created_at")
             .prefetch_related(
                 "questions__answers",
@@ -36,9 +38,61 @@ class QuizListView(LoginRequiredMixin, ListView):
             )
         )
 
+    def get_queryset(self):
+        return self.get_poll_queryset(is_archived=False)
+
+    def enrich_polls(self, polls):
+        for poll in polls:
+            questions = list(poll.questions.all())
+            user_answers = list(poll.user_quiz.all())
+            ratings = list(poll.rating.all())
+            poll.question_count = len(questions)
+            poll.ready_question_count = sum(
+                bool(question.answers.all()) for question in questions
+            )
+            poll.completed_count = len(poll.passed_quiz.all())
+            poll.is_active = poll_is_active(poll)
+            poll.share_url = self.request.build_absolute_uri(
+                reverse("take_poll", args=(poll.pk,))
+            )
+            poll.average_rating = (
+                round(
+                    sum(rating.answer_number for rating in ratings) / len(ratings),
+                    1,
+                )
+                if ratings
+                else None
+            )
+            poll.correctness_percent = (
+                round(
+                    100 * sum(answer.answers.correct for answer in user_answers)
+                    / len(user_answers)
+                )
+                if user_answers
+                else None
+            )
+        return polls
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        self.enrich_polls(context["my_polls"])
+        archived_polls = list(self.get_poll_queryset(is_archived=True))
+        context["archived_polls"] = self.enrich_polls(archived_polls)
+        context["archived_count"] = len(archived_polls)
+        return context
+
 
 def index(request):
     return render(request, "questionnaire/index.html")
+
+
+def unavailable(request, message, status=404):
+    return render(
+        request,
+        "questionnaire/unavailable.html",
+        {"error_message": message},
+        status=status,
+    )
 
 
 @login_required
@@ -48,7 +102,7 @@ def create_poll(request):
         quiz = form.save(commit=False)
         quiz.user = request.user
         quiz.save()
-        messages.success(request, "Вы успешно создали опрос!")
+        messages.success(request, "Опрос создан. Добавьте в него первый вопрос.")
         return redirect("create_question", quiz.pk)
 
     return render(request, "questionnaire/create_poll.html", {"form": form})
@@ -61,26 +115,104 @@ def create_question(request, quiz_id):
 
     if request.method == "POST" and form.is_valid():
         form.save()
-        messages.info(request, "Вы создали вопрос!")
+        messages.success(request, "Вопрос добавлен. Теперь можно добавить ещё один или варианты ответа.")
         return redirect("create_question", quiz.pk)
 
+    questions = list(quiz.questions.prefetch_related("answers").order_by("pk"))
+    for question in questions:
+        question.answer_count = len(question.answers.all())
+        question.correct_answer_count = sum(
+            answer.correct for answer in question.answers.all()
+        )
     return render(
         request,
         "questionnaire/create_question.html",
-        {"form": form, "quiz": quiz},
+        {
+            "form": form,
+            "quiz": quiz,
+            "questions": questions,
+            "question_count": len(questions),
+            "ready_question_count": sum(
+                bool(question.answers.all()) for question in questions
+            ),
+        },
     )
 
 
 @login_required
-def create_answer(request):
-    form = AnswerForm(request.user, request.POST or None)
+def create_answer(request, quiz_id):
+    quiz = get_object_or_404(Quiz, pk=quiz_id, user=request.user)
+    form = AnswerForm(quiz, request.POST or None)
 
     if request.method == "POST" and form.is_valid():
         form.save()
-        messages.info(request, "Вы создали ответ на вопрос!")
-        return redirect("create_answer")
+        messages.success(request, "Вариант ответа добавлен.")
+        return redirect("create_answer", quiz.pk)
 
-    return render(request, "questionnaire/create_answer.html", {"form": form})
+    questions = list(quiz.questions.prefetch_related("answers").order_by("pk"))
+    for question in questions:
+        question.answer_count = len(question.answers.all())
+        question.correct_answer_count = sum(
+            answer.correct for answer in question.answers.all()
+        )
+    return render(
+        request,
+        "questionnaire/create_answer.html",
+        {
+            "form": form,
+            "quiz": quiz,
+            "questions": questions,
+            "question_count": len(questions),
+            "ready_question_count": sum(
+                bool(question.answers.all()) for question in questions
+            ),
+        },
+    )
+
+
+@login_required
+def create_answer_legacy(request):
+    quiz = (
+        Quiz.objects
+        .filter(user=request.user, is_archived=False)
+        .order_by("-created_at")
+        .first()
+    )
+    if quiz is None:
+        messages.info(request, "Сначала создайте опрос, затем добавьте варианты ответа.")
+        return redirect("create_poll")
+    return redirect("create_answer", quiz.pk)
+
+
+@login_required
+@require_POST
+def archive_poll(request, quiz_id):
+    quiz = get_object_or_404(Quiz, pk=quiz_id, user=request.user)
+    if quiz.is_archived:
+        messages.info(request, "Этот опрос уже находится в архиве.")
+    else:
+        quiz.is_archived = True
+        quiz.archived_at = timezone.now()
+        quiz.save(update_fields=("is_archived", "archived_at"))
+        messages.success(
+            request,
+            "Опрос перенесён в архив и больше недоступен для прохождения."
+        )
+    return redirect("my_poll")
+
+
+@login_required
+@require_POST
+def restore_poll(request, quiz_id):
+    quiz = get_object_or_404(Quiz, pk=quiz_id, user=request.user)
+    if not quiz.is_archived:
+        messages.info(request, "Этот опрос уже находится среди активных.")
+    else:
+        quiz.is_archived = False
+        quiz.archived_at = None
+        quiz.save(update_fields=("is_archived", "archived_at"))
+        messages.success(request, "Опрос возвращён из архива.")
+    return redirect("my_poll")
 
 
 @login_required
@@ -90,7 +222,7 @@ def go_poll(request):
 
     poll_id = request.POST.get("poll_id", "")
     if not poll_id.isdigit():
-        messages.error(request, "Значение поля id опроса некорректно!")
+        messages.error(request, "Введите номер опроса целиком.")
         return render(request, "questionnaire/go_poll.html")
 
     return redirect("take_poll", int(poll_id))
@@ -107,8 +239,14 @@ def available_questions(poll):
 
 
 def render_question(request, poll, questions, question):
-    index = questions.index(question)
-    previous_question = questions[index - 1] if index > 0 else None
+    question_index = questions.index(question)
+    previous_question = questions[question_index - 1] if question_index else None
+    selected_answer_id = (
+        UserAnswer.objects
+        .filter(quiz=poll, question=question, user=request.user)
+        .values_list("answers_id", flat=True)
+        .first()
+    )
     return render(
         request,
         "questionnaire/take_poll.html",
@@ -116,6 +254,9 @@ def render_question(request, poll, questions, question):
             "poll": poll,
             "question": question,
             "previous_question": previous_question,
+            "question_position": question_index + 1,
+            "question_total": len(questions),
+            "selected_answer_id": selected_answer_id,
         },
     )
 
@@ -123,17 +264,16 @@ def render_question(request, poll, questions, question):
 @login_required
 def take_poll(request, poll_id):
     poll = get_object_or_404(Quiz, pk=poll_id)
+    if poll.is_archived:
+        return unavailable(request, "Автор перенёс этот опрос в архив.")
     if not poll_is_active(poll):
-        return HttpResponseNotFound("Срок действия опроса истёк!")
-    if PassedPolls.objects.filter(
-        quiz=poll,
-        passed_user=request.user,
-    ).exists():
-        return HttpResponseNotFound("Вы уже прошли этот опрос!")
+        return unavailable(request, "Срок действия этого опроса уже истёк.")
+    if PassedPolls.objects.filter(quiz=poll, passed_user=request.user).exists():
+        return unavailable(request, "Вы уже прошли этот опрос.")
 
     questions = available_questions(poll)
     if not questions:
-        return HttpResponseNotFound("В этом опросе нет вопросов с ответами")
+        return unavailable(request, "В этом опросе пока нет вопросов с вариантами ответа.")
 
     if request.method == "GET":
         return render_question(request, poll, questions, questions[0])
@@ -148,10 +288,17 @@ def take_poll(request, poll_id):
         None,
     )
     if question is None:
-        return HttpResponseNotFound("Вопрос не принадлежит этому опросу.")
+        return unavailable(request, "Этот вопрос не относится к выбранному опросу.")
 
-    if request.POST.get("redirect"):
-        return render_question(request, poll, questions, question)
+    previous_question_id = request.POST.get("previous_question", "")
+    if previous_question_id.isdigit():
+        previous_question = next(
+            (item for item in questions if item.pk == int(previous_question_id)),
+            None,
+        )
+        if previous_question is None:
+            return unavailable(request, "Этот вопрос не относится к выбранному опросу.")
+        return render_question(request, poll, questions, previous_question)
 
     answer_id = request.POST.get("answers", "")
     if not answer_id.isdigit():
@@ -160,7 +307,7 @@ def take_poll(request, poll_id):
 
     answer = question.answers.filter(pk=int(answer_id)).first()
     if answer is None:
-        return HttpResponseNotFound("Ответ не принадлежит этому вопросу.")
+        return unavailable(request, "Этот вариант ответа не относится к текущему вопросу.")
 
     user_answer = (
         UserAnswer.objects
@@ -188,24 +335,16 @@ def take_poll(request, poll_id):
             questions[current_index + 1],
         )
 
-    PassedPolls.objects.get_or_create(
-        quiz=poll,
-        passed_user=request.user,
-    )
-    messages.info(request, "Вы успешно прошли опрос!")
+    PassedPolls.objects.get_or_create(quiz=poll, passed_user=request.user)
+    messages.success(request, "Опрос пройден. Оцените его, пожалуйста.")
     return redirect("rating", poll.pk)
 
 
 @login_required
 def rating(request, poll_id):
     quiz = get_object_or_404(Quiz, pk=poll_id)
-    if not PassedPolls.objects.filter(
-        quiz=quiz,
-        passed_user=request.user,
-    ).exists():
-        return HttpResponseNotFound(
-            "Указанный опрос не найден или вы его не прошли!"
-        )
+    if not PassedPolls.objects.filter(quiz=quiz, passed_user=request.user).exists():
+        return unavailable(request, "Оценить можно только уже пройденный опрос.")
 
     if request.method == "POST":
         rating_value = request.POST.get("rating", "")
@@ -232,7 +371,7 @@ def rating(request, poll_id):
             saved_rating.comment = comment
             saved_rating.save(update_fields=("answer_number", "comment"))
 
-        messages.success(request, "Вы успешно оставили отзыв!")
+        messages.success(request, "Спасибо за отзыв!")
         return redirect("questionnaireIndex")
 
     return render(request, "questionnaire/rating.html", {"poll": quiz})

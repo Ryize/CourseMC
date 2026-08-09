@@ -73,9 +73,9 @@
                         {% csrf_token %}
                         <!-- {{ form.as_p }} -->
                         <div class="input-box">
-                            <label for="id_login">Имя пользователя:</label>
+                            <label for="id_login">Логин или e-mail:</label>
                             <input type="text" name="login"
-                                   placeholder="Имя пользователя"
+                                   placeholder="Логин или e-mail"
                                    autocomplete="username" maxlength="150"
                                    required="" id="id_login">
                         </div>
@@ -116,4 +116,4 @@
         src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
 <script src="{% static 'Course/js/gsap.min.js' %}"></script>
 <script src="{% static 'Course/js/ScrollTrigger.min.js' %}"></script>
-<script src="{% static 'Course/js/main.js' %}"></script>
+<script src="{% static 'Course/js/main.js' %}?v=20260808-2"></script>

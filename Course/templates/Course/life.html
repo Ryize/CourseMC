@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Игра «Жизнь»</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+  <style>
+    body { background-color: #f8f9fa; }
+    .life-grid { user-select: none; }
+    .life-cell {
+      width: 24px; height: 24px; cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    .life-cell.alive { background-color: #198754; }
+    .life-cell.dead  { background-color: #ffffff; }
+  </style>
+</head>
+<body>
+  <div id="app" class="container py-4">
+    <div class="row mb-3">
+      <div class="col">
+        <h1 class="h3">Жизнь</h1>
+        <p class="text-muted mb-0"></p>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-md-auto">
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-success" @click="startGame" :disabled="isRunning">
+            СТАРТ
+          </button>
+          <button type="button" class="btn btn-warning" @click="pauseGame" :disabled="!isRunning">
+            ПАУЗА
+          </button>
+          <button type="button" class="btn btn-danger" @click="resetGame">
+            СБРОС
+          </button>
+        </div>
+      </div>
+      <div class="col-md d-flex align-items-center">
+        <div class="me-3">
+          <strong>Итерация:</strong> <span v-text="generation"></span>
+        </div>
+        <div>
+          <strong>Живых клеток:</strong>
+          <span v-text="livingCells"></span>/<span v-text="totalCells"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-bordered life-grid mb-0">
+        <tbody>
+          <tr v-for="(row, rowIndex) in grid" :key="rowIndex">
+            <td
+              v-for="(cell, colIndex) in row"
+              :key="colIndex"
+              class="life-cell"
+              :class="cell ? 'alive' : 'dead'"
+              @click="toggleCell(rowIndex, colIndex)"
+            ></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          rows: 15,
+          cols: 25,
+          grid: [],
+          isRunning: false,
+          timerId: null,
+          generation: 0,
+          tickDelay: 1000,
+        };
+      },
+      computed: {
+        totalCells() {
+          return this.rows * this.cols;
+        },
+        livingCells() {
+          return this.grid.reduce(
+            (sum, row) => sum + row.reduce((rowSum, cell) => rowSum + (cell ? 1 : 0), 0),
+            0
+          );
+        },
+      },
+      created() {
+        this.resetGrid();
+      },
+      methods: {
+        resetGrid() {
+          this.grid = Array.from({ length: this.rows }, () =>
+            Array.from({ length: this.cols }, () => false)
+          );
+          this.generation = 0;
+        },
+        toggleCell(rowIndex, colIndex) {
+          this.grid = this.grid.map((row, r) =>
+            row.map((cell, c) => {
+              if (r === rowIndex && c === colIndex) {
+                return !cell;
+              }
+              return cell;
+            })
+          );
+        },
+        startGame() {
+          if (this.isRunning) return;
+          this.isRunning = true;
+          this.scheduleTick();
+        },
+        pauseGame() {
+          this.isRunning = false;
+          if (this.timerId !== null) {
+            clearTimeout(this.timerId);
+            this.timerId = null;
+          }
+        },
+        resetGame() {
+          this.pauseGame();
+          this.resetGrid();
+        },
+        scheduleTick() {
+          this.timerId = setTimeout(() => {
+            this.tickGame();
+          }, this.tickDelay);
+        },
+        tickGame() {
+          if (!this.isRunning) return;
+          const nextGrid = this.grid.map((row, rowIndex) =>
+            row.map((cell, colIndex) => {
+              const livingNeighbors = this.countLivingNeighbors(rowIndex, colIndex);
+              if (cell) {
+                return livingNeighbors === 2 || livingNeighbors === 3;
+              }
+              return livingNeighbors === 3;
+            })
+          );
+
+          const hasChanges = nextGrid.some((row, rowIndex) =>
+            row.some((cell, colIndex) => cell !== this.grid[rowIndex][colIndex])
+          );
+
+          // применяем новое поколение
+          this.grid = nextGrid;
+          this.generation += 1;
+
+          // проверяем уже по новому состоянию
+          const livingNow = this.livingCells;
+          if (!hasChanges || livingNow === 0) {
+            this.pauseGame();
+            return;
+          }
+
+          this.scheduleTick();
+        },
+        countLivingNeighbors(rowIndex, colIndex) {
+          let count = 0;
+          for (let dr = -1; dr <= 1; dr += 1) {
+            for (let dc = -1; dc <= 1; dc += 1) {
+              if (dr === 0 && dc === 0) continue;
+              const r = rowIndex + dr;
+              const c = colIndex + dc;
+              if (r < 0 || c < 0 || r >= this.rows || c >= this.cols) continue;
+              if (this.grid[r][c]) count += 1;
+            }
+          }
+          return count;
+        },
+      },
+    }).mount('#app');
+  </script>
+</body>
+</html>

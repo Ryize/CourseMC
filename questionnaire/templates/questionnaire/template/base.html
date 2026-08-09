@@ -1,18 +1,24 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
-    <head>
-        {% block head %}
-
-        {% endblock %}
-    </head>
-    <body>
-    {% include 'questionnaire/includes/flash_messages.html' %}
-        {% block header %}
-            {% include "questionnaire/includes/header.html" %}
-        {% endblock %}
-
-        {% block content %}
-            <center><h1>Стартовая страница base.html</h1></center>
-        {% endblock %}
-    </body>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Твой Опросник — CourseMC{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'Course/css/style.css' %}?v=20260808-2">
+    <link rel="stylesheet" href="{% static 'questionnaire/css/questionnaire.css' %}?v=20260808-1">
+    <link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}"
+          type="image/x-icon">
+    <script src="{% static 'questionnaire/js/questionnaire.js' %}?v=20260808-1" defer></script>
+    {% block head %}{% endblock %}
+</head>
+<body class="questionnaire-page{% block body_class %}{% endblock %}">
+{% include 'template/header.html' %}
+{% include 'questionnaire/includes/flash_messages.html' %}
+<main class="questionnaire-main">
+    {% block content %}{% endblock %}
+</main>
+{% include 'template/footer.html' %}
+</body>
 </html>

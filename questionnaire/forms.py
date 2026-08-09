@@ -39,9 +39,8 @@ class QuestionForm(ModelForm):
 
 
 class AnswerForm(ModelForm):
-    def __init__(self, user, *args, **kwargs):
+    def __init__(self, quiz, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        quiz = Quiz.objects.filter(user=user).order_by("-created_at").first()
         self.fields["question"].empty_label = "Не выбрано!"
         self.fields["question"].queryset = Question.objects.filter(
             quiz=quiz

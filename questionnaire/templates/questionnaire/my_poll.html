@@ -1,135 +1,149 @@
 {% extends 'questionnaire/template/base.html' %}
-{% load static %}
 {% load questionnaire_tags %}
-{% block head %}
-    <link rel="stylesheet" href="{% static 'css/dynamic_background.css' %}">
-    <link rel="stylesheet" href="{% static 'css/list_poll.css' %}">
-    <script src="{% static 'js/my_polls.js' %}" defer></script>
-{% endblock %}
+
+{% block title %}Мои опросы — CourseMC{% endblock %}
 
 {% block content %}
+    <section class="questionnaire-section-heading">
+        <div>
+            <p class="questionnaire-kicker">Кабинет автора</p>
+            <h1>Мои опросы</h1>
+            <p>Здесь собраны вопросы, ссылки для учеников и результаты прохождений.</p>
+        </div>
+        <a class="questionnaire-link-button questionnaire-link-button--warm"
+           href="{% url 'create_poll' %}">Создать опрос</a>
+    </section>
 
-    <div class="row" id="row" style="width: 100%;">
-        <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1"></div>
-        <div class="col-xs-10 col-sm-12 col-md-10 col-lg-10">
-            <ol class="bullet">
-
-                <center><h1>Мои опросы</h1></center>
-                <br>
-
-                {% for poll in my_polls %}
-
-                    <li>
-                        <span>{{ poll.title }}</span>
-                        <br>
-                        <span><small>{{ poll.description }}</small></span>
-                        <hr>
-                        <p>
-                            <button type="button"
-                                    class="pointer poll-toggle btn btn-link p-0"
-                                    data-target="questions-{{ poll.pk }}"
-                                    data-show-label="Нажмите для отображения вопросов и ответов"
-                                    data-hide-label="Нажмите для скрытия вопросов и ответов"
-                                    aria-expanded="false">
-                                <strong><i>Нажмите для отображения вопросов и ответов</i></strong>
-                            </button>
-                        </p>
-                        <div id="questions-{{ poll.pk }}" hidden>
-                            {% for question in poll.questions.all %}
-
-                                <p>Вопрос: <strong>{{ question.question|safe }}</strong></p>
-                                <label title="{{ question.question }}">Варианты ответов:</label>
-                                {% for answer in question.answers.all %}
-                                    {% if answer.correct %}
-                                        <p title="Это правильный ответ">{{ forloop.counter }}) {{ answer.answer }} ✅</p>
-                                    {% else %}
-                                        <p title="Это не правильный ответ">{{ forloop.counter }}) {{ answer.answer }}
-                                            ❌</p>
-                                    {% endif %}
-                                {% endfor %}
-                                <br>
-                                <hr>
-
-                            {% empty %}
-                                <p>В этом опросе пока нет вопросов.</p>
-                            {% endfor %}
-                            <label style="float: right"><small>Можно пройти до: {{ poll.lifetime }}</small></label>
-                            <br>
+    {% if my_polls %}
+        <section class="questionnaire-polls" aria-label="Список моих опросов">
+            {% for poll in my_polls %}
+                <article class="questionnaire-card questionnaire-poll-card">
+                    <div class="questionnaire-poll-main">
+                        <div>
+                            <span class="questionnaire-poll-topic">{{ poll.topic }}</span>
+                            {% if poll.is_active %}
+                                <span class="questionnaire-status questionnaire-status--active">Активен</span>
+                            {% else %}
+                                <span class="questionnaire-status questionnaire-status--expired">Завершён</span>
+                            {% endif %}
+                            <h2 class="questionnaire-poll-title">{{ poll.title }}</h2>
+                            <p class="questionnaire-poll-description">{{ poll.description }}</p>
+                            <div class="questionnaire-poll-meta">
+                                <span><strong>{{ poll.question_count }}</strong> вопросов</span>
+                                <span><strong>{{ poll.ready_question_count }}</strong> готовы к прохождению</span>
+                                <span><strong>{{ poll.completed_count }}</strong> прошли</span>
+                                <span>до <strong>{{ poll.lifetime|date:'d.m.Y H:i' }}</strong></span>
+                            </div>
                         </div>
-                        <br>
-                        <p>
+                        <div class="questionnaire-poll-actions">
+                            <a class="questionnaire-link-button"
+                               href="{% url 'create_question' poll.pk %}">Настроить</a>
                             <button type="button"
-                                    class="pointer poll-toggle btn btn-link p-0"
-                                    data-target="poll-info-{{ poll.pk }}"
-                                    data-show-label="Нажмите для отображения статистики опроса"
-                                    data-hide-label="Нажмите для скрытия статистики опроса"
-                                    aria-expanded="false">
-                                <strong><i>Нажмите для отображения статистики опроса</i></strong>
+                                    class="questionnaire-button questionnaire-button--secondary"
+                                    data-questionnaire-copy="{{ poll.share_url }}">
+                                Скопировать ссылку
                             </button>
-                        </p>
-                        <div id="poll-info-{{ poll.pk }}" hidden>
-                            Прошли опрос: {{ poll.passed_quiz.all|length }}
-                            {% if poll.passed_quiz.all|length > 0 %}
-                                <div class="row">
-                                    {% for passed_quiz in poll.passed_quiz.all reversed %}
-                                        <hr>
-                                        <label style="margin-top: 35px;"><strong><big>Имя: {{ passed_quiz.passed_user }}</big></strong></label>
-                                        {% for passed_question in passed_quiz.quiz.user_quiz.all %}
-                                            {% if passed_question.user == passed_quiz.passed_user %}
-                                                <div class="col-xs-12 col-sm-12 col-md-4 col-lg-4"
-                                                     style="margin-top: 20px;">
-                                                    <label>Вопрос: {{ passed_question.question }}</label><br>
+                        </div>
+                    </div>
 
-                                                    <label style="background-color: {% if passed_question.answers.correct %}LimeGreen;{% else %}Salmon;{% endif %}">Ответ
-                                                        пользователя: {{ passed_question.answers }}</label><br>
-                                                    <label>
-                                                        <small>Правильный ответ(ы):
-                                                            {% for answer in passed_question.question.answers.all %}
-                                                                {% if answer.correct %}
-                                                                    <span><strong>{{ answer }} </strong></span>
-                                                                {% endif %}
-                                                            {% endfor %}
-                                                        </small>
-                                                    </label>
-                                                </div>
-                                                <br>
+                    <details class="questionnaire-details">
+                        <summary>Вопросы и варианты ответов</summary>
+                        <div class="questionnaire-details-content">
+                            {% if poll.questions.all %}
+                                <ol class="questionnaire-question-list">
+                                    {% for question in poll.questions.all %}
+                                        <li>
+                                            <strong>{{ question.question|questionnaire_text }}</strong>
+                                            {% if question.answers.all %}
+                                                <ul class="questionnaire-answer-list">
+                                                    {% for answer in question.answers.all %}
+                                                        <li class="{% if answer.correct %}questionnaire-answer--correct{% endif %}">
+                                                            {{ answer.answer|questionnaire_text }}{% if answer.correct %} · правильный ответ{% endif %}
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% else %}
+                                                <ul class="questionnaire-answer-list">
+                                                    <li>Варианты ответа ещё не добавлены.</li>
+                                                </ul>
                                             {% endif %}
-                                        {% endfor %}
+                                        </li>
                                     {% endfor %}
-                                </div>
-                                <hr>
-                                <p>{{ poll|statistic:user.pk|safe }}</p>
+                                </ol>
+                            {% else %}
+                                <p class="questionnaire-poll-description">В этом опросе пока нет вопросов.</p>
                             {% endif %}
                         </div>
-                        <br>
-                        <label style="float: right"><small>Создан: {{ poll.created_at }}</small></label>
-                        <p>
-                            <small>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                     class="bi bi-subtract" viewBox="0 0 16 16">
-                                    <path d="M0 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2H2a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H2z"/>
-                                </svg>
-                                <button type="button"
-                                        class="pointer poll-copy btn btn-link p-0"
-                                        data-url="{{ request.scheme }}://{{ request.get_host }}{% url 'take_poll' poll.pk %}">
-                                    Скопировать ссылку
-                                </button>
-                            </small>
-                        </p>
+                    </details>
 
-                    </li>
+                    <details class="questionnaire-details">
+                        <summary>Результаты</summary>
+                        <div class="questionnaire-details-content">
+                            <div class="questionnaire-results-grid">
+                                <div class="questionnaire-metric">
+                                    <span>Прохождений</span>
+                                    <strong>{{ poll.completed_count }}</strong>
+                                </div>
+                                <div class="questionnaire-metric">
+                                    <span>Правильных ответов</span>
+                                    <strong>{% if poll.correctness_percent is not None %}{{ poll.correctness_percent }}%{% else %}—{% endif %}</strong>
+                                </div>
+                                <div class="questionnaire-metric">
+                                    <span>Средняя оценка</span>
+                                    <strong>{% if poll.average_rating is not None %}{{ poll.average_rating }}/5{% else %}—{% endif %}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
+                </article>
+            {% endfor %}
+        </section>
+        {% include 'questionnaire/includes/pagination.html' %}
+    {% else %}
+        <section class="questionnaire-card questionnaire-empty">
+            <h2>Активных опросов пока нет</h2>
+            <p>Создай новый опрос или верни прежний из архива.</p>
+            <a class="questionnaire-link-button questionnaire-link-button--warm"
+               href="{% url 'create_poll' %}">Создать опрос</a>
+        </section>
+    {% endif %}
 
-                {% empty %}
-                    <li>
-                        <span>У вас пока нет опросов.</span>
-                        <p><a href="{% url 'create_poll' %}">Создать первый опрос</a></p>
-                    </li>
-                {% endfor %}
-
-            </ol>
-        </div>
-    </div>
-
-    {% include 'questionnaire/includes/pagination.html' %}
-
+    {% if archived_polls %}
+        <details class="questionnaire-archive">
+            <summary>
+                <span>Архив опросов</span>
+                <span class="questionnaire-archive-count">{{ archived_count }}</span>
+            </summary>
+            <div class="questionnaire-archive-content">
+                <p>Архивные опросы не видны участникам. Вопросы, ответы и результаты сохранены.</p>
+                <section class="questionnaire-polls" aria-label="Архивные опросы">
+                    {% for poll in archived_polls %}
+                        <article class="questionnaire-card questionnaire-poll-card questionnaire-poll-card--archived">
+                            <div class="questionnaire-poll-main">
+                                <div>
+                                    <span class="questionnaire-poll-topic">{{ poll.topic }}</span>
+                                    <span class="questionnaire-status questionnaire-status--archived">В архиве</span>
+                                    <h2 class="questionnaire-poll-title">{{ poll.title }}</h2>
+                                    <p class="questionnaire-poll-description">{{ poll.description }}</p>
+                                    <div class="questionnaire-poll-meta">
+                                        <span><strong>{{ poll.question_count }}</strong> вопросов</span>
+                                        <span><strong>{{ poll.completed_count }}</strong> прошли</span>
+                                        <span>архивирован <strong>{{ poll.archived_at|date:'d.m.Y H:i' }}</strong></span>
+                                    </div>
+                                </div>
+                                <div class="questionnaire-poll-actions">
+                                    <a class="questionnaire-link-button questionnaire-link-button--secondary"
+                                       href="{% url 'create_question' poll.pk %}">Открыть настройки</a>
+                                    <form method="post" action="{% url 'restore_poll' poll.pk %}">
+                                        {% csrf_token %}
+                                        <button class="questionnaire-button" type="submit">Вернуть в активные</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </section>
+            </div>
+        </details>
+    {% endif %}
 {% endblock %}

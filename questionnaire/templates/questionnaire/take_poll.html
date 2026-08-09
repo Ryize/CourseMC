@@ -1,149 +1,54 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="ru">
+{% extends 'questionnaire/template/base.html' %}
+{% load questionnaire_tags %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content=
-            "width=device-width, initial-scale=1.0">
-    <title>
-        {{ poll.title }} - YourQuestionnaire
-    </title>
-    {% include 'questionnaire/includes/header.html' %}
-    <style>
+{% block title %}{{ poll.title }} — CourseMC{% endblock %}
 
-        /* Styling the Body element i.e. Color,
-        Font, Alignment */
-        body {
-            font-family: Verdana;
-            text-align: center;
-        }
-
-        /* Styling the Form (Color, Padding, Shadow) */
-        aside {
-            background-color: #fff;
-            max-width: 500px;
-            margin: 50px auto;
-            padding: 30px 20px;
-            box-shadow: 2px 5px 10px rgba(110, 0, 0, 0.5);
-        }
-
-        /* Styling form-control Class */
-        .form-control {
-            text-align: left;
-            margin-bottom: 25px;
-        }
-
-        /* Styling form-control Label */
-        .form-control label {
-            display: block;
-            margin-bottom: 10px;
-        }
-
-        /* Styling form-control input,
-        select, textarea */
-        .form-control input,
-        .form-control select,
-        .form-control textarea {
-            border: 1px solid #777;
-            border-radius: 2px;
-            font-family: inherit;
-            padding: 10px;
-            display: block;
-            width: 95%;
-        }
-
-        /* Styling form-control Radio
-        button and Checkbox */
-        .form-control input[type="radio"],
-        .form-control input[type="checkbox"] {
-            display: inline-block;
-            width: auto;
-        }
-
-        /* Styling Button */
-        button {
-            background-color: #05c46b;
-            border: 1px solid #777;
-            border-radius: 2px;
-            font-family: inherit;
-            font-size: 21px;
-            display: block;
-            width: 100%;
-            margin-top: 50px;
-            margin-bottom: 20px;
-        }
-
-        .btn-link {
-            border: none;
-            outline: none;
-            background: none;
-            cursor: pointer;
-            color: #0000EE;
-            padding: 0;
-            margin: 0;
-            text-decoration: none;
-            font-family: inherit;
-            font-size: inherit;
-            width: auto;
-            height: auto;
-        }
-    </style>
-    <link rel="stylesheet" href="{% static 'css/dynamic_background.css' %}">
-</head>
-
-<body style="height: 100vh;">
-{% include 'questionnaire/includes/flash_messages.html' %}
-<br>
-<div class="text-center">
-<h1>{{ poll.title }}</h1>
-<small>{{ poll.description }}</small>
-</div>
-<aside>
-    <form id="form" method="post" action="{% url 'take_poll' poll.pk %}">
-
-        {% csrf_token %}
-        <input type="hidden" name="number_question" value="{{ question.pk }}">
-
-        <div class="form-control border-0">
-
-            <div class="form-control">
-                <label>{{ question.question|safe }}</label>
-                <label for="inp-1">
-                    {% for answer in question.answers.all %}
-                        <input type="radio"
-                               name="answers" value="{{ answer.pk }}" id="number-{{ answer.pk }}" class="m-2" required>
-                        <label style='display: inline;' for='number-{{ answer.pk }}'>{{ answer.answer }}</label><br>
-                    {% empty %}
-                        <p>У этого вопроса пока нет вариантов ответа.</p>
-                    {% endfor %}
-                </label>
+{% block content %}
+    <section class="questionnaire-card questionnaire-take-card">
+        <div class="questionnaire-take-header">
+            <div>
+                <p class="questionnaire-kicker">{{ poll.topic }}</p>
+                <h1>{{ poll.title }}</h1>
+                {% if poll.description %}
+                    <p>{{ poll.description }}</p>
+                {% endif %}
             </div>
-
-            <button type="submit" value="submit"
-                    {% if not question.answers.exists %}disabled{% endif %}>
-                Сохранить ответ
-            </button>
+            <span class="questionnaire-progress-copy">Вопрос {{ question_position }} из {{ question_total }}</span>
         </div>
-    </form>
-    {% if previous_question %}
-        <form method="post" action="{% url 'take_poll' poll.pk %}" id="back">
+
+        <progress class="questionnaire-progress" value="{{ question_position }}" max="{{ question_total }}">
+            {{ question_position }} из {{ question_total }}
+        </progress>
+
+        <form method="post" action="{% url 'take_poll' poll.pk %}">
             {% csrf_token %}
-            <input type="hidden" name="number_question" value="{{ previous_question.pk }}" form="back">
-            <input type="hidden" name="redirect" value="1" form="back">
-            <button type="submit" name="your_name" value="your_value" class="btn-link">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                     class="bi bi-arrow-return-left" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd"
-                          d="M14.5 1.5a.5.5 0 0 1 .5.5v4.8a2.5 2.5 0 0 1-2.5 2.5H2.707l3.347 3.346a.5.5 0 0 1-.708.708l-4.2-4.2a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 8.3H12.5A1.5 1.5 0 0 0 14 6.8V2a.5.5 0 0 1 .5-.5z"/>
-                </svg>
-                Назад
-            </button>
-
+            <input type="hidden" name="number_question" value="{{ question.pk }}">
+            <h2 class="questionnaire-question-text">{{ question.question|questionnaire_text }}</h2>
+            <div class="questionnaire-options">
+                {% for answer in question.answers.all %}
+                    <label class="questionnaire-option" for="answer-{{ answer.pk }}">
+                        <input type="radio" name="answers" value="{{ answer.pk }}"
+                               id="answer-{{ answer.pk }}"
+                               {% if selected_answer_id == answer.pk %}checked{% endif %} required>
+                        <span>{{ answer.answer|questionnaire_text }}</span>
+                    </label>
+                {% endfor %}
+            </div>
+            <div class="questionnaire-take-actions">
+                {% if previous_question %}
+                    <button class="questionnaire-button questionnaire-button--secondary"
+                            type="submit" name="previous_question" value="{{ previous_question.pk }}"
+                            formnovalidate>
+                        К предыдущему вопросу
+                    </button>
+                {% else %}
+                    <a class="questionnaire-link-button questionnaire-link-button--secondary"
+                       href="{% url 'questionnaireIndex' %}">Выйти</a>
+                {% endif %}
+                <button class="questionnaire-button" type="submit">
+                    {% if question_position == question_total %}Завершить опрос{% else %}Следующий вопрос{% endif %}
+                </button>
+            </div>
         </form>
-    {% endif %}
-</aside>
-</body>
-
-</html>
+    </section>
+{% endblock %}

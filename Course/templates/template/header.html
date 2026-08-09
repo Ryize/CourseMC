@@ -8,10 +8,14 @@
                     <li class="active"><a href="{% url 'schedule' %}">Расписания</a>
                     </li>
                 {% endif %}
-                <li style="cursor: pointer;" onclick="activeDropDownNav(0)">Сервисы
+                <li class="header-dropdown-trigger"
+                    data-dropdown-trigger="0"
+                    onclick="activeDropDownNav(0)">Сервисы
                     <ion-icon name="chevron-down-outline"></ion-icon>
                 </li>
-                <li style="cursor: pointer;" onclick="activeDropDownNav(1)">Действия
+                <li class="header-dropdown-trigger"
+                    data-dropdown-trigger="1"
+                    onclick="activeDropDownNav(1)">Действия
                     <ion-icon name="chevron-down-outline"></ion-icon>
                 </li>
                 <li><a href="{% url 'review' %}">Отзывы</a></li>

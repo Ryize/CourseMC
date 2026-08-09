@@ -1,21 +1,61 @@
 {% extends 'questionnaire/template/base.html' %}
-{% load static %}
-{#{% block header %}{% endblock %}#}
+
+{% block title %}Создать опрос — CourseMC{% endblock %}
+
 {% block content %}
-    <title>Создать опрос - YourQuestionnaire</title>
-    <link rel="stylesheet" href="{% static 'css/form.css' %}">
+    <section class="questionnaire-builder-layout">
+        <div class="questionnaire-card questionnaire-form-card">
+            <p class="questionnaire-kicker">Новый опрос</p>
+            <h1>Создай основу</h1>
+            <p>Заполни данные опроса. После сохранения перейдём к вопросам и вариантам ответов.</p>
 
-    <form class="decor" method="post" action="{% url 'create_poll' %}">
-        <div class="form-left-decoration"></div>
-        <div class="form-right-decoration"></div>
-        <div class="circle"></div>
-        <div class="form-inner">
-            <h3>Создать опрос</h3>
-            {% csrf_token %}
-            {{ form.as_p }}
-            <input type="submit" value="Создать">
+            <form class="questionnaire-form" method="post">
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                <div class="questionnaire-field">
+                    <label for="{{ form.title.id_for_label }}">Название</label>
+                    {{ form.title }}
+                    {{ form.title.errors }}
+                </div>
+                <div class="questionnaire-field">
+                    <label for="{{ form.description.id_for_label }}">Описание</label>
+                    {{ form.description }}
+                    {{ form.description.errors }}
+                </div>
+                <div class="questionnaire-field">
+                    <label for="{{ form.topic.id_for_label }}">Тема</label>
+                    {{ form.topic }}
+                    {{ form.topic.errors }}
+                </div>
+                <div class="questionnaire-field">
+                    <label for="{{ form.lifetime.id_for_label }}">Действует до</label>
+                    {{ form.lifetime }}
+                    {{ form.lifetime.errors }}
+                </div>
+                <div class="questionnaire-form-actions">
+                    <button class="questionnaire-button questionnaire-button--warm" type="submit">Продолжить к вопросам</button>
+                    <a class="questionnaire-link-button questionnaire-link-button--secondary"
+                       href="{% url 'my_poll' %}">Отмена</a>
+                </div>
+            </form>
         </div>
-    </form>
 
-    </div>
+        <aside class="questionnaire-card questionnaire-builder-sidebar">
+            <h2>Конструктор опроса</h2>
+            <ol class="questionnaire-builder-steps">
+                <li class="questionnaire-builder-step is-current">
+                    <span class="questionnaire-builder-step-number">1</span><span>Данные опроса</span>
+                </li>
+                <li class="questionnaire-builder-step">
+                    <span class="questionnaire-builder-step-number">2</span><span>Вопросы</span>
+                </li>
+                <li class="questionnaire-builder-step">
+                    <span class="questionnaire-builder-step-number">3</span><span>Варианты ответа</span>
+                </li>
+                <li class="questionnaire-builder-step">
+                    <span class="questionnaire-builder-step-number">4</span><span>Проверка и ссылка</span>
+                </li>
+            </ol>
+        </aside>
+    </section>
 {% endblock %}

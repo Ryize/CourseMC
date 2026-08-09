@@ -1,0 +1,161 @@
+body.interpreter-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+body.interpreter-page header {
+    position: relative;
+    top: 0;
+    padding: 20px 0;
+}
+
+.interpreter {
+    width: min(1180px, calc(100% - 40px));
+    margin: 35px auto;
+    flex: 1 0 auto;
+}
+
+.interpreter__heading,
+.interpreter__output-heading,
+.interpreter__actions {
+    display: flex;
+    align-items: center;
+}
+
+.interpreter__heading {
+    justify-content: space-between;
+    gap: 30px;
+    margin-bottom: 24px;
+}
+
+.interpreter__heading h1 {
+    margin-bottom: 8px;
+    color: #1e1e1e;
+}
+
+.interpreter__heading p {
+    color: #555;
+}
+
+body.black .interpreter__heading h1,
+body.black .interpreter__heading p,
+body.black .interpreter__panel label,
+body.black .interpreter__actions small {
+    color: #fff;
+}
+
+.interpreter__status {
+    padding: 8px 14px;
+    border-radius: 20px;
+    background: #fff3cd;
+    color: #664d03;
+    white-space: nowrap;
+}
+
+.interpreter__status.ready {
+    background: #d1e7dd;
+    color: #0f5132;
+}
+
+.interpreter__status.error {
+    background: #f8d7da;
+    color: #842029;
+}
+
+.interpreter__workspace {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.interpreter__panel {
+    min-width: 0;
+}
+
+.interpreter__panel label {
+    display: block;
+    margin-bottom: 8px;
+    color: #1e1e1e;
+    font-weight: 600;
+}
+
+.interpreter__output-heading {
+    justify-content: space-between;
+}
+
+#python-code,
+#python-output {
+    width: 100%;
+    min-height: 430px;
+    padding: 18px;
+    border: 1px solid #343a40;
+    border-radius: 10px;
+    background: #15181f;
+    color: #f8f9fa;
+    font: 15px/1.6 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        monospace;
+    tab-size: 4;
+}
+
+#python-code {
+    resize: vertical;
+}
+
+#python-output {
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.interpreter__actions {
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.interpreter__actions button {
+    min-width: 130px;
+    justify-content: center;
+}
+
+.interpreter__stop {
+    background: #dc3545;
+}
+
+.interpreter__clear {
+    padding: 5px 10px;
+    margin-bottom: 6px;
+    background: transparent;
+    color: #6f7bf0;
+    border: 1px solid #6f7bf0;
+}
+
+.interpreter__actions small {
+    margin-left: auto;
+    color: #555;
+}
+
+body.interpreter-page footer {
+    flex: 0 0 auto;
+}
+
+@media screen and (max-width: 800px) {
+    .interpreter__workspace {
+        grid-template-columns: 1fr;
+    }
+
+    .interpreter__heading,
+    .interpreter__actions {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .interpreter__actions small {
+        margin-left: 0;
+    }
+
+    #python-code,
+    #python-output {
+        min-height: 300px;
+    }
+}

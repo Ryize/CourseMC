@@ -15,6 +15,12 @@ class Quiz(models.Model):
         verbose_name="Пользователь",
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создан")
+    is_archived = models.BooleanField(default=False, verbose_name="В архиве")
+    archived_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name="Перенесён в архив",
+    )
 
     def __str__(self):
         return f"{self.title}, {self.topic}"

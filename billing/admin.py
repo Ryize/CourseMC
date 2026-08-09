@@ -52,13 +52,18 @@ class UserListFilter(admin.SimpleListFilter):
             [i][1] - удобочитаемое имя параметра, которое появится на правой
             боковой панели.
         """
-        students = set(
-            [chat.user for chat in InformationPayments.objects.all() if
-             chat.user.is_learned])
-        result_data = []
-        for student in students:
-            result_data.append((student.name, student.name,))
-        return tuple(result_data)
+        students = {
+            payment.user
+            for payment in InformationPayments.objects.select_related('user')
+            if payment.user.is_learned
+        }
+        return tuple(
+            (student.name, student.name)
+            for student in sorted(
+                students,
+                key=lambda student: (student.name.casefold(), student.pk),
+            )
+        )
 
     def queryset(self, request, queryset):
         """

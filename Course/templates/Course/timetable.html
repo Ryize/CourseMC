@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Расписания - CourseMC</title>
-    <link rel="stylesheet" href="{% static 'Course/css/style.css' %}?v=20260729-5">
+    <link rel="stylesheet" href="{% static 'Course/css/style.css' %}?v=20260805-1">
     <link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}"
           type="image/x-icon">
     <script src="{% static 'Course/js/schedule.js' %}?v=20260729-4" defer></script>
@@ -66,6 +66,13 @@
         </div>
     </div>
     <h3> Кол-во пропусков: <span>{{ absences }}</span></h3>
+    {% if messages %}
+        <div class="schedule-messages" aria-live="polite">
+            {% for message in messages %}
+                <p class="schedule-message {{ message.tags }}">{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
     {% include 'Course/includes/schedule_results.html' %}
 </section>
 {% include 'template/footer.html' %}
