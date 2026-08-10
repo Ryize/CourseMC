@@ -1,11 +1,14 @@
 import random
 from urllib.parse import unquote
 
+from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.response import Response
+from rest_framework.permissions import IsAdminUser
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from Course.models import (LearnGroup, Schedule, Student, StudentQuestion,
@@ -27,6 +30,8 @@ from interview.models import InterviewQuestionCategory, InterviewQuestion
 from ai_assistant.models import QuestionAnswer
 
 from ai_assistant.interview import InterviewThisOutOfOpenAI
+
+from .permissions import HasCourseMCBotToken
 
 
 class ScheduleViewSet(APIView):
@@ -65,7 +70,9 @@ class ScheduleGet(APIView):
         Возвращает список расписаний для переданного пользователя.
         """
         username = request.data['username']
-        student = Student.objects.get(name=username)
+        student = Student.objects.for_username(username)
+        if not student:
+            return Response({'error': 'Student not found'}, status=404)
         group = student.groups
         schedule = Schedule.objects.filter(group=group).values()
         return Response(schedule)
@@ -75,6 +82,8 @@ class StudentViewSet(APIView):
     """
     Вывод всех учеников
     """
+
+    permission_classes = (IsAdminUser,)
 
     def get(self, request):
         """
@@ -95,6 +104,54 @@ class StudentViewSet(APIView):
             serializer.save()
             return Response(status=201)
         return Response(status=400)
+
+
+class BotStudentAuthenticationView(APIView):
+    """Проверяет данные ученика, не раскрывая список аккаунтов и пароли."""
+
+    authentication_classes = ()
+    permission_classes = (HasCourseMCBotToken,)
+    throttle_classes = (ScopedRateThrottle,)
+    throttle_scope = 'bot_auth'
+
+    def post(self, request):
+        login = str(request.data.get('login', '')).strip()
+        password = str(request.data.get('password', ''))
+        if not login or not password:
+            return Response(
+                {'authenticated': False},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        user = authenticate(request=request, username=login, password=password)
+        student = Student.objects.for_user(user) if user else None
+        if not student:
+            return Response(
+                {'authenticated': False},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        return Response({
+            'authenticated': True,
+            'username': user.username,
+            'group_id': student.groups_id,
+        })
+
+
+class BotGroupStudentsView(APIView):
+    """Возвращает боту логины учеников конкретной действующей группы."""
+
+    authentication_classes = ()
+    permission_classes = (HasCourseMCBotToken,)
+
+    def get(self, request, group_id):
+        usernames = list(
+            Student.objects
+            .filter(groups_id=group_id, is_learned=True)
+            .order_by('user__username', 'pk')
+            .values_list('user__username', flat=True)
+        )
+        return Response({'usernames': usernames})
 
 
 class LearnGroupViewSet(APIView):
@@ -150,7 +207,7 @@ class ClassesTimetableView(APIView):
         Возвращает список со временем занятий для определённого учителя
         """
         class_timetable = ClassesTimetable.objects.filter(
-            teacher__username=user_name,
+            group__teacher__user__username=user_name,
         ).all()
         serializer = ClassesTimetableListSerializer(class_timetable, many=True)
         return Response(serializer.data)
@@ -191,6 +248,8 @@ class PaymentAmountView(GenericAPIView):
         user = User.objects.filter(username=username).first()
         if not user:
             return JsonResponse({'error': 'User not found'})
+        if not Student.objects.for_user(user):
+            return JsonResponse({'error': 'Student not found'})
         amount = get_cost_classes(user)
         return JsonResponse(
             {
@@ -204,10 +263,12 @@ class PaymentAmountView(GenericAPIView):
         """
         if username.find('%') == 0:
             username = unquote(username.upper(), 'utf-8')
-        student = Student.objects.filter(name=username).first()
         user = User.objects.filter(username=username).first()
         if not user:
             return JsonResponse({'error': 'User not found'})
+        student = Student.objects.for_user(user)
+        if not student:
+            return JsonResponse({'error': 'Student not found'})
         amount = get_cost_classes(user)
         InformationPayments.objects.create(user=student, amount=amount)
         return Response(status=201)
@@ -239,7 +300,7 @@ class MissingView(GenericAPIView):
                 },
                 status=401
             )
-        student = Student.objects.filter(name=username).first()
+        student = Student.objects.for_username(username)
         if not student:
             return JsonResponse(
                 {

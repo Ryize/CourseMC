@@ -53,8 +53,8 @@ class ActiveStudentListFilter(SimpleListFilter):
         return tuple(
             Student.objects
             .filter(is_learned=True, groups__is_studies=True)
-            .order_by('name', 'pk')
-            .values_list('pk', 'name')
+            .order_by('user__username', 'pk')
+            .values_list('pk', 'user__username')
         )
 
     def queryset(self, request, queryset):
@@ -117,7 +117,7 @@ class MyGroupsListFilter(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         if LearnGroup.objects.filter(
-            teacher__name=request.user.username,
+            teacher__user=request.user,
             is_studies=True,
         ).exists():
             return (('yes', 'Мои группы'),)
@@ -130,7 +130,7 @@ class MyGroupsListFilter(SimpleListFilter):
         if self.value() != 'yes':
             return queryset
         return queryset.filter(
-            student__groups__teacher__name=request.user.username,
+            student__groups__teacher__user=request.user,
             student__groups__is_studies=True,
         )
 
@@ -138,10 +138,8 @@ class MyGroupsListFilter(SimpleListFilter):
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
     fields = (
-        'name',
+        'user',
         'contact',
-        'email',
-        'password',
         'direction',
         'groups',
         'is_learned',
@@ -149,7 +147,7 @@ class StudentAdmin(admin.ModelAdmin):
     )
     list_display = (
         'id',
-        'name',
+        'account',
         'contact',
         'groups',
         'directions',
@@ -157,7 +155,7 @@ class StudentAdmin(admin.ModelAdmin):
     )
     list_display_links = (
         'id',
-        'name',
+        'account',
         'groups',
         'directions',
         'contact',
@@ -168,10 +166,19 @@ class StudentAdmin(admin.ModelAdmin):
         'direction',
     )
     readonly_fields = ('created_at',)
+    autocomplete_fields = ('user',)
+    list_select_related = ('user', 'groups')
     empty_value_display = '-пустой-'
     list_per_page = 64
     list_max_show_all = 8
-    search_fields = ['name', 'contact', 'email', 'groups']
+    search_fields = [
+        'contact', 'user__username', 'user__email',
+        'groups__title',
+    ]
+
+    @admin.display(description='Аккаунт', ordering='user__username')
+    def account(self, obj):
+        return obj.user.username
 
     def directions(self, obj) -> str:
         """
@@ -211,8 +218,7 @@ class LearnGroupAdmin(admin.ModelAdmin):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "teacher":
-            names = [user.username for user in User.objects.filter(is_staff=True)]
-            kwargs["queryset"] = Student.objects.filter(name__in=names)
+            kwargs["queryset"] = Student.objects.filter(user__is_staff=True)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
@@ -508,7 +514,7 @@ class ClassesTimetableAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return ClassesTimetable.objects.all()
         return ClassesTimetable.objects.filter(
-            group__teacher__name=request.user.username
+            group__teacher__user=request.user,
         )
 
 
@@ -624,7 +630,7 @@ class LessonSolutionAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return queryset
         return queryset.filter(
-            student__groups__teacher__name=request.user.username,
+            student__groups__teacher__user=request.user,
         )
 
     def get_ordering(self, request):
@@ -671,7 +677,7 @@ class LessonSolutionAdmin(admin.ModelAdmin):
         return (
             obj is None
             or request.user.is_superuser
-            or obj.student.groups.teacher.name == request.user.username
+            or obj.student.groups.teacher.user_id == request.user.pk
         )
 
     def has_change_permission(self, request, obj=None):
@@ -680,7 +686,7 @@ class LessonSolutionAdmin(admin.ModelAdmin):
         return (
             obj is None
             or request.user.is_superuser
-            or obj.student.groups.teacher.name == request.user.username
+            or obj.student.groups.teacher.user_id == request.user.pk
         )
 
     def has_delete_permission(self, request, obj=None):

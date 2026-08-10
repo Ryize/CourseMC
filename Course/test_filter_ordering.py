@@ -15,10 +15,15 @@ from .models import LearnGroup, Student
 class FilterOrderingTests(TestCase):
     def setUp(self):
         self.request = RequestFactory().get('/admin/')
-        self.teacher = Student.objects.create(
-            name='teacher',
-            contact='@teacher',
+        self.teacher_user = User.objects.create_user(
+            'teacher',
             email='teacher@example.com',
+            password='password',
+            is_staff=True,
+        )
+        self.teacher = Student.objects.create(
+            user=self.teacher_user,
+            contact='@teacher',
             groups_id=500,
         )
         self.group = LearnGroup.objects.create(
@@ -29,17 +34,21 @@ class FilterOrderingTests(TestCase):
         )
 
     def test_user_filters_are_sorted_alphabetically(self):
+        alexey_user = User.objects.create_user(
+            'Алексей', email='alexey@example.com',
+        )
         alexey = Student.objects.create(
-            name='Алексей',
+            user=alexey_user,
             contact='@alexey',
-            email='alexey@example.com',
             is_learned=True,
             groups=self.group,
         )
+        boris_user = User.objects.create_user(
+            'Борис', email='boris@example.com',
+        )
         boris = Student.objects.create(
-            name='Борис',
+            user=boris_user,
             contact='@boris',
-            email='boris@example.com',
             is_learned=True,
             groups=self.group,
         )

@@ -13,7 +13,7 @@ from .models import ProjectForReview
 
 
 def learned_student(request):
-    student = Student.objects.filter(name=request.user.username).first()
+    student = Student.objects.for_user(request.user)
     if student is None or not student.is_learned:
         raise PermissionDenied
     return student

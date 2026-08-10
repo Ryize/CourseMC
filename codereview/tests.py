@@ -19,10 +19,12 @@ class CodeReviewTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             "review-user",
+            email="student@example.com",
             password="password",
         )
         self.other_user = User.objects.create_user(
             "other-review-user",
+            email="other@example.com",
             password="password",
         )
         self.staff = User.objects.create_user(
@@ -32,9 +34,8 @@ class CodeReviewTests(TestCase):
         )
         self.direction = DirectionStudy.objects.create(title="Python")
         self.student = Student.objects.create(
-            name=self.user.username,
+            user=self.user,
             contact="@student",
-            email="student@example.com",
             is_learned=True,
             groups_id=200,
         )
@@ -46,9 +47,8 @@ class CodeReviewTests(TestCase):
         )
         self.student.direction.add(self.direction)
         self.other_student = Student.objects.create(
-            name=self.other_user.username,
+            user=self.other_user,
             contact="@other",
-            email="other@example.com",
             is_learned=True,
             groups=self.group,
         )
@@ -184,10 +184,14 @@ class CodeReviewTests(TestCase):
             is_studies=False,
             teacher=self.student,
         )
-        archive_student = Student.objects.create(
-            name='archive-review-student',
-            contact='@archive',
+        archive_user = User.objects.create_user(
+            'archive-review-student',
             email='archive-review@example.com',
+            password='password',
+        )
+        archive_student = Student.objects.create(
+            user=archive_user,
+            contact='@archive',
             is_learned=False,
             groups=archive_group,
         )
@@ -242,10 +246,10 @@ class CodeReviewTests(TestCase):
         self.assertIn(archive_project.pk, archive_ids)
         self.assertNotIn(current_project.pk, archive_ids)
         self.assertNotIn(
-            (archive_student.pk, archive_student.name),
+            (archive_student.pk, archive_student.user.username),
             current_student_filter.lookups(current_request, model_admin),
         )
         self.assertIn(
-            (archive_student.pk, archive_student.name),
+            (archive_student.pk, archive_student.user.username),
             archive_student_filter.lookups(archive_request, model_admin),
         )

@@ -54,7 +54,7 @@ class ProjectStudentListFilter(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         active_scope = request.GET.get('student_scope') != 'archive'
-        students = Student.objects.order_by('name', 'pk')
+        students = Student.objects.order_by('user__username', 'pk')
         if active_scope:
             students = students.filter(is_learned=True, groups__is_studies=True)
         else:
@@ -62,7 +62,7 @@ class ProjectStudentListFilter(SimpleListFilter):
                 is_learned=True,
                 groups__is_studies=True,
             )
-        return tuple(students.values_list('pk', 'name'))
+        return tuple(students.values_list('pk', 'user__username'))
 
     def queryset(self, request, queryset):
         if not self.value():

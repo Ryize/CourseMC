@@ -2,7 +2,6 @@ from typing import Optional
 
 from django.db.models import IntegerField, Case, Value, When
 from django.contrib import admin
-from django.contrib.auth.models import User
 
 from billing.models import (Absences, Adjustment,
                             EducationCost, InformationPayments)
@@ -17,14 +16,14 @@ class OnlyMyStudentMixin:
     """
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "user" and not request.user.is_superuser:
-            teacher = Student.objects.filter(name=request.user.username).first()
+            teacher = Student.objects.for_user(request.user)
             kwargs["queryset"] = Student.objects.filter(is_learned=True, groups__teacher=teacher).order_by('-pk')
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         if not request.user.is_superuser:
-            queryset = queryset.filter(user__groups__teacher__name=request.user.username)
+            queryset = queryset.filter(user__groups__teacher__user=request.user)
         return queryset
 
 
@@ -58,10 +57,13 @@ class UserListFilter(admin.SimpleListFilter):
             if payment.user.is_learned
         }
         return tuple(
-            (student.name, student.name)
+            (student.pk, student.user.username)
             for student in sorted(
                 students,
-                key=lambda student: (student.name.casefold(), student.pk),
+                key=lambda student: (
+                    student.user.username.casefold(),
+                    student.pk,
+                ),
             )
         )
 
@@ -76,8 +78,7 @@ class UserListFilter(admin.SimpleListFilter):
         """
         if not self.value():
             return queryset
-        user = Student.objects.filter(name=self.value()).first()
-        return queryset.filter(user=user)
+        return queryset.filter(user_id=self.value())
 
 
 @admin.register(EducationCost)
@@ -121,10 +122,10 @@ class EducationCostAdmin(OnlyMyStudentMixin, admin.ModelAdmin):
            Если ученика не существует, или сумма равна или меньше 0,
            возвращает None. Иначе возвращает сумму долга.
         """
-        user = User.objects.filter(username=obj.user.name).first()
+        user = obj.user.user
         if user:
             last_pay = InformationPayments.objects.filter(
-                user__name=user.username
+                user=obj.user,
             ).first()
             if not last_pay:
                 return
@@ -137,7 +138,7 @@ class EducationCostAdmin(OnlyMyStudentMixin, admin.ModelAdmin):
         queryset = super().get_queryset(request)
 
         if not request.user.is_superuser:
-            queryset = queryset.filter(user__groups__teacher__name=request.user.username)
+            queryset = queryset.filter(user__groups__teacher__user=request.user)
 
         # Значения debt из _get_data для каждой записи
         debt_values_list = [self._get_debt(obj) for obj in queryset]
@@ -170,7 +171,7 @@ class EducationCostAdmin(OnlyMyStudentMixin, admin.ModelAdmin):
 
         Если ученика нет, вернёт None. Иначе вернёт сумму оплаты за месяц.
         """
-        student = Student.objects.filter(name=obj.user.name).first()
+        student = obj.user
         group = student.groups
         if student:
             try:

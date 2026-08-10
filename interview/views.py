@@ -30,7 +30,7 @@ def parse_integer(value, default):
 
 @login_required
 def test_answer(request):
-    student = Student.objects.filter(name=request.user.username).first()
+    student = Student.objects.for_user(request.user)
     if not student or not student.is_learned:
         return redirect('home')
 
@@ -92,10 +92,8 @@ def test_answer(request):
 @require_POST
 def question_progress(request, question_id):
     """Сохраняет самооценку только для вопроса, ранее выданного пользователю."""
-    if not Student.objects.filter(
-        name=request.user.username,
-        is_learned=True,
-    ).exists():
+    student = Student.objects.for_user(request.user)
+    if not student or not student.is_learned:
         raise PermissionDenied
 
     action = request.POST.get('action')

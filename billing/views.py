@@ -38,9 +38,7 @@ class BillingView(LoginRequiredMixin, ListView):
         Returns:
             dict: словарь с параметрами.
         """
-        student = Student.objects.filter(
-            name=get_user(self.request).username,
-        ).first()
+        student = Student.objects.for_user(get_user(self.request))
         student_email = get_student_email(self.request)
         billings = InformationPayments.objects.filter(
             user=student,
@@ -91,9 +89,7 @@ class BillingView(LoginRequiredMixin, ListView):
         if cost_classes < 1:
             return context
         payment_data = get_payment_url(cost_classes)
-        student = Student.objects.filter(
-            name=get_user(self.request).username,
-        ).first()
+        student = Student.objects.for_user(get_user(self.request))
         PaymentVerification.objects.create(user=student,
                                            payment_id=payment_data[1],
                                            amount=cost_classes)
@@ -115,14 +111,10 @@ class BillingView(LoginRequiredMixin, ListView):
         Returns:
             bool: можно/нет зайти на страницу (через родительский dispatch).
         """
-        student = Student.objects.filter(
-            name=get_user(self.request).username, is_learned=True,
-        ).first()
-        if not student:
+        student = Student.objects.for_user(get_user(self.request))
+        if not student or not student.is_learned:
             return redirect('home')
-        if not EducationCost.objects.filter(
-                user__name=request.user.username,
-        ).first():
+        if not EducationCost.objects.filter(user=student).exists():
             return redirect('home')
         return super().dispatch(request, *args, **kwargs)
 
@@ -149,9 +141,7 @@ def get_cost_classes(user: User) -> int:
     Returns:
         int (размер оплаты)
     """
-    student = Student.objects.filter(
-        name=user.username,
-    ).first()
+    student = Student.objects.for_user(user)
     billings = InformationPayments.objects.filter(
         user=student,
     ).order_by('-date').all()
@@ -187,8 +177,8 @@ def get_student_email(request) -> str:
     Returns:
         str (строка с почтой пользователя)
     """
-    student = Student.objects.filter(name=get_user(request).username).first()
-    return student.email
+    student = Student.objects.for_user(get_user(request))
+    return student.user.email
 
 
 @login_required

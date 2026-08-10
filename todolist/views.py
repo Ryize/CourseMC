@@ -30,7 +30,7 @@ def todo_user(request):
 
 @login_required
 def todo_group(request):
-    student = Student.objects.filter(name=request.user.username).first()
+    student = Student.objects.for_user(request.user)
     if student is None:
         raise PermissionDenied
     group = student.groups
@@ -83,7 +83,7 @@ def task_delete(request, queryset):
 
 def request_GET(request, todos, group_title: Optional[str] = None):
     categories = Category.objects.all()
-    student = Student.objects.filter(name=request.user.username).first()
+    student = Student.objects.for_user(request.user)
     if not student:
         return redirect('home')
     group = student.groups

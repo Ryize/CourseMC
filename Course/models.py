@@ -13,7 +13,21 @@ from django.dispatch import receiver
 
 
 def generate_student_password():
+    """Оставлено только для воспроизводимости исторической миграции 0001."""
     return random.randint(1111, 9999)
+
+
+class StudentManager(models.Manager):
+    """Безопасно сопоставляет авторизованный аккаунт с учебным профилем."""
+
+    def for_user(self, user):
+        if not getattr(user, 'is_authenticated', False):
+            return None
+        return self.filter(user=user).first()
+
+    def for_username(self, username):
+        """Находит учебный профиль через канонический логин аккаунта."""
+        return self.filter(user__username=username).first()
 
 
 class PrivateLessonSolutionStorage(FileSystemStorage):
@@ -38,16 +52,14 @@ def lesson_solution_upload_to(instance, filename):
 
 
 class Student(models.Model):
-    name = models.CharField(max_length=32, verbose_name='Имя')
-    contact = models.CharField(max_length=128, verbose_name='Контакты')
-    email = models.EmailField(max_length=64,
-                              unique=False,
-                              verbose_name='Почта'
-                              )
-    password = models.CharField(
-        max_length=128, verbose_name='Пароль',
-        default=generate_student_password,
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name='course_profile',
+        verbose_name='Аккаунт',
+        help_text='Единственный источник логина, почты и пароля ученика.',
     )
+    contact = models.CharField(max_length=128, verbose_name='Контакты')
     groups = models.ForeignKey(
         'LearnGroup',
         on_delete=models.CASCADE,
@@ -62,12 +74,14 @@ class Student(models.Model):
     created_at = models.DateTimeField(auto_now_add=True,
                                       verbose_name='Зарегестрирован')
 
+    objects = StudentManager()
+
     class Meta:
         verbose_name = 'Ученик'
         verbose_name_plural = 'Ученики'
 
     def __str__(self):
-        return f'{self.name}'
+        return self.user.username
 
 
 class LearnGroup(models.Model):

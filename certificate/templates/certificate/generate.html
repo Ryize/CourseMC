@@ -34,7 +34,7 @@
 
                 <select name="name" id="pet-select" class="form-control">
                     {% for student in students %}
-                        <option value="{{ student.name }}">{{ student.name }}</option>
+                        <option value="{{ student.user.username }}">{{ student.user.username }}</option>
                     {% endfor %}
                 </select>
             </div>

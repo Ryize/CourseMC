@@ -41,8 +41,10 @@ class InterviewViewTests(TestCase):
 
     def get_as_student(self, params):
         student = SimpleNamespace(is_learned=True, save=lambda: None)
-        with patch('interview.views.Student.objects.filter') as student_filter:
-            student_filter.return_value.first.return_value = student
+        with patch(
+            'interview.views.Student.objects.for_user',
+            return_value=student,
+        ):
             return self.client.get('/interview/', params)
 
     def test_random_mode_ignores_hidden_python_complexity(self):
@@ -172,8 +174,10 @@ class InterviewViewTests(TestCase):
         question = InterviewQuestion.objects.filter(theme=self.python).first()
         mark_questions_as_shown(self.user, [question])
 
-        with patch('interview.views.Student.objects.filter') as student_filter:
-            student_filter.return_value.exists.return_value = True
+        with patch(
+            'interview.views.Student.objects.for_user',
+            return_value=SimpleNamespace(is_learned=True),
+        ):
             answered_response = self.client.post(
                 reverse('interview_question_progress', args=(question.pk,)),
                 {'action': 'answered'},

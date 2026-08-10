@@ -8,6 +8,10 @@ from .models import Schedule, Student
 
 
 class StudentForm(ModelForm):
+    name = forms.CharField(max_length=150, label='Имя')
+    email = forms.EmailField(max_length=254, label='Почта')
+    password = forms.CharField(max_length=128, label='Пароль')
+
     class Meta:
         model = Student
         fields = ("name", "contact", "email", "password")
@@ -32,10 +36,9 @@ class StudentForm(ModelForm):
         )
 
 
-class AuthForm(ModelForm):
-    class Meta:
-        model = Student
-        fields = ("name", "password")
+class AuthForm(forms.Form):
+    name = forms.CharField(max_length=150, label='Логин')
+    password = forms.CharField(max_length=128, label='Пароль')
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop("request", None)

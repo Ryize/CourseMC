@@ -35,7 +35,10 @@ class StudentListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Student
-        fields = '__all__'
+        fields = (
+            'id', 'user', 'contact', 'groups', 'is_learned', 'direction',
+            'created_at',
+        )
 
 
 class LearnGroupListSerializer(serializers.ModelSerializer):
@@ -70,9 +73,9 @@ class ClassesTimetableListSerializer(serializers.ModelSerializer):
 
 class ApplicationsForTrainingSerializer(serializers.ModelSerializer):
     """ Список всех заявок на обучение. """
-    name = serializers.ReadOnlyField(source='student.name')
+    name = serializers.ReadOnlyField(source='student.user.username')
     contact = serializers.ReadOnlyField(source='student.contact')
-    email = serializers.ReadOnlyField(source='student.email')
+    email = serializers.ReadOnlyField(source='student.user.email')
 
     class Meta:
         model = ApplicationsForTraining

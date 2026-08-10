@@ -19,7 +19,7 @@ def generate(request):
         return render(request, 'certificate/generate.html',
                       {'students': students})
     name = request.POST.get('name')
-    student = get_object_or_404(Student, name=name)
+    student = get_object_or_404(Student, user__username=name)
     fio = request.POST.get('fio')
     number = f'{student.pk}{random.randint(1000, 9999)}'
     certificate = Certificate(student=student, number=number, fio=fio)

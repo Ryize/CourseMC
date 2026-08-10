@@ -64,14 +64,13 @@ def get_lesson_data(user: User) -> tuple:
             [2] - сколько должен за прошедшие занятия
     """
 
-    lesson_price = EducationCost.objects.filter(
-        user__name=user.username).first().amount
+    student = Student.objects.for_user(user)
+    lesson_price = EducationCost.objects.filter(user=student).first().amount
     last_pay = str(InformationPayments.objects.filter(
-        user__name=user.username
+        user=student,
     ).last().date).split()[0]
     current_date = str(datetime.datetime.now()).split()[0]
     dates = weekday_count(last_pay, current_date)
-    student = Student.objects.filter(name=user.username).first()
     timetable = ClassesTimetable.objects.filter(group=student.groups).values(
         'weekday').all()
     weekdays = set(map(lambda i: i['weekday'], timetable))

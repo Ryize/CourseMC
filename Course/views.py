@@ -109,16 +109,19 @@ class StudentRecordView(FormView):
             }
             return JsonResponse(response)
         try:
-            user = User.objects.create_user(name, email, password)
+            with transaction.atomic():
+                user = User.objects.create_user(name, email, password)
+                student = form.save(commit=False)
+                student.user = user
+                student.save()
+                form.save_m2m()
+                ApplicationsForTraining.objects.create(student=student, ip=ip)
         except IntegrityError:
             response = {
                 'success': False,
                 'error_message': 'Пользователь с таким именем уже существует!',
             }
             return JsonResponse(response)
-        student = form.save()
-        ApplicationsForTraining.objects.create(student=student, ip=ip)
-        user.save()
         response = {
             'success': True,
         }
@@ -191,8 +194,7 @@ class TimetableView(LoginRequiredMixin, ListView):
         Returns:
             Schedule: Отфильтрованный QuerySet.
         """
-        student = Student.objects.filter(
-            name=self.request.user.username).first()
+        student = Student.objects.for_user(self.request.user)
         accessible_ids = get_accessible_schedule_ids(student)
         self.lesson_numbers = {
             schedule_id: number
@@ -230,8 +232,7 @@ class TimetableView(LoginRequiredMixin, ListView):
         """
         context = super().get_context_data(**kwargs)
         context['reviews_count'] = Review.objects.all().count()
-        student = Student.objects.filter(
-            name=self.request.user.username).first()
+        student = Student.objects.for_user(self.request.user)
         context['absences'] = Absences.objects.filter(user=student).count()
         page_schedules = list(context['schedules'])
         solutions = LessonSolution.objects.filter(
@@ -264,10 +265,8 @@ class TimetableView(LoginRequiredMixin, ListView):
         Returns:
             bool: можно/нет зайти на страницу (через родительский dispatch).
         """
-        student = Student.objects.filter(
-            name=get_user(self.request).username, is_learned=True,
-        ).first()
-        if not student:
+        student = Student.objects.for_user(get_user(self.request))
+        if not student or not student.is_learned:
             return redirect('home')
         return super().dispatch(request, *args, **kwargs)
 
@@ -294,11 +293,8 @@ class LessonSolutionUploadView(LoginRequiredMixin, View):
     """Принимает прикреплённые к доступному уроку файлы решения."""
 
     def post(self, request, schedule_id):
-        student = Student.objects.filter(
-            name=request.user.username,
-            is_learned=True,
-        ).first()
-        if not student:
+        student = Student.objects.for_user(request.user)
+        if not student or not student.is_learned:
             raise PermissionDenied('Отправлять решения могут только учащиеся.')
 
         if schedule_id not in set(get_accessible_schedule_ids(student)):
@@ -367,15 +363,16 @@ class LessonSolutionFileDownloadView(LoginRequiredMixin, View):
             return self._file_response(solution_file, request.GET.get('view') != '1')
 
         if request.user.is_staff:
-            if solution.student.groups.teacher.name != request.user.username:
+            if solution.student.groups.teacher.user_id != request.user.pk:
                 raise PermissionDenied('Вы не ведёте группу этого ученика.')
             return self._file_response(solution_file, request.GET.get('view') != '1')
 
-        student = Student.objects.filter(
-            name=request.user.username,
-            is_learned=True,
-        ).first()
-        if not student or student.pk != solution.student_id:
+        student = Student.objects.for_user(request.user)
+        if (
+            not student
+            or not student.is_learned
+            or student.pk != solution.student_id
+        ):
             raise PermissionDenied('Этот файл недоступен.')
         return self._file_response(solution_file, request.GET.get('view') != '1')
 
@@ -413,7 +410,10 @@ def download_report(request):
     schedules = Schedule.objects.filter(is_archived=False).order_by(
         'direction_id', 'position', 'pk',
     )
-    group = Student.objects.filter(name=request.user.username).first().groups
+    student = Student.objects.for_user(request.user)
+    if not student:
+        raise PermissionDenied('Учебный профиль не найден.')
+    group = student.groups
     number_dash_on_line = 64
     result_data = """Отчёт о группе {group_title}
 {approximate_string_length}
@@ -443,7 +443,7 @@ def download_report(request):
     Контакты: {student_contact}
     Пропущенных урока: {student_absents}
         """.format(
-            student_name=student.name,
+            student_name=student.user.username,
             student_contact=student.contact or 'Не указаны!',
             student_absents=Absences.objects.filter(user=student).count(),
         )
@@ -502,7 +502,7 @@ def ask_question(request):
     }
     if not question:
         return JsonResponse(response, status=STATUS_PRECONDITION_FAILED)
-    student = Student.objects.filter(name=request.user.username).first()
+    student = Student.objects.for_user(request.user)
     if not student:
         return JsonResponse(response, status=STATUS_FORBIDDEN)
     group = student.groups

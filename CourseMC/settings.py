@@ -28,6 +28,10 @@ SOCIAL_AUTH_VK_OAUTH2_SECRET = (
 LOGIN_REDIRECT_URL = "/"
 ACCOUNT_AUTHENTICATION_METHOD = "username_email"
 
+# Один и тот же секрет задаётся в окружении сайта и Telegram-бота. Значение
+# намеренно не хранится в репозитории.
+COURSEMC_BOT_API_TOKEN = os.environ.get("COURSEMC_BOT_API_TOKEN", "")
+
 # Preserve the primary key type used by the existing Django 3.2 migrations.
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
@@ -139,6 +143,12 @@ AUTHENTICATION_BACKENDS = (
     "Course.auth_backends.StudentEmailAuthenticationBackend",
     # бекенд классической аутентификации, чтобы работала авторизация через обычный логин и пароль
 )
+
+REST_FRAMEWORK = {
+    "DEFAULT_THROTTLE_RATES": {
+        "bot_auth": "10/min",
+    },
+}
 
 CKEDITOR_CONFIGS = {
     "default": {

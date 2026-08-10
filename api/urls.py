@@ -7,12 +7,17 @@ from .views import (LearnGroupViewSet, ScheduleGet, ScheduleViewSet,
                     ClassesTimetableGingerView, ProjectForReviewView,
                     InterviewQuestionCategoryViewSet, InterviewQuestionViewSet,
                     ClassesTimetableWeekdayView,
-                    GetQuestionView, CheckAnswerView)
+                    GetQuestionView, CheckAnswerView,
+                    BotStudentAuthenticationView, BotGroupStudentsView)
 
 urlpatterns = [
     path('schedule/', ScheduleViewSet.as_view()),
     path('schedule/get_by_username/', ScheduleGet.as_view()),
     path('student/', StudentViewSet.as_view()),
+    path('bot/authenticate/', BotStudentAuthenticationView.as_view(),
+         name='bot_student_authenticate'),
+    path('bot/groups/<int:group_id>/students/', BotGroupStudentsView.as_view(),
+         name='bot_group_students'),
     path('groups/', LearnGroupViewSet.as_view()),
     path('student_question/', StudentQuestionView.as_view()),
     path('classes_timetable/<str:user_name>/', ClassesTimetableView.as_view()),

@@ -1,10 +1,12 @@
 import tempfile
 from datetime import timedelta
+from io import StringIO
 
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.db import transaction
+from django.core.management import call_command
+from django.db import IntegrityError, transaction
 from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
 from django.urls import reverse
@@ -35,13 +37,13 @@ class TimetableTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             "schedule-user",
+            email="student@example.com",
             password="password",
         )
         self.direction = DirectionStudy.objects.create(title="Python")
         self.student = Student.objects.create(
-            name=self.user.username,
+            user=self.user,
             contact="@student",
-            email="student@example.com",
             is_learned=True,
             groups_id=100,
         )
@@ -62,6 +64,87 @@ class TimetableTests(TestCase):
                 lesson_type="Новая тема" if number % 2 else "Практика",
                 direction=self.direction,
             )
+
+    def test_account_link_uses_one_to_one_relation(self):
+        duplicate_user = User.objects.create_user(
+            'duplicate-account',
+            email='duplicate@example.com',
+            password='password',
+        )
+        duplicate_profile = Student.objects.create(
+            user=duplicate_user,
+            contact='@duplicate',
+            groups=self.group,
+        )
+
+        self.assertEqual(Student.objects.for_user(self.user), self.student)
+        self.assertEqual(
+            Student.objects.for_user(duplicate_user),
+            duplicate_profile,
+        )
+
+    def test_username_lookup_uses_canonical_user_username(self):
+        canonical_user = User.objects.create_user(
+            'canonical-account',
+            email='canonical@example.com',
+            password='password',
+        )
+        canonical_profile = Student.objects.create(
+            user=canonical_user,
+            contact='@canonical',
+            groups=self.group,
+        )
+
+        self.assertEqual(
+            Student.objects.for_username(canonical_user.username),
+            canonical_profile,
+        )
+        self.assertIsNone(Student.objects.for_username('old-display-name'))
+
+    def test_profile_cannot_be_created_without_account(self):
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Student.objects.create(
+                contact='@missing-account',
+                groups=self.group,
+            )
+
+    def test_link_audit_never_prints_passwords(self):
+        self.user.set_password('private-account-password')
+        self.user.save(update_fields=('password',))
+        output = StringIO()
+
+        call_command('audit_user_student_links', '--details', stdout=output)
+
+        report = output.getvalue()
+        self.assertIn('Связанных профилей', report)
+        self.assertNotIn('private-account-password', report)
+
+    def test_registration_creates_linked_account_and_profile_atomically(self):
+        LearnGroup.objects.create(
+            pk=2,
+            title='Группа новых заявок',
+            is_studies=False,
+            teacher=self.student,
+        )
+
+        response = self.client.post(
+            reverse('home'),
+            {
+                'name': 'new-linked-student',
+                'contact': '@new-linked-student',
+                'email': 'new-linked@example.com',
+                'password': 'registration-password',
+            },
+            REMOTE_ADDR='192.0.2.10',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['success'])
+        user = User.objects.get(username='new-linked-student')
+        student = Student.objects.get(user=user)
+        self.assertEqual(student.user.username, user.username)
+        self.assertEqual(student.user.email, 'new-linked@example.com')
+        self.assertTrue(user.check_password('registration-password'))
 
     def test_timetable_requires_learned_student(self):
         anonymous_response = self.client.get(reverse("schedule"))
@@ -246,10 +329,14 @@ class AdminFilterTests(TimetableTests):
             is_studies=False,
             teacher=self.student,
         )
-        inactive_student = Student.objects.create(
-            name='archived-student',
-            contact='@archived',
+        inactive_user = User.objects.create_user(
+            'archived-student',
             email='archived@example.com',
+            password='password',
+        )
+        inactive_student = Student.objects.create(
+            user=inactive_user,
+            contact='@archived',
             is_learned=False,
             groups=inactive_group,
         )
@@ -274,11 +361,11 @@ class AdminFilterTests(TimetableTests):
         )
 
         self.assertIn(
-            (self.student.pk, self.student.name),
+            (self.student.pk, self.student.user.username),
             student_filter.lookups(request, model_admin),
         )
         self.assertNotIn(
-            (inactive_student.pk, inactive_student.name),
+            (inactive_student.pk, inactive_student.user.username),
             student_filter.lookups(request, model_admin),
         )
         self.assertIn(
@@ -482,11 +569,12 @@ class LessonSolutionTests(TimetableTests):
         )
         self.assertEqual(preview_response['X-Content-Type-Options'], 'nosniff')
 
-        other_user = User.objects.create_user('other-student', password='password')
+        other_user = User.objects.create_user(
+            'other-student', email='other@example.com', password='password',
+        )
         other_student = Student.objects.create(
-            name=other_user.username,
+            user=other_user,
             contact='@other',
-            email='other@example.com',
             is_learned=True,
             groups=self.group,
         )
@@ -567,7 +655,5 @@ class AccountLoginTests(TimetableTests):
     def test_user_can_log_in_with_username(self):
         self._login(self.user.username)
 
-    def test_student_can_log_in_with_email_from_profile(self):
-        self.assertEqual(self.user.email, '')
-
-        self._login(self.student.email)
+    def test_student_can_log_in_with_account_email(self):
+        self._login(self.user.email)
