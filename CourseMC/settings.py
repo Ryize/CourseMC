@@ -16,6 +16,11 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+try:
+    from config import PROXYAPI_API_KEY as LOCAL_PROXYAPI_API_KEY
+except ImportError:
+    LOCAL_PROXYAPI_API_KEY = ''
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
@@ -31,6 +36,19 @@ ACCOUNT_AUTHENTICATION_METHOD = "username_email"
 # Один и тот же секрет задаётся в окружении сайта и Telegram-бота. Значение
 # намеренно не хранится в репозитории.
 COURSEMC_BOT_API_TOKEN = os.environ.get("COURSEMC_BOT_API_TOKEN", "")
+
+# Ключ хранится только в окружении сервера. Код-ревью продолжит работать и без
+# него: заявка сохранится, а в админке появится причина, почему черновик ИИ не
+# сформирован.
+PROXYAPI_API_KEY = os.environ.get(
+    "PROXYAPI_API_KEY",
+    LOCAL_PROXYAPI_API_KEY,
+)
+PROXYAPI_REVIEW_MODEL = os.environ.get("PROXYAPI_REVIEW_MODEL", "gpt-4o-mini")
+PROXYAPI_REVIEW_API_URL = os.environ.get(
+    "PROXYAPI_REVIEW_API_URL",
+    "https://api.proxyapi.ru/openai/v1/chat/completions",
+)
 
 # Preserve the primary key type used by the existing Django 3.2 migrations.
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"

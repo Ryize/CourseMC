@@ -12,9 +12,7 @@ venv/
 venvv/
 
 # Local configuration and secrets
-.env
-.env.*
-!.env.example
+config.py
 
 # Django local state
 db.sqlite3

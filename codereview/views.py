@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from Course.models import Student
 
+from .ai_review import generate_ai_review_draft
 from .cognetive_counter import get_project_info
 from .forms import ProjectForReviewForm
 from .git_urls import GitError
@@ -87,6 +88,9 @@ def send_review(request):
         lines=stats['all_size'],
         cognetive=stats['all_cognetive'],
     )
+    # Ошибка ИИ не мешает ученику отправить проект: преподаватель увидит её в
+    # админке и сможет запустить черновик повторно после настройки ProxyAPI.
+    generate_ai_review_draft(review)
     messages.success(request, 'Проект отправлен на проверку.')
     return redirect('review_my', pk=review.pk)
 

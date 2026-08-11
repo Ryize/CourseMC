@@ -73,7 +73,7 @@
                                     target="_blank">{{ review.github }}</a></p>
             <h6>Кол-во строк: {{ review.lines }}</h6>
             <h6>Когнитивная сложность: {{ review.cognetive }}</h6>
-            {% if review.code_review.first %}
+            {% if review.code_review.first and review.code_review.first.is_published %}
                 {% if review.code_review.first.status %}
                     <label class="mt-2">✅ Пройдено</label>
                 {% else %}

@@ -103,8 +103,9 @@ def tree_to_urls(tree, repo, branch):
                         base_url + new_path + file)  # формируем ссылку для каждого файла
             traverse_tree(value.get("dirs", {}),
                           new_path)  # рекурсивно обходим вложенные директории
-    for i in tree[repo.split('/')[-1]]["files"]:
-        urls.append(base_url + i)
+    for filename in tree[repo.split('/')[-1]]["files"]:
+        if filename.endswith('.py'):
+            urls.append(base_url + filename)
     traverse_tree(
         tree[repo.split('/')[-1]][
             "dirs"])  # вызываем функцию для стартовой директории

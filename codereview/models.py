@@ -1,4 +1,5 @@
 from ckeditor_uploader.fields import RichTextUploadingField
+from django.conf import settings
 from django.db import models
 
 from Course.models import Student
@@ -59,6 +60,12 @@ class ProjectForReview(models.Model):
 
 
 class CodeReview(models.Model):
+    AI_GENERATION_STATUSES = (
+        ('not_requested', 'Не запрашивался'),
+        ('generating', 'Генерируется'),
+        ('ready', 'Черновик готов'),
+        ('failed', 'Не удалось сформировать'),
+    )
     STYLES = (
         ('Маслёнок', 'Маслёнок'),
         ('Маслёнок+', 'Маслёнок+'),
@@ -98,6 +105,52 @@ class CodeReview(models.Model):
     code_wishes = models.TextField(verbose_name='Общие пожелания', null=True,
                                    blank=True)
     status = models.BooleanField(verbose_name='Пройдено', default=False)
+    is_published = models.BooleanField(
+        verbose_name='Показывать ученику',
+        default=False,
+    )
+    is_ai_generated = models.BooleanField(
+        verbose_name='Черновик создан ИИ',
+        default=False,
+    )
+    ai_generation_status = models.CharField(
+        max_length=16,
+        choices=AI_GENERATION_STATUSES,
+        default='not_requested',
+        verbose_name='Статус черновика ИИ',
+    )
+    ai_model = models.CharField(
+        max_length=64,
+        blank=True,
+        verbose_name='Модель ИИ',
+    )
+    ai_source_summary = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name='Контекст для ИИ',
+    )
+    ai_generation_error = models.TextField(
+        blank=True,
+        verbose_name='Ошибка генерации ИИ',
+    )
+    ai_generated_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Черновик сгенерирован',
+    )
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_code_reviews',
+        verbose_name='Согласовал',
+    )
+    approved_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Согласовано',
+    )
     created_at = models.DateTimeField(auto_now_add=True,
                                       verbose_name='Отправлено')
 

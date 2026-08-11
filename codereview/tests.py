@@ -1,18 +1,22 @@
+import json
 from unittest.mock import patch
 
 from django.contrib import admin
 from django.contrib.auth.models import User
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 
 from Course.models import DirectionStudy, LearnGroup, Student
 
 from .admin import (
+    CodeReviewAdmin,
     ProjectForReviewAdmin,
     ProjectStudentListFilter,
     ProjectStudentScopeListFilter,
 )
-from .models import ProjectCategories, ProjectForReview
+from .ai_review import SourceBundle, generate_ai_review_draft
+from .git_urls import tree_to_urls
+from .models import CodeReview, ProjectCategories, ProjectForReview
 
 
 class CodeReviewTests(TestCase):
@@ -31,6 +35,7 @@ class CodeReviewTests(TestCase):
             "review-admin",
             password="password",
             is_staff=True,
+            is_superuser=True,
         )
         self.direction = DirectionStudy.objects.create(title="Python")
         self.student = Student.objects.create(
@@ -177,6 +182,90 @@ class CodeReviewTests(TestCase):
         self.assertContains(response, "Укажите ссылку на репозиторий GitHub")
         self.assertFalse(ProjectForReview.objects.exists())
 
+    @patch(
+        "codereview.views.generate_ai_review_draft",
+    )
+    @patch(
+        "codereview.views.get_project_info",
+        return_value={"all_cognetive": 10, "all_size": 50},
+    )
+    def test_valid_submission_starts_ai_draft(
+        self,
+        analyse_repository,
+        generate_draft,
+    ):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("review_send"),
+            {
+                "category": self.category.pk,
+                "github": "https://github.com/example/project",
+                "comment": "Проверьте проект",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        generate_draft.assert_called_once_with(ProjectForReview.objects.get())
+
+    def test_student_cannot_see_unpublished_ai_draft(self):
+        project = self.create_review()
+        CodeReview.objects.create(
+            project=project,
+            problems="<p>Черновик ИИ с проблемой</p>",
+            amount_problems=1,
+            is_ai_generated=True,
+            ai_generation_status="ready",
+            is_published=False,
+            status=False,
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("review_my", args=(project.pk,)))
+
+        self.assertContains(response, "Ревью пока не готово")
+        self.assertNotContains(response, "Черновик ИИ с проблемой")
+
+        list_response = self.client.get(reverse("review_list"))
+        self.assertNotContains(list_response, "❌ Не пройдено")
+        self.assertNotContains(
+            list_response,
+            reverse("review_my", args=(project.pk,)),
+        )
+
+    def test_admin_marks_revealed_review_as_approved(self):
+        project = self.create_review()
+        review = CodeReview.objects.create(project=project, is_published=False)
+        review.is_published = True
+        request = RequestFactory().post("/admin/codereview/codereview/")
+        request.user = self.staff
+        model_admin = CodeReviewAdmin(CodeReview, admin.site)
+
+        model_admin.save_model(request, review, form=None, change=True)
+
+        review.refresh_from_db()
+        self.assertEqual(review.approved_by, self.staff)
+        self.assertIsNotNone(review.approved_at)
+
+    def test_admin_project_list_links_to_ai_draft(self):
+        project = self.create_review()
+        draft = CodeReview.objects.create(
+            project=project,
+            is_ai_generated=True,
+            ai_generation_status='ready',
+        )
+        self.client.force_login(self.staff)
+
+        response = self.client.get(
+            reverse('admin:codereview_projectforreview_changelist')
+        )
+
+        self.assertContains(response, 'Черновик готов')
+        self.assertContains(
+            response,
+            reverse('admin:codereview_codereview_change', args=(draft.pk,)),
+        )
+
     def test_admin_filters_current_students_and_keeps_archive_available(self):
         current_project = self.create_review(self.student)
         archive_group = LearnGroup.objects.create(
@@ -253,3 +342,123 @@ class CodeReviewTests(TestCase):
             (archive_student.pk, archive_student.user.username),
             archive_student_filter.lookups(archive_request, model_admin),
         )
+
+
+class GitUrlTests(TestCase):
+    def test_root_non_python_files_are_not_sent_to_complexity_analyser(self):
+        tree = {
+            'demo': {
+                'files': ['.gitignore', 'README.md', 'manage.py'],
+                'dirs': {},
+            },
+        }
+
+        urls = tree_to_urls(tree, 'owner/demo', 'main')
+
+        self.assertEqual(
+            urls,
+            ['https://raw.githubusercontent.com/owner/demo/main/manage.py'],
+        )
+
+
+class AIReviewDraftTests(TestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user("review-owner", password="password")
+        self.direction = DirectionStudy.objects.create(title="Python")
+        self.student = Student.objects.create(
+            user=self.owner,
+            contact="@owner",
+            is_learned=True,
+            groups_id=333,
+        )
+        group = LearnGroup.objects.create(
+            pk=333,
+            title="Группа для ИИ-ревью",
+            is_studies=True,
+            teacher=self.student,
+        )
+        self.student.groups = group
+        self.student.save(update_fields=("groups",))
+        self.student.direction.add(self.direction)
+        self.category = ProjectCategories.objects.create(
+            title="Проект для ИИ-ревью",
+            min_lines=10,
+            min_cognetive=1,
+            max_cognetive=100,
+        )
+        self.project = ProjectForReview.objects.create(
+            category=self.category,
+            user=self.student,
+            github="https://github.com/example/project",
+            lines=50,
+            cognetive=10,
+        )
+
+    @override_settings(PROXYAPI_API_KEY="test-key", PROXYAPI_REVIEW_MODEL="gpt-4o-mini")
+    @patch(
+        "codereview.ai_review.collect_repository_source",
+        return_value=SourceBundle(
+            content="\n### Файл: app.py\n```python\nprint('hello')\n```",
+            summary="Передано 1 из 1 Python-файлов, 14 символов",
+        ),
+    )
+    @patch("codereview.ai_review.requests.post")
+    def test_generation_creates_hidden_safe_draft(self, post, collect_source):
+        response = post.return_value
+        response.raise_for_status.return_value = None
+        response.json.return_value = {
+            "choices": [
+                {
+                    "message": {
+                        "content": json.dumps(
+                            {
+                                "issues": [
+                                    {
+                                        "file": "app.py",
+                                        "problem": "В коде есть <script>опасная строка</script>",
+                                    }
+                                ],
+                                "metrics": {
+                                    "quality": 7,
+                                    "architecture": 6,
+                                    "standards": 8,
+                                    "principles": 7,
+                                },
+                                "style": "Pre-Junior",
+                                "wishes": "Добавьте обработку ошибок.",
+                            },
+                            ensure_ascii=False,
+                        )
+                    }
+                }
+            ]
+        }
+
+        draft = generate_ai_review_draft(self.project)
+
+        self.assertFalse(draft.status)
+        self.assertFalse(draft.is_published)
+        self.assertTrue(draft.is_ai_generated)
+        self.assertEqual(draft.ai_generation_status, "ready")
+        self.assertEqual(draft.amount_problems, 1)
+        self.assertEqual(draft.code_quality, 7)
+        self.assertIn("&lt;script&gt;", draft.problems)
+        self.assertNotIn("<script>", draft.problems)
+        self.assertNotIn("Как улучшить", draft.problems)
+        self.assertNotIn("Строка 3", draft.problems)
+        self.assertIn("<ol", draft.problems)
+        self.assertNotIn("<ul", draft.problems)
+        self.assertEqual(draft.ai_source_summary, "Передано 1 из 1 Python-файлов, 14 символов")
+        self.assertEqual(post.call_args.kwargs["json"]["model"], "gpt-4o-mini")
+        self.assertEqual(post.call_args.kwargs["json"]["max_completion_tokens"], 850)
+        collect_source.assert_called_once_with(self.project.github)
+
+    @override_settings(PROXYAPI_API_KEY="")
+    @patch("codereview.ai_review.collect_repository_source")
+    def test_missing_proxyapi_key_records_admin_only_failure(self, collect_source):
+        draft = generate_ai_review_draft(self.project)
+
+        self.assertFalse(draft.is_published)
+        self.assertEqual(draft.ai_generation_status, "failed")
+        self.assertIn("PROXYAPI_API_KEY", draft.ai_generation_error)
+        collect_source.assert_not_called()

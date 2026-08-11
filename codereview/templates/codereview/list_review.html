@@ -60,7 +60,7 @@
                     <li>
                         <span>{{ review.github|github }} ({{ review.category }})</span>
                         <br>
-                        {% if review.code_review.first %}
+                        {% if review.code_review.first and review.code_review.first.is_published %}
                             {% if review.code_review.first.status %}
                                 <span class="mt-2 black">✅ Пройдено</span>
                             {% else %}
@@ -74,7 +74,7 @@
                         <p class="black"
                            onclick="copyURL('copy_url-{{ poll.pk }}')">
                             <small>
-                                {% if review.code_review.first %}
+                                {% if review.code_review.first and review.code_review.first.is_published %}
                                     <svg xmlns="http://www.w3.org/2000/svg"
                                          width="16" height="16"
                                          fill="currentColor" class="bi bi-book"
