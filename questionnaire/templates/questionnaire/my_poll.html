@@ -89,10 +89,18 @@
                                     <strong>{% if poll.correctness_percent is not None %}{{ poll.correctness_percent }}%{% else %}—{% endif %}</strong>
                                 </div>
                                 <div class="questionnaire-metric">
-                                    <span>Средняя оценка</span>
-                                    <strong>{% if poll.average_rating is not None %}{{ poll.average_rating }}/5{% else %}—{% endif %}</strong>
+                                    <span>Средняя оценка опроса</span>
+                                    {% if poll.average_rating is not None %}
+                                        <strong>{{ poll.average_rating }}/5</strong>
+                                    {% else %}
+                                        <strong class="questionnaire-metric-empty">Оценок пока нет</strong>
+                                    {% endif %}
                                 </div>
                             </div>
+                            <a class="questionnaire-link-button questionnaire-link-button--secondary questionnaire-results-link"
+                               href="{% url 'poll_results' poll.pk %}">
+                                Посмотреть прохождения
+                            </a>
                         </div>
                     </details>
                 </article>

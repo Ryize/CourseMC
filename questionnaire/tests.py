@@ -99,6 +99,71 @@ class QuestionnaireAccessTests(TestCase):
         self.quiz.refresh_from_db()
         self.assertFalse(self.quiz.is_archived)
 
+    def test_owner_can_edit_existing_question_and_answer(self):
+        question = Question.objects.create(
+            question="Старый текст вопроса",
+            quiz=self.quiz,
+        )
+        other_question = Question.objects.create(
+            question="Другой вопрос",
+            quiz=self.quiz,
+        )
+        answer = AnswerQuestion.objects.create(
+            answer="Старый вариант",
+            question=question,
+            correct=False,
+        )
+        self.client.force_login(self.owner)
+
+        question_response = self.client.post(
+            reverse("edit_question", args=(self.quiz.pk, question.pk)),
+            {"question": "Новая формулировка"},
+        )
+        answer_response = self.client.post(
+            reverse("edit_answer", args=(self.quiz.pk, answer.pk)),
+            {
+                "question": other_question.pk,
+                "answer": "Новый правильный вариант",
+                "correct": "on",
+            },
+        )
+
+        self.assertRedirects(question_response, reverse("create_question", args=(self.quiz.pk,)))
+        self.assertRedirects(answer_response, reverse("create_answer", args=(self.quiz.pk,)))
+        question.refresh_from_db()
+        answer.refresh_from_db()
+        self.assertEqual(question.question, "Новая формулировка")
+        self.assertEqual(answer.answer, "Новый правильный вариант")
+        self.assertEqual(answer.question, other_question)
+        self.assertTrue(answer.correct)
+
+    def test_non_owner_cannot_edit_existing_question_or_answer(self):
+        question = Question.objects.create(
+            question="Вопрос владельца",
+            quiz=self.quiz,
+        )
+        answer = AnswerQuestion.objects.create(
+            answer="Вариант владельца",
+            question=question,
+        )
+        self.client.force_login(self.other)
+
+        question_response = self.client.get(
+            reverse("edit_question", args=(self.quiz.pk, question.pk))
+        )
+        answer_response = self.client.post(
+            reverse("edit_answer", args=(self.quiz.pk, answer.pk)),
+            {
+                "question": question.pk,
+                "answer": "Попытка изменить",
+            },
+        )
+
+        self.assertEqual(question_response.status_code, 404)
+        self.assertEqual(answer_response.status_code, 404)
+        answer.refresh_from_db()
+        self.assertEqual(answer.answer, "Вариант владельца")
+
 
 class QuestionnaireArchiveTests(TestCase):
     def setUp(self):
@@ -145,6 +210,97 @@ class QuestionnaireArchiveTests(TestCase):
         self.quiz.refresh_from_db()
         self.assertFalse(self.quiz.is_archived)
         self.assertIsNone(self.quiz.archived_at)
+
+
+class QuestionnaireResultsTests(TestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user("owner", password="password")
+        self.participant = User.objects.create_user(
+            "participant",
+            password="password",
+        )
+        self.other = User.objects.create_user("other", password="password")
+        self.quiz = Quiz.objects.create(
+            title="Опрос с результатами",
+            description="Описание",
+            topic="Python",
+            lifetime=timezone.now() + timedelta(days=1),
+            user=self.owner,
+        )
+        correct_question = Question.objects.create(
+            question="Верный вопрос",
+            quiz=self.quiz,
+        )
+        wrong_question = Question.objects.create(
+            question="Вопрос с ошибкой",
+            quiz=self.quiz,
+        )
+        AnswerQuestion.objects.create(
+            answer="Правильный ответ",
+            question=correct_question,
+            correct=True,
+        )
+        AnswerQuestion.objects.create(
+            answer="Правильный вариант",
+            question=wrong_question,
+            correct=True,
+        )
+        wrong_answer = AnswerQuestion.objects.create(
+            answer="Выбранный неверный вариант",
+            question=wrong_question,
+            correct=False,
+        )
+        UserAnswer.objects.create(
+            quiz=self.quiz,
+            question=correct_question,
+            answers=correct_question.answers.get(correct=True),
+            user=self.participant,
+        )
+        UserAnswer.objects.create(
+            quiz=self.quiz,
+            question=wrong_question,
+            answers=wrong_answer,
+            user=self.participant,
+        )
+        PassedPolls.objects.create(quiz=self.quiz, passed_user=self.participant)
+
+    def test_owner_sees_participant_result_and_mistake(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.get(reverse("poll_results", args=(self.quiz.pk,)))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "participant")
+        self.assertContains(response, "50%")
+        self.assertContains(response, "Вопрос с ошибкой")
+        self.assertContains(response, "Выбранный неверный вариант")
+        self.assertContains(response, "Правильный вариант")
+
+    def test_non_owner_cannot_see_results(self):
+        self.client.force_login(self.other)
+
+        response = self.client.get(reverse("poll_results", args=(self.quiz.pk,)))
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_dashboard_distinguishes_answer_result_from_poll_rating(self):
+        self.client.force_login(self.owner)
+
+        response_without_rating = self.client.get(reverse("my_poll"))
+
+        self.assertContains(response_without_rating, "50%")
+        self.assertContains(response_without_rating, "Средняя оценка опроса")
+        self.assertContains(response_without_rating, "Оценок пока нет")
+
+        Rating.objects.create(
+            quiz=self.quiz,
+            user=self.participant,
+            answer_number=4,
+        )
+
+        response_with_rating = self.client.get(reverse("my_poll"))
+
+        self.assertContains(response_with_rating, "4,0/5")
 
 
 class QuestionnaireFlowTests(TestCase):

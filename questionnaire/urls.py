@@ -17,11 +17,26 @@ urlpatterns = [
         name="create_answer",
     ),
     path(
+        "poll/<int:quiz_id>/question/<int:question_id>/edit/",
+        views.edit_question,
+        name="edit_question",
+    ),
+    path(
+        "poll/<int:quiz_id>/answer/<int:answer_id>/edit/",
+        views.edit_answer,
+        name="edit_answer",
+    ),
+    path(
         "create_answer/",
         views.create_answer_legacy,
         name="create_answer_legacy",
     ),
     path("my_polls/", views.QuizListView.as_view(), name="my_poll"),
+    path(
+        "poll/<int:quiz_id>/results/",
+        views.poll_results,
+        name="poll_results",
+    ),
     path(
         "poll/<int:quiz_id>/archive/",
         views.archive_poll,

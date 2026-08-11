@@ -41,10 +41,12 @@
                     {% for question in questions %}
                         <li>
                             <span class="questionnaire-builder-list-number">{{ forloop.counter }}</span>
-                            <span>
+                            <div class="questionnaire-builder-list-content">
                                 {{ question.question|questionnaire_text }}
                                 <small>{{ question.answer_count }} вариантов ответа</small>
-                            </span>
+                            </div>
+                            <a class="questionnaire-inline-link"
+                               href="{% url 'edit_question' quiz.pk question.pk %}">Изменить</a>
                         </li>
                     {% endfor %}
                 </ol>

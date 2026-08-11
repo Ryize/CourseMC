@@ -1,7 +1,8 @@
 {% if messages %}
     <ul class="questionnaire-messages" aria-live="polite">
         {% for message in messages %}
-            <li class="questionnaire-message {{ message.tags|default:'info' }}">
+            <li class="questionnaire-message {{ message.tags|default:'info' }}"
+                data-questionnaire-flash>
                 {{ message }}
             </li>
         {% endfor %}

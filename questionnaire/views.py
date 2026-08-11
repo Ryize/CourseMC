@@ -7,7 +7,7 @@ from django.views.generic import ListView
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 
-from questionnaire.forms import AnswerForm, QuestionForm, QuizForm
+from questionnaire.forms import AnswerForm, QuestionEditForm, QuestionForm, QuizForm
 from questionnaire.models import (
     AnswerQuestion,
     PassedPolls,
@@ -171,6 +171,52 @@ def create_answer(request, quiz_id):
 
 
 @login_required
+def edit_question(request, quiz_id, question_id):
+    quiz = get_object_or_404(Quiz, pk=quiz_id, user=request.user)
+    question = get_object_or_404(Question, pk=question_id, quiz=quiz)
+    form = QuestionEditForm(request.POST or None, instance=question)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Вопрос изменён.")
+        return redirect("create_question", quiz.pk)
+
+    return render(
+        request,
+        "questionnaire/edit_question.html",
+        {
+            "form": form,
+            "quiz": quiz,
+            "question": question,
+            "has_completed_responses": quiz.passed_quiz.exists(),
+        },
+    )
+
+
+@login_required
+def edit_answer(request, quiz_id, answer_id):
+    quiz = get_object_or_404(Quiz, pk=quiz_id, user=request.user)
+    answer = get_object_or_404(AnswerQuestion, pk=answer_id, question__quiz=quiz)
+    form = AnswerForm(quiz, request.POST or None, instance=answer)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Вариант ответа изменён.")
+        return redirect("create_answer", quiz.pk)
+
+    return render(
+        request,
+        "questionnaire/edit_answer.html",
+        {
+            "form": form,
+            "quiz": quiz,
+            "answer": answer,
+            "has_completed_responses": quiz.passed_quiz.exists(),
+        },
+    )
+
+
+@login_required
 def create_answer_legacy(request):
     quiz = (
         Quiz.objects
@@ -213,6 +259,96 @@ def restore_poll(request, quiz_id):
         quiz.save(update_fields=("is_archived", "archived_at"))
         messages.success(request, "Опрос возвращён из архива.")
     return redirect("my_poll")
+
+
+@login_required
+def poll_results(request, quiz_id):
+    """Показывает автору опроса результаты всех завершённых прохождений."""
+    quiz = get_object_or_404(Quiz, pk=quiz_id, user=request.user)
+    questions = list(
+        quiz.questions
+        .prefetch_related("answers")
+        .filter(answers__isnull=False)
+        .distinct()
+        .order_by("pk")
+    )
+    completions = list(
+        PassedPolls.objects
+        .filter(quiz=quiz)
+        .select_related("passed_user")
+        .order_by("-created_at", "-pk")
+    )
+    user_ids = [completion.passed_user_id for completion in completions]
+    answers_by_user = {user_id: [] for user_id in user_ids}
+
+    for user_answer in (
+        UserAnswer.objects
+        .filter(quiz=quiz, user_id__in=user_ids)
+        .select_related("question", "answers")
+        .order_by("question__pk", "pk")
+    ):
+        answers_by_user[user_answer.user_id].append(user_answer)
+
+    question_numbers = {
+        question.pk: index
+        for index, question in enumerate(questions, start=1)
+    }
+    correct_answers = {
+        question.pk: ", ".join(
+            answer.answer
+            for answer in question.answers.all()
+            if answer.correct
+        )
+        for question in questions
+    }
+    results = []
+    for completion in completions:
+        answers = answers_by_user.get(completion.passed_user_id, [])
+        correct_count = sum(answer.answers.correct for answer in answers)
+        mistakes = []
+        for answer in answers:
+            if answer.answers.correct:
+                continue
+            mistakes.append({
+                "number": question_numbers.get(answer.question_id, "—"),
+                "question": answer.question.question,
+                "selected_answer": answer.answers.answer,
+                "correct_answer": correct_answers.get(answer.question_id, "—"),
+            })
+        result = completion
+        result.answer_count = len(answers)
+        result.correct_count = correct_count
+        result.mistakes = mistakes
+        result.correctness_percent = (
+            round(correct_count / len(answers) * 100)
+            if answers
+            else 0
+        )
+        results.append(result)
+
+    all_answers = [
+        answer
+        for answers in answers_by_user.values()
+        for answer in answers
+    ]
+    correct_answers_count = sum(answer.answers.correct for answer in all_answers)
+    correctness_percent = (
+        round(correct_answers_count / len(all_answers) * 100)
+        if all_answers
+        else None
+    )
+
+    return render(
+        request,
+        "questionnaire/poll_results.html",
+        {
+            "poll": quiz,
+            "results": results,
+            "question_count": len(questions),
+            "completion_count": len(completions),
+            "correctness_percent": correctness_percent,
+        },
+    )
 
 
 @login_required

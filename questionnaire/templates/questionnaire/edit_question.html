@@ -1,0 +1,44 @@
+{% extends 'questionnaire/template/base.html' %}
+
+{% block title %}Изменить вопрос: {{ quiz.title }} — CourseMC{% endblock %}
+
+{% block content %}
+    <section class="questionnaire-builder-layout">
+        <div class="questionnaire-card questionnaire-form-card questionnaire-form-card--narrow">
+            <p class="questionnaire-kicker">Настройка опроса · {{ quiz.topic }}</p>
+            <h1>Изменить вопрос</h1>
+            <p>Скорректируй формулировку и сохрани изменения.</p>
+
+            {% if has_completed_responses %}
+                <p class="questionnaire-edit-warning">
+                    Опрос уже проходили. Меняй вопрос только для исправления формулировки: результаты будут показываться с обновлённым текстом.
+                </p>
+            {% endif %}
+
+            <form class="questionnaire-form" method="post">
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                <div class="questionnaire-field">
+                    <label for="{{ form.question.id_for_label }}">Текст вопроса</label>
+                    {{ form.question }}
+                    {{ form.question.errors }}
+                </div>
+                <div class="questionnaire-form-actions">
+                    <button class="questionnaire-button" type="submit">Сохранить изменения</button>
+                    <a class="questionnaire-link-button questionnaire-link-button--secondary"
+                       href="{% url 'create_question' quiz.pk %}">Отмена</a>
+                </div>
+            </form>
+        </div>
+
+        <aside class="questionnaire-card questionnaire-builder-sidebar">
+            <h2>{{ quiz.title }}</h2>
+            <p>После сохранения вернёшься к списку вопросов.</p>
+            <div class="questionnaire-form-actions">
+                <a class="questionnaire-link-button questionnaire-link-button--secondary"
+                   href="{% url 'create_answer' quiz.pk %}">К вариантам ответа</a>
+            </div>
+            {% include 'questionnaire/includes/poll_management.html' %}
+        </aside>
+    </section>
+{% endblock %}

@@ -1,6 +1,13 @@
 'use strict';
 
 document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-questionnaire-flash]').forEach((message) => {
+        window.setTimeout(() => {
+            message.classList.add('is-dismissing');
+            window.setTimeout(() => message.remove(), 220);
+        }, 6000);
+    });
+
     const toast = document.createElement('div');
     toast.className = 'questionnaire-toast';
     toast.setAttribute('role', 'status');

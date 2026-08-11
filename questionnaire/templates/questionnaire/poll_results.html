@@ -1,0 +1,74 @@
+{% extends 'questionnaire/template/base.html' %}
+{% load questionnaire_tags %}
+
+{% block title %}Результаты опроса — CourseMC{% endblock %}
+
+{% block content %}
+    <section class="questionnaire-section-heading questionnaire-results-heading">
+        <div>
+            <p class="questionnaire-kicker">Кабинет автора</p>
+            <h1>Результаты опроса</h1>
+            <p>{{ poll.title }}</p>
+        </div>
+        <a class="questionnaire-link-button questionnaire-link-button--secondary"
+           href="{% url 'my_poll' %}">К моим опросам</a>
+    </section>
+
+    <section class="questionnaire-card questionnaire-results-overview" aria-label="Сводка результатов">
+        <div class="questionnaire-results-grid">
+            <div class="questionnaire-metric">
+                <span>Прохождений</span>
+                <strong>{{ completion_count }}</strong>
+            </div>
+            <div class="questionnaire-metric">
+                <span>Средний результат</span>
+                <strong>{% if correctness_percent is not None %}{{ correctness_percent }}%{% else %}—{% endif %}</strong>
+            </div>
+            <div class="questionnaire-metric">
+                <span>Вопросов в опросе</span>
+                <strong>{{ question_count }}</strong>
+            </div>
+        </div>
+    </section>
+
+    {% if results %}
+        <section class="questionnaire-attempts" aria-label="Прохождения учеников">
+            {% for result in results %}
+                <article class="questionnaire-card questionnaire-attempt-card">
+                    <div class="questionnaire-attempt-header">
+                        <div>
+                            <h2>{{ result.passed_user.username }}</h2>
+                            <p>Прошёл {{ result.created_at|date:'d.m.Y в H:i' }}</p>
+                        </div>
+                        <div class="questionnaire-attempt-score {% if result.mistakes %}questionnaire-attempt-score--needs-work{% else %}questionnaire-attempt-score--perfect{% endif %}">
+                            <strong>{{ result.correctness_percent }}%</strong>
+                            <span>{{ result.correct_count }} из {{ result.answer_count }} верно</span>
+                        </div>
+                    </div>
+
+                    {% if result.mistakes %}
+                        <div class="questionnaire-attempt-errors">
+                            <h3>Ошибки: {{ result.mistakes|length }}</h3>
+                            <ol>
+                                {% for mistake in result.mistakes %}
+                                    <li>
+                                        <strong>Вопрос {{ mistake.number }}. {{ mistake.question|questionnaire_text }}</strong>
+                                        <span>Ответ ученика: {{ mistake.selected_answer|questionnaire_text }}</span>
+                                        <span class="questionnaire-correct-answer">Правильный ответ: {{ mistake.correct_answer|questionnaire_text }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ol>
+                        </div>
+                    {% else %}
+                        <p class="questionnaire-attempt-success">Все ответы верные — отличная работа.</p>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </section>
+    {% else %}
+        <section class="questionnaire-card questionnaire-empty">
+            <h2>Прохождений пока нет</h2>
+            <p>Когда ученик завершит опрос, здесь появятся его результат и ошибки.</p>
+        </section>
+    {% endif %}
+{% endblock %}

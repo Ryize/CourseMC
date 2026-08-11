@@ -57,10 +57,24 @@
                     {% for question in questions %}
                         <li>
                             <span class="questionnaire-builder-list-number">{{ forloop.counter }}</span>
-                            <span>
+                            <div class="questionnaire-builder-list-content">
                                 {{ question.question|questionnaire_text }}
                                 <small>{{ question.answer_count }} вариантов · правильных: {{ question.correct_answer_count }}</small>
-                            </span>
+                                {% if question.answers.all %}
+                                    <ul class="questionnaire-builder-answer-list" aria-label="Варианты ответа">
+                                        {% for answer in question.answers.all %}
+                                            <li class="{% if answer.correct %}is-correct{% endif %}">
+                                                <span>
+                                                    {{ answer.answer|questionnaire_text }}
+                                                    {% if answer.correct %}<small>Правильный ответ</small>{% endif %}
+                                                </span>
+                                                <a class="questionnaire-inline-link"
+                                                   href="{% url 'edit_answer' quiz.pk answer.pk %}">Изменить</a>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
                         </li>
                     {% endfor %}
                 </ol>

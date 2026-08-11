@@ -38,6 +38,12 @@ class QuestionForm(ModelForm):
         }
 
 
+class QuestionEditForm(ModelForm):
+    class Meta:
+        model = Question
+        fields = ("question",)
+
+
 class AnswerForm(ModelForm):
     def __init__(self, quiz, *args, **kwargs):
         super().__init__(*args, **kwargs)
