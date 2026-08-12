@@ -21,7 +21,7 @@
                     <ion-icon name="chevron-down-outline"></ion-icon>
                 </div>
                 <div class="dropdown">
-                    <div>{{ schedule.lesson_materials|safe }}</div>
+                    <div class="lesson-materials">{{ schedule.lesson_materials|safe }}</div>
                     <section class="lesson-solution">
                         {% if schedule.lesson_solution %}
                             <p class="lesson-solution-status {{ schedule.lesson_solution.status }}">

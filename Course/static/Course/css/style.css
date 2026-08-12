@@ -1667,6 +1667,59 @@ body.black .scheduleSection .title.blog .dropdown-filter div:hover {
     flex-wrap: wrap;
 }
 
+.scheduleSection .lesson-materials {
+    width: 100%;
+}
+
+.scheduleSection .lesson-materials .lesson-assignment-label,
+.scheduleSection .lesson-materials .lesson-assignment-text {
+    margin: 0;
+}
+
+.scheduleSection .lesson-materials .lesson-assignment-label {
+    font-weight: 400;
+}
+
+.scheduleSection .lesson-materials .lesson-assignment-list {
+    display: block;
+    margin: 0;
+    padding-left: 28px;
+    list-style: decimal outside;
+}
+
+.scheduleSection .lesson-materials .lesson-assignment-list > li {
+    display: list-item;
+    margin-top: 12px;
+}
+
+.scheduleSection .lesson-materials .lesson-assignment-list > li::before {
+    content: none;
+}
+
+.scheduleSection .lesson-materials .lesson-assignment-list > li::marker {
+    content: counter(list-item) ") ";
+}
+
+.scheduleSection .lesson-materials .lesson-helpful-materials-list {
+    display: block;
+    margin: 0;
+    padding-left: 28px;
+    list-style: disc outside;
+}
+
+.scheduleSection .lesson-materials .lesson-helpful-materials-list > li {
+    display: list-item;
+    margin-top: 12px;
+}
+
+.scheduleSection .lesson-materials .lesson-helpful-materials-list > li::before {
+    content: none;
+}
+
+.scheduleSection .lesson-materials .lesson-helpful-materials-list > li::marker {
+    content: normal;
+}
+
 .homeSection:nth-child(10) .dropdown .dot {
     min-width: 12px;
     min-height: 12px;
