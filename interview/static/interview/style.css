@@ -318,7 +318,7 @@ body.interview-questions-page .interview-question-toggle.is-answered,
 body.interview-questions-page .interview-question-toggle.is-answered:hover {
     color: #15966f;
     text-decoration: none;
-    cursor: default;
+    cursor: pointer;
 }
 
 body.interview-questions-page .question-action-status {

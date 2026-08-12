@@ -1680,44 +1680,45 @@ body.black .scheduleSection .title.blog .dropdown-filter div:hover {
     font-weight: 400;
 }
 
-.scheduleSection .lesson-materials .lesson-assignment-list {
+.scheduleSection .item.active .dropdown .lesson-materials .lesson-assignment-list {
     display: block;
     margin: 0;
     padding-left: 28px;
     list-style: decimal outside;
 }
 
-.scheduleSection .lesson-materials .lesson-assignment-list > li {
+.scheduleSection .dropdown .lesson-materials .lesson-assignment-list > li {
     display: list-item;
     margin-top: 12px;
 }
 
-.scheduleSection .lesson-materials .lesson-assignment-list > li::before {
+.scheduleSection .dropdown .lesson-materials .lesson-assignment-list > li::before {
     content: none;
 }
 
-.scheduleSection .lesson-materials .lesson-assignment-list > li::marker {
+.scheduleSection .dropdown .lesson-materials .lesson-assignment-list > li::marker {
     content: counter(list-item) ") ";
 }
 
-.scheduleSection .lesson-materials .lesson-helpful-materials-list {
+.scheduleSection .item.active .dropdown .lesson-materials .lesson-helpful-materials-list {
     display: block;
     margin: 0;
     padding-left: 28px;
     list-style: disc outside;
 }
 
-.scheduleSection .lesson-materials .lesson-helpful-materials-list > li {
+.scheduleSection .dropdown .lesson-materials .lesson-helpful-materials-list > li {
     display: list-item;
     margin-top: 12px;
 }
 
-.scheduleSection .lesson-materials .lesson-helpful-materials-list > li::before {
+.scheduleSection .dropdown .lesson-materials .lesson-helpful-materials-list > li::before {
     content: none;
 }
 
-.scheduleSection .lesson-materials .lesson-helpful-materials-list > li::marker {
+.scheduleSection .dropdown .lesson-materials .lesson-helpful-materials-list > li::marker {
     content: normal;
+    color: #6f7bf7;
 }
 
 .homeSection:nth-child(10) .dropdown .dot {
