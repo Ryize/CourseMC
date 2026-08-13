@@ -3,6 +3,7 @@
 import json
 from collections import defaultdict
 from datetime import timedelta
+from urllib.parse import urlencode
 
 from django.db.models import Count
 from django.urls import reverse
@@ -17,7 +18,7 @@ from Course.models import (
     StudentQuestion,
 )
 from codereview.models import CodeReview, ProjectForReview
-from interview.models import InterviewQuestionProgress
+from interview.models import InterviewQuestion, InterviewQuestionProgress
 from questionnaire.models import PassedPolls, Question, Quiz, UserAnswer
 
 
@@ -36,7 +37,7 @@ CHART_COLORS = {
 }
 
 
-def _chart(labels, datasets, *, options=None):
+def _chart(labels, datasets, *, options=None, links=None):
     return {
         'has_data': bool(labels),
         'data': json.dumps(
@@ -44,6 +45,7 @@ def _chart(labels, datasets, *, options=None):
             ensure_ascii=False,
         ),
         'options': json.dumps(options or {}, ensure_ascii=False),
+        'links': json.dumps(links or [], ensure_ascii=False),
     }
 
 
@@ -55,6 +57,10 @@ def _shorten(value, limit=44):
 def _admin_url(model, action='changelist', object_id=None):
     name = f'admin:{model._meta.app_label}_{model._meta.model_name}_{action}'
     return reverse(name, args=(object_id,)) if object_id else reverse(name)
+
+
+def _admin_filter_url(model, **filters):
+    return f'{_admin_url(model)}?{urlencode(filters)}'
 
 
 def _age_label(moment, now):
@@ -159,6 +165,14 @@ def _solution_activity(student_ids, start, now):
             },
         ],
         options={'scales': {'y': {'beginAtZero': True}}},
+        links=[
+            _admin_filter_url(
+                LessonSolutionSubmission,
+                submitted_at__gte=week.isoformat(),
+                submitted_at__lt=(week + timedelta(days=7)).isoformat(),
+            )
+            for week in weeks
+        ] if has_activity else [],
     )
 
 
@@ -187,6 +201,10 @@ def _solution_statuses(student_ids):
             'displayYAxis': True,
         }],
         options={'scales': {'y': {'beginAtZero': True}}},
+        links=[
+            _admin_filter_url(LessonSolution, status__exact=status)
+            for status, _, _ in statuses
+        ],
     ), totals
 
 
@@ -265,6 +283,10 @@ def _quiz_results(completions, answers):
                 'y': {'ticks': {'autoSkip': False}},
             },
         },
+        links=[
+            _admin_filter_url(PassedPolls, quiz__id__exact=quiz_id)
+            for quiz_id in quiz_ids
+        ],
     ), percentages
 
 
@@ -315,6 +337,10 @@ def _difficult_questions(answers):
             'indexAxis': 'y',
             'scales': {'x': {'beginAtZero': True, 'max': 100}},
         },
+        links=[
+            _admin_url(Question, 'change', question_id)
+            for question_id in ranked
+        ],
     )
 
 
@@ -350,6 +376,14 @@ def _quiz_activity(completions, start, now):
             },
         ],
         options={'scales': {'y': {'beginAtZero': True}}},
+        links=[
+            _admin_filter_url(
+                PassedPolls,
+                created_at__gte=week.isoformat(),
+                created_at__lt=(week + timedelta(days=7)).isoformat(),
+            )
+            for week in weeks
+        ] if has_activity else [],
     )
 
 
@@ -357,12 +391,13 @@ def _interview_progress(student_user_ids):
     rows = (
         InterviewQuestionProgress.objects
         .filter(user_id__in=student_user_ids)
-        .values('question__theme__title', 'status')
+        .values('question__theme_id', 'question__theme__title', 'status')
         .annotate(total=Count('pk'))
     )
-    grouped = defaultdict(lambda: {'answered': 0, 'repeat': 0})
+    grouped = defaultdict(lambda: {'id': None, 'answered': 0, 'repeat': 0})
     for row in rows:
         theme = row['question__theme__title'] or 'Без категории'
+        grouped[theme]['id'] = row['question__theme_id']
         key = (
             'answered'
             if row['status'] == InterviewQuestionProgress.Status.ANSWERED
@@ -410,6 +445,13 @@ def _interview_progress(student_user_ids):
                 'y': {'stacked': True},
             },
         },
+        links=[
+            _admin_filter_url(
+                InterviewQuestion,
+                theme__id__exact=grouped[theme]['id'],
+            )
+            for theme in themes
+        ],
     )
     total_answered = sum(item['answered'] for item in grouped.values())
     total_questions = sum(

@@ -4,6 +4,8 @@ from pathlib import Path
 from django import forms
 from django.forms import ModelForm, TextInput
 
+from CourseMC.widgets import RichTextEditorWidget
+
 from .models import Schedule, Student
 
 
@@ -77,6 +79,10 @@ class ScheduleAdminForm(forms.ModelForm):
     class Meta:
         model = Schedule
         fields = '__all__'
+        widgets = {
+            'plan': RichTextEditorWidget(),
+            'lesson_materials': RichTextEditorWidget(),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

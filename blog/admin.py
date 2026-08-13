@@ -1,9 +1,10 @@
-from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django import forms
 from django.contrib import admin
 from unfold.admin import ModelAdmin
 from django.db.models import Count
 from django.utils.safestring import mark_safe
+
+from CourseMC.widgets import RichTextEditorWidget
 
 from .models import *
 
@@ -111,7 +112,7 @@ class CommentAuthorListFilter(AuthorListFilter):
 
 @admin.register(Post)
 class PostAdmin(ModelAdmin):
-    content = forms.CharField(widget=CKEditorUploadingWidget())
+    content = forms.CharField(widget=RichTextEditorWidget())
     fields = (
         "title",
         "description",

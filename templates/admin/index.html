@@ -12,6 +12,11 @@
     <link rel="stylesheet" href="{% static 'myadmins/dashboard.css' %}">
 {% endblock %}
 
+{% block extrahead %}
+    {{ block.super }}
+    <script src="{% static 'myadmins/dashboard_drilldown.js' %}" defer></script>
+{% endblock %}
+
 {% block content %}
     {% component "unfold/components/container.html" %}
         <div class="cm-dashboard">
@@ -65,7 +70,9 @@
                 {% component "unfold/components/card.html" with title="Отправка решений" class="cm-chart-card" %}
                     <p class="cm-card-description">Первые и повторные отправки по неделям.</p>
                     {% if solution_activity_chart.has_data %}
-                        {% component "unfold/components/chart/line.html" with data=solution_activity_chart.data options=solution_activity_chart.options height=280 %}{% endcomponent %}
+                        <div class="cm-drilldown-chart" data-chart-links="{{ solution_activity_chart.links }}">
+                            {% component "unfold/components/chart/line.html" with data=solution_activity_chart.data options=solution_activity_chart.options height=280 %}{% endcomponent %}
+                        </div>
                     {% else %}
                         <p class="cm-empty">За выбранный период решений не отправляли.</p>
                     {% endif %}
@@ -74,7 +81,9 @@
                 {% component "unfold/components/card.html" with title="Текущие статусы решений" class="cm-chart-card" %}
                     <p class="cm-card-description">Состояние работ активных учеников на текущий момент.</p>
                     {% if solution_status_chart.has_data %}
-                        {% component "unfold/components/chart/bar.html" with data=solution_status_chart.data options=solution_status_chart.options height=280 %}{% endcomponent %}
+                        <div class="cm-drilldown-chart" data-chart-links="{{ solution_status_chart.links }}">
+                            {% component "unfold/components/chart/bar.html" with data=solution_status_chart.data options=solution_status_chart.options height=280 %}{% endcomponent %}
+                        </div>
                     {% else %}
                         <p class="cm-empty">У выбранных учеников пока нет решений.</p>
                     {% endif %}
@@ -83,7 +92,9 @@
                 {% component "unfold/components/card.html" with title="Результаты опросов" class="cm-chart-card" %}
                     <p class="cm-card-description">Средняя доля правильных ответов; рядом указано число прохождений.</p>
                     {% if quiz_results_chart.has_data %}
-                        {% component "unfold/components/chart/bar.html" with data=quiz_results_chart.data options=quiz_results_chart.options height=320 %}{% endcomponent %}
+                        <div class="cm-drilldown-chart" data-chart-links="{{ quiz_results_chart.links }}">
+                            {% component "unfold/components/chart/bar.html" with data=quiz_results_chart.data options=quiz_results_chart.options height=320 %}{% endcomponent %}
+                        </div>
                     {% else %}
                         <p class="cm-empty">За выбранный период завершённых опросов нет.</p>
                     {% endif %}
@@ -92,7 +103,9 @@
                 {% component "unfold/components/card.html" with title="Самые сложные вопросы" class="cm-chart-card" %}
                     <p class="cm-card-description">В рейтинг входят вопросы минимум с тремя завершёнными ответами.</p>
                     {% if difficult_questions_chart.has_data %}
-                        {% component "unfold/components/chart/bar.html" with data=difficult_questions_chart.data options=difficult_questions_chart.options height=360 %}{% endcomponent %}
+                        <div class="cm-drilldown-chart" data-chart-links="{{ difficult_questions_chart.links }}">
+                            {% component "unfold/components/chart/bar.html" with data=difficult_questions_chart.data options=difficult_questions_chart.options height=360 %}{% endcomponent %}
+                        </div>
                     {% else %}
                         <p class="cm-empty">Пока недостаточно ответов для честного рейтинга.</p>
                     {% endif %}
@@ -101,7 +114,9 @@
                 {% component "unfold/components/card.html" with title="Активность опросов" class="cm-chart-card" %}
                     <p class="cm-card-description">Завершённые прохождения и уникальные ученики по неделям.</p>
                     {% if quiz_activity_chart.has_data %}
-                        {% component "unfold/components/chart/bar.html" with data=quiz_activity_chart.data options=quiz_activity_chart.options height=280 %}{% endcomponent %}
+                        <div class="cm-drilldown-chart" data-chart-links="{{ quiz_activity_chart.links }}">
+                            {% component "unfold/components/chart/bar.html" with data=quiz_activity_chart.data options=quiz_activity_chart.options height=280 %}{% endcomponent %}
+                        </div>
                     {% else %}
                         <p class="cm-empty">За выбранный период прохождений нет.</p>
                     {% endif %}
@@ -115,7 +130,9 @@
                         {% endif %}
                     </p>
                     {% if interview_progress_chart.has_data %}
-                        {% component "unfold/components/chart/bar.html" with data=interview_progress_chart.data options=interview_progress_chart.options height=360 %}{% endcomponent %}
+                        <div class="cm-drilldown-chart" data-chart-links="{{ interview_progress_chart.links }}">
+                            {% component "unfold/components/chart/bar.html" with data=interview_progress_chart.data options=interview_progress_chart.options height=360 %}{% endcomponent %}
+                        </div>
                     {% else %}
                         <p class="cm-empty">Ученики ещё не отмечали вопросы собеседования.</p>
                     {% endif %}

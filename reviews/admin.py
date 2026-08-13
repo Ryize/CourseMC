@@ -1,14 +1,15 @@
-from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django import forms
 from django.contrib import admin
 from unfold.admin import ModelAdmin
+
+from CourseMC.widgets import RichTextEditorWidget
 
 from .models import *
 
 
 @admin.register(Review)
 class ReviewAdmin(ModelAdmin):
-    content = forms.CharField(widget=CKEditorUploadingWidget())
+    content = forms.CharField(widget=RichTextEditorWidget())
     fields = ("author_id", "content", "pub_date")
     list_display = ("author_id", "pub_date")
     list_display_links = ("author_id", "pub_date")

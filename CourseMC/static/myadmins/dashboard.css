@@ -175,6 +175,10 @@
     min-width: 0;
 }
 
+.cm-chart-clickable {
+    cursor: pointer;
+}
+
 .cm-card-description {
     font-size: 13px;
     min-height: 36px;

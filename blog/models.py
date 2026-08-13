@@ -1,4 +1,3 @@
-from ckeditor_uploader.fields import RichTextUploadingField
 from colorfield.fields import ColorField
 from django.contrib.auth.models import User
 from django.db import models
@@ -8,7 +7,7 @@ from django.urls import reverse_lazy
 class Post(models.Model):
     title = models.CharField(max_length=122, verbose_name="Название")
     description = models.CharField(max_length=512, verbose_name="Описание")
-    content = RichTextUploadingField(verbose_name="Текст поста", null=False)
+    content = models.TextField(verbose_name="Текст поста")
     author = models.ForeignKey(
         User,
         on_delete=models.SET_DEFAULT,

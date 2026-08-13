@@ -6,6 +6,8 @@ from django.utils import timezone
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin
 
+from CourseMC.widgets import RichTextEditorWidget
+
 from Course.models import Student
 from .ai_review import AIReviewStateError, generate_ai_review_draft
 from .models import ProjectCategories, ProjectForReview, CodeReview
@@ -215,6 +217,11 @@ class CodeReviewAdmin(ModelAdmin):
     list_per_page = 64
     list_max_show_all = 8
     actions = ('regenerate_ai_drafts',)
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == 'problems':
+            kwargs['widget'] = RichTextEditorWidget()
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
 
     def generation_state(self, review):
         return review.get_ai_generation_status_display()

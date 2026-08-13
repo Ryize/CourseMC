@@ -1,4 +1,3 @@
-from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from datetime import timedelta
 
 from django import forms
@@ -7,9 +6,11 @@ from django.contrib.admin import SimpleListFilter
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group, User
+from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Case, IntegerField, Q, Value, When
-from django.urls import reverse
+from django.db.models import Case, Count, IntegerField, Q, Value, When
+from django.http import Http404, HttpResponseRedirect
+from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
@@ -21,6 +22,8 @@ from unfold.forms import (
 )
 
 from billing.admin import UserListFilter
+from CourseMC.widgets import RichTextEditorWidget
+from .curriculum import create_curriculum_draft, publish_curriculum_version
 from .forms import ScheduleAdminForm
 from .models import *
 
@@ -235,7 +238,7 @@ class LearnGroupAdmin(ModelAdmin):
         'is_studies',
     )
     empty_value_display = '-пустой-'
-    readonly_fields = ('created_at',)
+    readonly_fields = ('is_studies', 'created_at')
     list_per_page = 64
     list_max_show_all = 8
     search_fields = ['title']
@@ -260,18 +263,183 @@ class DirectionStudyAdmin(ModelAdmin):
     empty_value_display = '-пустой-'
     list_per_page = 64
     list_max_show_all = 8
+    actions = ('create_program_draft',)
+
+    @admin.action(description='Создать черновик из опубликованной программы')
+    def create_program_draft(self, request, queryset):
+        created = 0
+        errors = []
+        for direction in queryset:
+            try:
+                create_curriculum_draft(direction, request.user)
+                created += 1
+            except ValidationError as error:
+                errors.extend(error.messages)
+        if created:
+            self.message_user(
+                request,
+                f'Создано черновиков: {created}. Редактируйте их в разделе '
+                '«Уроки черновика программы».',
+                messages.SUCCESS,
+            )
+        for error in errors:
+            self.message_user(request, error, messages.WARNING)
+
+
+@admin.register(CurriculumVersion)
+class CurriculumVersionAdmin(ModelAdmin):
+    fields = (
+        'direction', 'name', 'status', 'notes', 'created_by',
+        'created_at', 'updated_at', 'published_at',
+    )
+    list_display = (
+        'name', 'direction', 'status', 'lesson_count', 'edit_lessons',
+        'created_by', 'updated_at', 'published_at',
+    )
+    list_filter = ('status', 'direction', 'created_at', 'published_at')
+    search_fields = ('name', 'direction__title', 'notes')
+    list_select_related = ('direction', 'created_by')
+    actions = ('publish_selected',)
+    date_hierarchy = 'created_at'
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(_lesson_count=Count('lessons'))
+
+    @admin.display(description='Уроков', ordering='_lesson_count')
+    def lesson_count(self, version):
+        return version._lesson_count
+
+    @admin.display(description='Содержание')
+    def edit_lessons(self, version):
+        return format_html(
+            '<a href="{}?version__id__exact={}">{}</a>',
+            reverse('admin:Course_curriculumlesson_changelist'),
+            version.pk,
+            'Редактировать' if version.status == version.Status.DRAFT else 'Посмотреть',
+        )
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = (
+            'direction', 'status', 'created_by', 'created_at',
+            'updated_at', 'published_at',
+        )
+        if obj and obj.status != obj.Status.DRAFT:
+            return readonly + ('name', 'notes')
+        return readonly
+
+    @admin.action(description='Опубликовать выбранные черновики')
+    def publish_selected(self, request, queryset):
+        published = 0
+        for version in queryset:
+            try:
+                publish_curriculum_version(version, request.user)
+                published += 1
+            except ValidationError as error:
+                for message in error.messages:
+                    self.message_user(
+                        request,
+                        f'{version}: {message}',
+                        messages.ERROR,
+                    )
+        if published:
+            self.message_user(
+                request,
+                f'Опубликовано версий: {published}.',
+                messages.SUCCESS,
+            )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        if not super().has_delete_permission(request, obj):
+            return False
+        return obj is None or obj.status == obj.Status.DRAFT
+
+    def delete_queryset(self, request, queryset):
+        super().delete_queryset(
+            request,
+            queryset.filter(status=CurriculumVersion.Status.DRAFT),
+        )
+
+
+class CurriculumLessonAdminForm(forms.ModelForm):
+    class Meta:
+        model = CurriculumLesson
+        fields = '__all__'
+        widgets = {
+            'plan': RichTextEditorWidget(),
+            'lesson_materials': RichTextEditorWidget(),
+        }
+
+
+@admin.register(CurriculumLesson)
+class CurriculumLessonAdmin(ModelAdmin):
+    form = CurriculumLessonAdminForm
+    fields = (
+        'version', 'source_schedule', 'position', 'theme',
+        'plan', 'lesson_materials', 'lesson_type',
+    )
+    list_display = ('position', 'theme', 'version', 'lesson_type')
+    list_display_links = ('theme',)
+    list_editable = ('position',)
+    list_filter = ('version', 'lesson_type')
+    search_fields = ('theme', 'plan', 'lesson_materials', 'version__name')
+    list_select_related = ('version__direction', 'source_schedule')
+    list_per_page = 100
+    ordering = ('version', 'position', 'pk')
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'version':
+            kwargs['queryset'] = CurriculumVersion.objects.filter(
+                status=CurriculumVersion.Status.DRAFT,
+            ).select_related('direction')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj and obj.version.status != CurriculumVersion.Status.DRAFT:
+            return (
+                'version', 'source_schedule', 'position', 'theme',
+                'plan', 'lesson_materials', 'lesson_type',
+            )
+        return ('source_schedule',)
+
+    def has_add_permission(self, request):
+        return (
+            super().has_add_permission(request)
+            and CurriculumVersion.objects.filter(
+                status=CurriculumVersion.Status.DRAFT,
+            ).exists()
+        )
+
+    def has_change_permission(self, request, obj=None):
+        if not super().has_change_permission(request, obj):
+            return False
+        return obj is None or obj.version.status == CurriculumVersion.Status.DRAFT
+
+    def has_delete_permission(self, request, obj=None):
+        if not super().has_delete_permission(request, obj):
+            return False
+        return obj is None or obj.version.status == CurriculumVersion.Status.DRAFT
+
+    def delete_queryset(self, request, queryset):
+        super().delete_queryset(
+            request,
+            queryset.filter(version__status=CurriculumVersion.Status.DRAFT),
+        )
 
 
 @admin.register(Schedule)
 class ScheduleAdmin(ModelAdmin):
     form = ScheduleAdminForm
-    content = forms.CharField(widget=CKEditorUploadingWidget())
     fieldsets = (
         ('Порядок в программе', {
             'fields': ('direction', 'insert_after', 'position', 'is_archived'),
             'description': (
-                'Выберите урок, после которого нужно поставить текущий. '
-                'Оставьте поле пустым, чтобы добавить урок в конец программы.'
+                'Это опубликованная программа. Рабочие изменения создавайте '
+                'через «Версии программы», чтобы ученики не увидели их до '
+                'публикации. Прямое редактирование доступно только '
+                'суперпользователю как аварийный инструмент.'
             ),
         }),
         ('Содержание урока', {
@@ -307,6 +475,14 @@ class ScheduleAdmin(ModelAdmin):
         'theme',
         'lesson_materials',
     )
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser and super().has_add_permission(request)
+
+    def has_change_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return super().has_change_permission(request, obj)
+        return False
 
     def get_queryset(self, request):
         return (
@@ -486,9 +662,12 @@ class ScheduleAdmin(ModelAdmin):
         return actions
 
     def has_delete_permission(self, request, obj=None):
-        if obj is None:
+        if not request.user.is_superuser or obj is None:
             return False
-        return not obj.solutions.exists()
+        return (
+            super().has_delete_permission(request, obj)
+            and not obj.solutions.exists()
+        )
 
 
 class CountryFilter(SimpleListFilter):
@@ -749,3 +928,86 @@ class StudentQuestionAdmin(ModelAdmin):
     search_fields = ('question', 'group__title')
     readonly_fields = ('created_at',)
     list_select_related = ('group',)
+
+
+class NotificationReadListFilter(SimpleListFilter):
+    title = 'Состояние'
+    parameter_name = 'read_state'
+
+    def lookups(self, request, model_admin):
+        return (('unread', 'Непрочитанные'), ('read', 'Прочитанные'))
+
+    def queryset(self, request, queryset):
+        if self.value() == 'unread':
+            return queryset.filter(read_at__isnull=True)
+        if self.value() == 'read':
+            return queryset.filter(read_at__isnull=False)
+        return queryset
+
+
+@admin.register(TeacherNotification)
+class TeacherNotificationAdmin(ModelAdmin):
+    list_display = ('open_notification_link', 'kind', 'created_at', 'read_at')
+    list_filter = (NotificationReadListFilter, 'kind', 'created_at')
+    search_fields = ('title', 'message')
+    readonly_fields = (
+        'recipient', 'kind', 'title', 'message', 'target_url',
+        'event_key', 'created_at', 'read_at',
+    )
+    actions = ('mark_as_read',)
+    date_hierarchy = 'created_at'
+    list_select_related = ('recipient',)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if request.user.is_superuser:
+            return queryset
+        return queryset.filter(recipient=request.user)
+
+    def get_urls(self):
+        return [
+            path(
+                '<int:notification_id>/open/',
+                self.admin_site.admin_view(self.open_notification),
+                name='Course_teachernotification_open',
+            ),
+        ] + super().get_urls()
+
+    @admin.display(description='Уведомление', ordering='title')
+    def open_notification_link(self, notification):
+        return format_html(
+            '<a href="{}">{}</a><span class="block text-subtle text-xs">{}</span>',
+            reverse(
+                'admin:Course_teachernotification_open',
+                args=(notification.pk,),
+            ),
+            notification.title,
+            notification.message,
+        )
+
+    def open_notification(self, request, notification_id):
+        notification = TeacherNotification.objects.filter(
+            pk=notification_id,
+        ).first()
+        if notification is None or (
+            notification.recipient_id != request.user.pk
+            and not request.user.is_superuser
+        ):
+            raise Http404
+        if notification.read_at is None:
+            notification.read_at = timezone.now()
+            notification.save(update_fields=('read_at',))
+        return HttpResponseRedirect(notification.target_url)
+
+    @admin.action(description='Отметить выбранные уведомления прочитанными')
+    def mark_as_read(self, request, queryset):
+        queryset.filter(read_at__isnull=True).update(read_at=timezone.now())
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser

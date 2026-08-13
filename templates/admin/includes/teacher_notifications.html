@@ -1,0 +1,47 @@
+<div class="relative ml-auto mr-2" x-data="{ notificationsOpen: false }">
+    <button
+        type="button"
+        class="border border-base-200 flex h-9 items-center justify-center relative rounded-default text-font-default-light transition-colors hover:bg-base-100 dark:border-base-700 dark:text-font-default-dark dark:hover:bg-base-800 w-9"
+        aria-label="Уведомления преподавателя"
+        x-on:click="notificationsOpen = !notificationsOpen"
+        x-ref="notificationButton"
+    >
+        <span class="material-symbols-outlined text-[20px]">notifications</span>
+        {% if teacher_notification_count %}
+            <span class="absolute bg-red-500 flex font-semibold h-5 items-center justify-center -right-2 rounded-full text-[10px] text-white -top-2 min-w-5 px-1">
+                {{ teacher_notification_count }}
+            </span>
+        {% endif %}
+    </button>
+
+    <div
+        class="absolute bg-white border border-base-200 mt-2 overflow-hidden right-0 rounded-default shadow-lg w-80 z-50 dark:bg-base-800 dark:border-base-700"
+        x-cloak
+        x-show="notificationsOpen"
+        x-on:click.outside="notificationsOpen = false"
+        x-transition
+    >
+        <div class="border-b border-base-200 flex font-semibold items-center justify-between px-4 py-3 text-sm dark:border-base-700">
+            <span>Уведомления</span>
+            {% if teacher_notification_count %}
+                <span class="text-primary-600 text-xs">{{ teacher_notification_count }} новых</span>
+            {% endif %}
+        </div>
+
+        {% for notification in teacher_notifications %}
+            <a href="{% url 'admin:Course_teachernotification_open' notification.pk %}" class="block border-b border-base-200 px-4 py-3 transition-colors hover:bg-base-50 dark:border-base-700 dark:hover:bg-base-700">
+                <span class="block font-medium text-sm">{{ notification.title }}</span>
+                {% if notification.message %}
+                    <span class="block mt-1 text-subtle text-xs line-clamp-2">{{ notification.message }}</span>
+                {% endif %}
+                <span class="block mt-1 text-subtle text-[11px]">{{ notification.created_at|timesince }} назад</span>
+            </a>
+        {% empty %}
+            <div class="px-4 py-6 text-center text-sm text-subtle">Новых уведомлений нет.</div>
+        {% endfor %}
+
+        <a href="{% url 'admin:Course_teachernotification_changelist' %}" class="block font-medium px-4 py-3 text-center text-primary-600 text-sm hover:bg-base-50 dark:hover:bg-base-700">
+            Открыть все
+        </a>
+    </div>
+</div>

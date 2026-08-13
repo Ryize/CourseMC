@@ -2,12 +2,11 @@ import os
 import random
 import uuid
 
-from ckeditor_uploader.fields import RichTextUploadingField
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.db import models
-from django.db.models import Max
+from django.db.models import Max, Q
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 
@@ -117,6 +116,64 @@ class DirectionStudy(models.Model):
         verbose_name_plural = 'Направления'
 
 
+class CurriculumVersion(models.Model):
+    class Status(models.TextChoices):
+        DRAFT = 'draft', 'Черновик'
+        PUBLISHED = 'published', 'Опубликована'
+        ARCHIVED = 'archived', 'Архив'
+
+    direction = models.ForeignKey(
+        DirectionStudy,
+        on_delete=models.PROTECT,
+        related_name='curriculum_versions',
+        verbose_name='Направление',
+    )
+    name = models.CharField(max_length=160, verbose_name='Название версии')
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.DRAFT,
+        verbose_name='Статус',
+    )
+    notes = models.TextField(blank=True, verbose_name='Комментарий к версии')
+    base_signature = models.CharField(max_length=64, editable=False, blank=True)
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_curriculum_versions',
+        verbose_name='Создал',
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создана')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Обновлена')
+    published_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Опубликована',
+    )
+
+    class Meta:
+        verbose_name = 'Версия программы'
+        verbose_name_plural = 'Версии программы'
+        ordering = ('-created_at', '-pk')
+        constraints = [
+            models.UniqueConstraint(
+                fields=('direction',),
+                condition=Q(status='draft'),
+                name='one_draft_curriculum_per_direction',
+            ),
+            models.UniqueConstraint(
+                fields=('direction',),
+                condition=Q(status='published'),
+                name='one_published_curriculum_per_direction',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.direction}: {self.name}'
+
+
 class Schedule(models.Model):
     LESSON_TYPE_CHOICES = (
         ('Практика', 'Практика'),
@@ -126,12 +183,12 @@ class Schedule(models.Model):
     theme = models.CharField(
         max_length=128, verbose_name='Тема урока', default='Тема не задана!'
     )
-    plan = RichTextUploadingField(
+    plan = models.TextField(
         verbose_name='План урока',
         unique=False,
         default='План не указан!',
     )
-    lesson_materials = RichTextUploadingField(
+    lesson_materials = models.TextField(
         verbose_name='Материалы к уроку',
         unique=False,
         default='Дополнительных материалов нету!',
@@ -195,6 +252,65 @@ class Schedule(models.Model):
         return f'{self.theme}'
 
 
+class CurriculumLesson(models.Model):
+    version = models.ForeignKey(
+        CurriculumVersion,
+        on_delete=models.CASCADE,
+        related_name='lessons',
+        verbose_name='Версия программы',
+    )
+    source_schedule = models.ForeignKey(
+        Schedule,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='curriculum_snapshots',
+        verbose_name='Опубликованный урок',
+    )
+    position = models.DecimalField(
+        max_digits=8,
+        decimal_places=3,
+        default=0,
+        db_index=True,
+        verbose_name='Порядок',
+        help_text='Можно использовать промежуточное значение, например 32,5.',
+    )
+    theme = models.CharField(max_length=128, verbose_name='Тема урока')
+    plan = models.TextField(verbose_name='План урока')
+    lesson_materials = models.TextField(verbose_name='Материалы к уроку')
+    lesson_type = models.CharField(
+        max_length=64,
+        choices=Schedule.LESSON_TYPE_CHOICES,
+        default='Практика',
+        verbose_name='Тип урока',
+    )
+
+    class Meta:
+        verbose_name = 'Урок черновика программы'
+        verbose_name_plural = 'Уроки черновика программы'
+        ordering = ('version_id', 'position', 'pk')
+        indexes = [
+            models.Index(
+                fields=('version', 'position'),
+                name='course_draft_version_pos_idx',
+            ),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.position and self.version_id:
+            last_position = (
+                type(self).objects
+                .filter(version_id=self.version_id)
+                .aggregate(last=Max('position'))['last']
+                or 0
+            )
+            self.position = last_position + 1
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.position}. {self.theme}'
+
+
 class StudentQuestion(models.Model):
     group = models.ForeignKey(
         'LearnGroup',
@@ -214,6 +330,49 @@ class StudentQuestion(models.Model):
 
     def __str__(self):
         return f'{self.question}, {self.group}'
+
+
+class TeacherNotification(models.Model):
+    class Kind(models.TextChoices):
+        LESSON_SOLUTION = 'lesson_solution', 'Решение урока'
+        STUDENT_QUESTION = 'student_question', 'Вопрос ученика'
+        CODE_REVIEW = 'code_review', 'Проект на ревью'
+
+    recipient = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='teacher_notifications',
+        verbose_name='Получатель',
+    )
+    kind = models.CharField(
+        max_length=24,
+        choices=Kind.choices,
+        verbose_name='Тип',
+    )
+    title = models.CharField(max_length=160, verbose_name='Заголовок')
+    message = models.CharField(max_length=255, blank=True, verbose_name='Описание')
+    target_url = models.CharField(max_length=500, verbose_name='Ссылка')
+    event_key = models.CharField(max_length=80, unique=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создано')
+    read_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Прочитано',
+    )
+
+    class Meta:
+        verbose_name = 'Уведомление преподавателя'
+        verbose_name_plural = 'Уведомления преподавателей'
+        ordering = ('-created_at', '-pk')
+        indexes = [
+            models.Index(
+                fields=('recipient', 'read_at', '-created_at'),
+                name='course_notify_unread_idx',
+            ),
+        ]
+
+    def __str__(self):
+        return self.title
 
 
 class ClassesTimetable(models.Model):

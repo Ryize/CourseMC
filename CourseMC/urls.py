@@ -3,12 +3,17 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from .rich_text import rich_text_image_upload
 from .views import page_not_found_view
 
 urlpatterns = [
     path('coursemc_control/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
-    path('ckeditor/', include('CourseMC.ckeditor_urls')),
+    path(
+        'editor/upload/',
+        rich_text_image_upload,
+        name='rich_text_image_upload',
+    ),
     path('api/v1/', include('api.urls')),
     path('', include('social_django.urls')),
     path('', include('Course.urls')),

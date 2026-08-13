@@ -1,4 +1,3 @@
-from ckeditor_uploader.fields import RichTextUploadingField
 from django.conf import settings
 from django.db import models
 
@@ -82,8 +81,7 @@ class CodeReview(models.Model):
         verbose_name='Проект',
         related_name='code_review',
     )
-    problems = RichTextUploadingField(verbose_name='Проблемы', null=True,
-                                      blank=True)
+    problems = models.TextField(verbose_name='Проблемы', null=True, blank=True)
     amount_problems = models.PositiveIntegerField(
         verbose_name='Всего проблем', null=True, blank=True)
     code_quality = models.PositiveIntegerField(

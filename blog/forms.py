@@ -1,5 +1,7 @@
 from django.forms import ModelForm
 
+from CourseMC.widgets import RichTextEditorWidget
+
 from .models import Post
 
 
@@ -13,6 +15,7 @@ class PostForm(ModelForm):
             "image",
             "categories",
         )
+        widgets = {"content": RichTextEditorWidget()}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
