@@ -1,0 +1,23 @@
+#result_list tr.data-row.cm-clickable-row {
+    cursor: pointer;
+    transition: background-color 120ms ease;
+}
+
+#result_list tr.data-row.cm-clickable-row:hover > td,
+#result_list tr.data-row.cm-clickable-row:hover > th,
+#result_list tr.data-row.cm-clickable-row:focus-visible > td,
+#result_list tr.data-row.cm-clickable-row:focus-visible > th {
+    background-color: rgb(99 102 241 / 7%);
+}
+
+#result_list tr.data-row.cm-clickable-row:focus-visible {
+    outline: 2px solid rgb(99 102 241);
+    outline-offset: -2px;
+}
+
+.dark #result_list tr.data-row.cm-clickable-row:hover > td,
+.dark #result_list tr.data-row.cm-clickable-row:hover > th,
+.dark #result_list tr.data-row.cm-clickable-row:focus-visible > td,
+.dark #result_list tr.data-row.cm-clickable-row:focus-visible > th {
+    background-color: rgb(129 140 248 / 10%);
+}

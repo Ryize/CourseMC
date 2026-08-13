@@ -31,7 +31,7 @@ SOCIAL_AUTH_VK_OAUTH2_SECRET = (
     "ab825789ab825789ab82578950abfb048aaab82ab825789cac22c88943e5f898833038e"
 )
 LOGIN_REDIRECT_URL = "/"
-ACCOUNT_AUTHENTICATION_METHOD = "username_email"
+ACCOUNT_LOGIN_METHODS = {"username", "email"}
 
 # Один и тот же секрет задаётся в окружении сайта и Telegram-бота. Значение
 # намеренно не хранится в репозитории.
@@ -61,6 +61,7 @@ ALLOWED_HOSTS = ["coursemc.ru", "www.coursemc.ru", "localhost", "127.0.0.1"]
 # Application definition
 
 INSTALLED_APPS = [
+    "unfold",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -91,6 +92,18 @@ INSTALLED_APPS = [
     'ai_assistant.apps.AiAssistantConfig',
 ]
 
+UNFOLD = {
+    "SITE_TITLE": "Курс M&C — админка",
+    "SITE_HEADER": "Курс M&C",
+    "SITE_SUBHEADER": "Управление учебной платформой",
+    "SITE_SYMBOL": "school",
+    "SITE_URL": "/",
+    "DASHBOARD_CALLBACK": "CourseMC.admin_dashboard.dashboard_callback",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": True,
+    "BORDER_RADIUS": "8px",
+}
+
 MIDDLEWARE = [
     "CourseMC.middleware.FilterIPMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -98,6 +111,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "CourseMC.middleware.IPVisitorsMiddleware",
@@ -132,7 +146,7 @@ SOCIAL_AUTH_VK_OAUTH2_SCOPE = ["email"]
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": os.environ.get("COURSEMC_DB_PATH", BASE_DIR / "db.sqlite3"),
     }
 }
 
@@ -349,5 +363,8 @@ STATICFILES_DIRS = [
 ]
 
 APPEND_SLASH = False
+
+# Keep URL validation explicit ahead of Django 6.0's default change.
+FORMS_URLFIELD_ASSUME_HTTPS = True
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240

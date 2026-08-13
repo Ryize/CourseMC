@@ -313,7 +313,7 @@ class CodeReviewTests(TestCase):
         )
         archive_scope_filter = ProjectStudentScopeListFilter(
             archive_request,
-            {'student_scope': 'archive'},
+            {'student_scope': ['archive']},
             ProjectForReview,
             model_admin,
         )

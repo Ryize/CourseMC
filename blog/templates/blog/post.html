@@ -34,7 +34,9 @@
 	            <div class="post-header">
 	                <h1>{{ post.title }}</h1>
 	                <div class="post-meta">
-	                    <time datetime="2019-04-01" class="root_style"><small>{{ post.created_at }}</small></time>
+	                    <time datetime="{{ post.created_at|date:'c' }}" class="root_style">
+	                        <small>{{ post.created_at|date:"j E Y г. H:i" }}</small>
+	                    </time>
 	                    <span class="author root_style"><small>{{ post.author }}</small></span>
 	                    {% for category in post.categories.all %}
 	                        <span class="category root_style"><small>{{ category.title }}{% if not forloop.last %},&nbsp; {% endif %}</small></span>

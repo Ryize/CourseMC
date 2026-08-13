@@ -1,0 +1,172 @@
+{% extends "admin/base.html" %}
+{% load i18n static unfold %}
+
+{% block title %}Обзор обучения | {{ site_title|default:"Админка" }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'myadmins/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+    {% component "unfold/components/container.html" %}
+        <div class="cm-dashboard">
+            <div class="cm-dashboard__heading">
+                <div>
+                    <p class="cm-dashboard__eyebrow">Учебная аналитика</p>
+                    <h1 class="cm-dashboard__title">Обзор платформы</h1>
+                    <p class="cm-dashboard__subtitle">
+                        Только учебные показатели и задачи, требующие внимания.
+                    </p>
+                </div>
+
+                <form method="get" class="cm-dashboard__filters">
+                    <label>
+                        <span>Период</span>
+                        <select name="period" onchange="this.form.submit()">
+                            {% for value, label in dashboard_periods %}
+                                <option value="{{ value }}"{% if dashboard_period == value %} selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        <span>Группа</span>
+                        <select name="group" onchange="this.form.submit()">
+                            <option value="">Все активные</option>
+                            {% for group in dashboard_groups %}
+                                <option value="{{ group.pk }}"{% if dashboard_group_id == group.pk %} selected{% endif %}>{{ group.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <noscript><button type="submit">Применить</button></noscript>
+                </form>
+            </div>
+
+            <div class="cm-kpi-grid">
+                {% for kpi in dashboard_kpis %}
+                    {% component "unfold/components/card.html" with class="cm-kpi" href=kpi.url %}
+                        <div class="cm-kpi__layout">
+                            <span class="cm-kpi__icon material-symbols-outlined" aria-hidden="true">{{ kpi.icon }}</span>
+                            <div class="cm-kpi__copy">
+                                <p class="cm-kpi__label">{{ kpi.title }}</p>
+                                <p class="cm-kpi__value">{{ kpi.value }}</p>
+                                <p class="cm-kpi__hint">{{ kpi.label }}</p>
+                            </div>
+                        </div>
+                    {% endcomponent %}
+                {% endfor %}
+            </div>
+
+            <div class="cm-chart-grid">
+                {% component "unfold/components/card.html" with title="Отправка решений" class="cm-chart-card" %}
+                    <p class="cm-card-description">Первые и повторные отправки по неделям.</p>
+                    {% if solution_activity_chart.has_data %}
+                        {% component "unfold/components/chart/line.html" with data=solution_activity_chart.data options=solution_activity_chart.options height=280 %}{% endcomponent %}
+                    {% else %}
+                        <p class="cm-empty">За выбранный период решений не отправляли.</p>
+                    {% endif %}
+                {% endcomponent %}
+
+                {% component "unfold/components/card.html" with title="Текущие статусы решений" class="cm-chart-card" %}
+                    <p class="cm-card-description">Состояние работ активных учеников на текущий момент.</p>
+                    {% if solution_status_chart.has_data %}
+                        {% component "unfold/components/chart/bar.html" with data=solution_status_chart.data options=solution_status_chart.options height=280 %}{% endcomponent %}
+                    {% else %}
+                        <p class="cm-empty">У выбранных учеников пока нет решений.</p>
+                    {% endif %}
+                {% endcomponent %}
+
+                {% component "unfold/components/card.html" with title="Результаты опросов" class="cm-chart-card" %}
+                    <p class="cm-card-description">Средняя доля правильных ответов; рядом указано число прохождений.</p>
+                    {% if quiz_results_chart.has_data %}
+                        {% component "unfold/components/chart/bar.html" with data=quiz_results_chart.data options=quiz_results_chart.options height=320 %}{% endcomponent %}
+                    {% else %}
+                        <p class="cm-empty">За выбранный период завершённых опросов нет.</p>
+                    {% endif %}
+                {% endcomponent %}
+
+                {% component "unfold/components/card.html" with title="Самые сложные вопросы" class="cm-chart-card" %}
+                    <p class="cm-card-description">В рейтинг входят вопросы минимум с тремя завершёнными ответами.</p>
+                    {% if difficult_questions_chart.has_data %}
+                        {% component "unfold/components/chart/bar.html" with data=difficult_questions_chart.data options=difficult_questions_chart.options height=360 %}{% endcomponent %}
+                    {% else %}
+                        <p class="cm-empty">Пока недостаточно ответов для честного рейтинга.</p>
+                    {% endif %}
+                {% endcomponent %}
+
+                {% component "unfold/components/card.html" with title="Активность опросов" class="cm-chart-card" %}
+                    <p class="cm-card-description">Завершённые прохождения и уникальные ученики по неделям.</p>
+                    {% if quiz_activity_chart.has_data %}
+                        {% component "unfold/components/chart/bar.html" with data=quiz_activity_chart.data options=quiz_activity_chart.options height=280 %}{% endcomponent %}
+                    {% else %}
+                        <p class="cm-empty">За выбранный период прохождений нет.</p>
+                    {% endif %}
+                {% endcomponent %}
+
+                {% component "unfold/components/card.html" with title="Твой собес" class="cm-chart-card" %}
+                    <p class="cm-card-description">
+                        Текущее соотношение «Отвечено» и «На повторение» по категориям.
+                        {% if interview_answered_percent is not None %}
+                            Всего отвечено: <strong>{{ interview_answered_percent }}%</strong>.
+                        {% endif %}
+                    </p>
+                    {% if interview_progress_chart.has_data %}
+                        {% component "unfold/components/chart/bar.html" with data=interview_progress_chart.data options=interview_progress_chart.options height=360 %}{% endcomponent %}
+                    {% else %}
+                        <p class="cm-empty">Ученики ещё не отмечали вопросы собеседования.</p>
+                    {% endif %}
+                {% endcomponent %}
+            </div>
+
+            <section class="cm-attention">
+                <div class="cm-section-heading">
+                    <div>
+                        <p class="cm-dashboard__eyebrow">Рабочая очередь</p>
+                        <h2>Требует внимания</h2>
+                    </div>
+                    <p>Сначала самые старые задачи.</p>
+                </div>
+
+                <div class="cm-attention-grid">
+                    {% for section in attention_sections %}
+                        {% component "unfold/components/card.html" with class="cm-attention-card" %}
+                            <div class="cm-attention-card__heading">
+                                <h3><a href="{{ section.url }}">{{ section.title }}</a></h3>
+                                <span>{{ section.count }}</span>
+                            </div>
+                            {% if section.items %}
+                                <div class="cm-attention-list">
+                                    {% for item in section.items %}
+                                        <a href="{{ item.url }}" class="cm-attention-item cm-attention-item--{{ item.tone }}">
+                                            <span>
+                                                <strong>{{ item.title }}</strong>
+                                                <small>{{ item.subtitle }}</small>
+                                            </span>
+                                            {% if item.age %}<time>{{ item.age }}</time>{% endif %}
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="cm-empty cm-empty--compact">Очередь пуста.</p>
+                            {% endif %}
+                        {% endcomponent %}
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="cm-admin-sections">
+                <div class="cm-section-heading">
+                    <div>
+                        <p class="cm-dashboard__eyebrow">Навигация</p>
+                        <h2>Разделы админки</h2>
+                    </div>
+                </div>
+                {% include "unfold/helpers/app_list_default.html" %}
+            </section>
+        </div>
+    {% endcomponent %}
+{% endblock %}

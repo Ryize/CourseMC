@@ -1,6 +1,5 @@
-import random
-
-import openai
+import requests
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -19,7 +18,7 @@ def index(request):
 
 @login_required
 def send_request_api(request):
-    if request.is_ajax():
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         chat = ChatGPT()
         data = request.POST.get('text')
         text_gpt = chat.send(data).lstrip('\n')
@@ -46,38 +45,23 @@ def send_request_api(request):
 
 
 class ChatGPT:
-    __api_keys = (
-        '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',
-        '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',
-        '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',
-    )
-
-    def __init__(self):
-        openai.api_key = random.choice(self.__api_keys)
-        self.model_engine = "text-davinci-003"
-
     def send(self, data) -> str:
-        try:
-            completion = openai.Completion.create(
-                engine=self.model_engine,
-                prompt=data,
-                max_tokens=2048,
-                temperature=1,
-                top_p=1,
-                frequency_penalty=0,
-                presence_penalty=0
-            )
+        if not settings.PROXYAPI_API_KEY:
+            return 'Сервис временно не настроен. Обратитесь к преподавателю.'
 
-            return completion.choices[0].text
-        except:
-            completion = openai.Completion.create(
-                engine=self.model_engine,
-                prompt=data,
-                max_tokens=2048,
-                temperature=1,
-                top_p=1,
-                frequency_penalty=0,
-                presence_penalty=0
-            )
-
-            return completion.choices[0].text
+        response = requests.post(
+            settings.PROXYAPI_REVIEW_API_URL,
+            headers={
+                'Authorization': f'Bearer {settings.PROXYAPI_API_KEY}',
+                'Content-Type': 'application/json',
+            },
+            json={
+                'model': settings.PROXYAPI_REVIEW_MODEL,
+                'messages': [{'role': 'user', 'content': data}],
+                'max_tokens': 1200,
+                'temperature': 0.7,
+            },
+            timeout=(5, 75),
+        )
+        response.raise_for_status()
+        return response.json()['choices'][0]['message']['content']

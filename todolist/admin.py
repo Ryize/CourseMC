@@ -2,19 +2,20 @@
 from __future__ import unicode_literals
 
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 
 from .models import TodoListUser, TodoListGroup, Category
 
 
-class TodoListUserAdmin(admin.ModelAdmin):
+class TodoListUserAdmin(ModelAdmin):
     list_display = ("title", "created_at", "due_date",)
 
 
-class TodoListGroupAdmin(admin.ModelAdmin):
+class TodoListGroupAdmin(ModelAdmin):
     list_display = ("title", "created_at", "due_date",)
 
 
-class CategoryAdmin(admin.ModelAdmin):
+class CategoryAdmin(ModelAdmin):
     list_display = ("title",)
 
 

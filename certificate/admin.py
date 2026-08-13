@@ -5,12 +5,13 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+from unfold.admin import ModelAdmin
 
 from certificate.models import Certificate
 
 
 @admin.register(Certificate)
-class CertificateAdmin(admin.ModelAdmin):
+class CertificateAdmin(ModelAdmin):
     change_list_template = "admin/model_change_list.html"
     fields = (
         "student",

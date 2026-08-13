@@ -1,10 +1,11 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 
 from interview.models import InterviewQuestionCategory, InterviewQuestion
 
 
 @admin.register(InterviewQuestion)
-class InterviewQuestionAdmin(admin.ModelAdmin):
+class InterviewQuestionAdmin(ModelAdmin):
     fields = (
         'title',
         'theme',
@@ -34,7 +35,7 @@ class InterviewQuestionAdmin(admin.ModelAdmin):
 
 
 @admin.register(InterviewQuestionCategory)
-class InterviewQuestionCategoryAdmin(admin.ModelAdmin):
+class InterviewQuestionCategoryAdmin(ModelAdmin):
     fields = (
         'title',
     )

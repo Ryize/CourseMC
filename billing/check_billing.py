@@ -93,9 +93,6 @@ def _() -> None:
     Использует модель PaymentVerification.
     """
 
-    if os.environ.get('RUN_CHECK_BILLING', '0') == '1':
-        return
-    os.environ['RUN_CHECK_BILLING'] = '1'
     while True:
         try:
             users = {}
@@ -117,5 +114,10 @@ def _() -> None:
             pass
 
 
-t = Thread(target=_, daemon=True)
-t.start()
+def start_payment_checker() -> None:
+    """Запускает проверку оплат один раз после инициализации Django."""
+
+    if os.environ.get('RUN_CHECK_BILLING', '0') == '1':
+        return
+    os.environ['RUN_CHECK_BILLING'] = '1'
+    Thread(target=_, name='payment-checker', daemon=True).start()

@@ -1,12 +1,12 @@
 # Локальная разработка
 
-Проект проверен на Python 3.9.6.
+Проект проверен на Python 3.12.0 и Django 5.2 LTS.
 
 ## Подготовка окружения
 
 ```shell
-python3 --version
-python3 -m venv .venv
+python3.12 --version
+python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```

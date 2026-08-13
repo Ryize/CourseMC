@@ -348,6 +348,36 @@ class LessonSolution(models.Model):
         return f'{self.student}: {self.schedule}'
 
 
+class LessonSolutionSubmission(models.Model):
+    """Неизменяемая запись о каждой отправке или повторной отправке работы."""
+
+    solution = models.ForeignKey(
+        LessonSolution,
+        on_delete=models.CASCADE,
+        related_name='submissions',
+        verbose_name='Решение урока',
+    )
+    attempt_number = models.PositiveIntegerField(verbose_name='Номер попытки')
+    submitted_at = models.DateTimeField(
+        db_index=True,
+        verbose_name='Отправлено',
+    )
+
+    class Meta:
+        verbose_name = 'Отправка решения'
+        verbose_name_plural = 'История отправок решений'
+        ordering = ('-submitted_at', '-pk')
+        constraints = [
+            models.UniqueConstraint(
+                fields=('solution', 'attempt_number'),
+                name='unique_solution_submission_attempt',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.solution}, попытка {self.attempt_number}'
+
+
 class LessonSolutionFile(models.Model):
     solution = models.ForeignKey(
         LessonSolution,

@@ -4,16 +4,41 @@ from datetime import timedelta
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter
+from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import Group, User
 from django.db import transaction
 from django.db.models import Case, IntegerField, Q, Value, When
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
+from unfold.admin import ModelAdmin
+from unfold.forms import (
+    AdminPasswordChangeForm,
+    UserChangeForm,
+    UserCreationForm,
+)
 
 from billing.admin import UserListFilter
 from .forms import ScheduleAdminForm
 from .models import *
+
+
+admin.site.unregister(User)
+admin.site.unregister(Group)
+
+
+@admin.register(User)
+class UserAdmin(BaseUserAdmin, ModelAdmin):
+    form = UserChangeForm
+    add_form = UserCreationForm
+    change_password_form = AdminPasswordChangeForm
+
+
+@admin.register(Group)
+class GroupAdmin(BaseGroupAdmin, ModelAdmin):
+    pass
 
 
 class ActiveGroupListFilter(SimpleListFilter):
@@ -136,7 +161,7 @@ class MyGroupsListFilter(SimpleListFilter):
 
 
 @admin.register(Student)
-class StudentAdmin(admin.ModelAdmin):
+class StudentAdmin(ModelAdmin):
     fields = (
         'user',
         'contact',
@@ -161,7 +186,6 @@ class StudentAdmin(admin.ModelAdmin):
         'contact',
     )
     list_filter = (
-        ActiveGroupListFilter,
         'is_learned',
         'direction',
     )
@@ -190,7 +214,7 @@ class StudentAdmin(admin.ModelAdmin):
 
 
 @admin.register(LearnGroup)
-class LearnGroupAdmin(admin.ModelAdmin):
+class LearnGroupAdmin(ModelAdmin):
     fields = (
         'title',
         'teacher',
@@ -223,7 +247,7 @@ class LearnGroupAdmin(admin.ModelAdmin):
 
 
 @admin.register(DirectionStudy)
-class DirectionStudyAdmin(admin.ModelAdmin):
+class DirectionStudyAdmin(ModelAdmin):
     fields = (
         'title',
     )
@@ -239,7 +263,7 @@ class DirectionStudyAdmin(admin.ModelAdmin):
 
 
 @admin.register(Schedule)
-class ScheduleAdmin(admin.ModelAdmin):
+class ScheduleAdmin(ModelAdmin):
     form = ScheduleAdminForm
     content = forms.CharField(widget=CKEditorUploadingWidget())
     fieldsets = (
@@ -481,7 +505,7 @@ class CountryFilter(SimpleListFilter):
 
 
 @admin.register(ClassesTimetable)
-class ClassesTimetableAdmin(admin.ModelAdmin):
+class ClassesTimetableAdmin(ModelAdmin):
     fieldsets = (
         (None, {
             'fields': ('group', 'weekday', 'time_lesson', 'duration',)
@@ -519,7 +543,7 @@ class ClassesTimetableAdmin(admin.ModelAdmin):
 
 
 @admin.register(ApplicationsForTraining)
-class ApplicationsForTrainingAdmin(admin.ModelAdmin):
+class ApplicationsForTrainingAdmin(ModelAdmin):
     fields = (
         'student',
         'created_at',
@@ -545,7 +569,7 @@ class ApplicationsForTrainingAdmin(admin.ModelAdmin):
 
 
 @admin.register(AdditionalLessons)
-class AdditionalLessonsAdmin(admin.ModelAdmin):
+class AdditionalLessonsAdmin(ModelAdmin):
     fields = (
         'group',
         'amount',
@@ -564,7 +588,7 @@ class AdditionalLessonsAdmin(admin.ModelAdmin):
 
 
 @admin.register(LessonSolution)
-class LessonSolutionAdmin(admin.ModelAdmin):
+class LessonSolutionAdmin(ModelAdmin):
     fields = (
         'student',
         'schedule',
@@ -691,3 +715,37 @@ class LessonSolutionAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return request.user.is_superuser
+
+
+@admin.register(LessonSolutionSubmission)
+class LessonSolutionSubmissionAdmin(ModelAdmin):
+    list_display = ('solution', 'attempt_number', 'submitted_at')
+    list_filter = ('submitted_at', 'solution__student__groups')
+    search_fields = (
+        'solution__student__user__username',
+        'solution__schedule__theme',
+    )
+    readonly_fields = ('solution', 'attempt_number', 'submitted_at')
+    list_select_related = (
+        'solution__student__user',
+        'solution__schedule',
+    )
+    date_hierarchy = 'submitted_at'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(StudentQuestion)
+class StudentQuestionAdmin(ModelAdmin):
+    list_display = ('question', 'group', 'solved', 'created_at')
+    list_filter = ('solved', ActiveGroupListFilter)
+    search_fields = ('question', 'group__title')
+    readonly_fields = ('created_at',)
+    list_select_related = ('group',)

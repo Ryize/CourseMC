@@ -65,7 +65,7 @@ class QuizListView(LoginRequiredMixin, ListView):
             )
             poll.correctness_percent = (
                 round(
-                    100 * sum(answer.answers.correct for answer in user_answers)
+                    100 * sum(answer.is_correct for answer in user_answers)
                     / len(user_answers)
                 )
                 if user_answers
@@ -304,10 +304,10 @@ def poll_results(request, quiz_id):
     results = []
     for completion in completions:
         answers = answers_by_user.get(completion.passed_user_id, [])
-        correct_count = sum(answer.answers.correct for answer in answers)
+        correct_count = sum(answer.is_correct for answer in answers)
         mistakes = []
         for answer in answers:
-            if answer.answers.correct:
+            if answer.is_correct:
                 continue
             mistakes.append({
                 "number": question_numbers.get(answer.question_id, "—"),
@@ -331,7 +331,7 @@ def poll_results(request, quiz_id):
         for answers in answers_by_user.values()
         for answer in answers
     ]
-    correct_answers_count = sum(answer.answers.correct for answer in all_answers)
+    correct_answers_count = sum(answer.is_correct for answer in all_answers)
     correctness_percent = (
         round(correct_answers_count / len(all_answers) * 100)
         if all_answers
@@ -457,10 +457,12 @@ def take_poll(request, poll_id):
             question=question,
             answers=answer,
             user=request.user,
+            is_correct=answer.correct,
         )
     elif user_answer.answers_id != answer.pk:
         user_answer.answers = answer
-        user_answer.save(update_fields=("answers",))
+        user_answer.is_correct = answer.correct
+        user_answer.save(update_fields=("answers", "is_correct"))
 
     current_index = questions.index(question)
     if current_index + 1 < len(questions):

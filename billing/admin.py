@@ -2,6 +2,7 @@ from typing import Optional
 
 from django.db.models import IntegerField, Case, Value, When
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 
 from billing.models import (Absences, Adjustment,
                             EducationCost, InformationPayments)
@@ -82,7 +83,7 @@ class UserListFilter(admin.SimpleListFilter):
 
 
 @admin.register(EducationCost)
-class EducationCostAdmin(OnlyMyStudentMixin, admin.ModelAdmin):
+class EducationCostAdmin(OnlyMyStudentMixin, ModelAdmin):
     """
     Стоимость обучения.
 
@@ -230,7 +231,7 @@ class EducationCostAdmin(OnlyMyStudentMixin, admin.ModelAdmin):
 
 
 @admin.register(InformationPayments)
-class InformationPaymentsAdmin(OnlyMyStudentMixin, admin.ModelAdmin):
+class InformationPaymentsAdmin(OnlyMyStudentMixin, ModelAdmin):
     """
     Список платежей.
 
@@ -258,7 +259,7 @@ class InformationPaymentsAdmin(OnlyMyStudentMixin, admin.ModelAdmin):
 
 
 @admin.register(Absences)
-class AbsencesAdmin(OnlyMyStudentMixin, admin.ModelAdmin):
+class AbsencesAdmin(OnlyMyStudentMixin, ModelAdmin):
     """
     Админ-панель для пропусков уроков.
 
@@ -285,7 +286,7 @@ class AbsencesAdmin(OnlyMyStudentMixin, admin.ModelAdmin):
 
 
 @admin.register(Adjustment)
-class AdjustmentAdmin(OnlyMyStudentMixin, admin.ModelAdmin):
+class AdjustmentAdmin(OnlyMyStudentMixin, ModelAdmin):
     """
     Админ-панель для корректировок оплаты.
 

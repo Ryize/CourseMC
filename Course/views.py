@@ -12,6 +12,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
+from django.db.models import Max
 from django.http import FileResponse, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -24,7 +25,8 @@ from django.views.generic.edit import FormView
 from Course.doc import docx_worker, save_report
 from Course.forms import LessonSolutionUploadForm, StudentForm
 from Course.models import LearnGroup, Schedule, Student, StudentQuestion, \
-    ApplicationsForTraining, AdditionalLessons, LessonSolution, LessonSolutionFile
+    ApplicationsForTraining, AdditionalLessons, LessonSolution, \
+    LessonSolutionFile, LessonSolutionSubmission
 from Course.report import get_content_disposition, get_content_type
 from billing.models import Absences
 from reviews.models import Review
@@ -310,6 +312,10 @@ class LessonSolutionUploadView(LoginRequiredMixin, View):
                 schedule=schedule,
                 student=student,
             )
+            if not created:
+                solution = LessonSolution.objects.select_for_update().get(
+                    pk=solution.pk,
+                )
             previous_file_ids = list(
                 solution.files.values_list('pk', flat=True),
             )
@@ -326,6 +332,15 @@ class LessonSolutionUploadView(LoginRequiredMixin, View):
                 )
             if previous_file_ids:
                 LessonSolutionFile.objects.filter(pk__in=previous_file_ids).delete()
+            last_attempt = (
+                solution.submissions.aggregate(last=Max('attempt_number'))['last']
+                or 0
+            )
+            LessonSolutionSubmission.objects.create(
+                solution=solution,
+                attempt_number=last_attempt + 1,
+                submitted_at=timezone.now(),
+            )
 
         if created:
             messages.success(request, 'Решение отправлено на проверку.')

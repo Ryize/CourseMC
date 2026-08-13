@@ -67,7 +67,11 @@ class PostListView(ListView):
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["Category"] = Category.objects.all()
+        context["filter_categories"] = (
+            Category.objects.filter(posts__is_displayed=True)
+            .distinct()
+            .order_by("title")
+        )
         context['descry'] = Post.objects.filter(is_displayed=False).all()
 
         return context
@@ -86,6 +90,11 @@ class MyPostListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['descry'] = Post.objects.filter(is_displayed=False).all()
         context['my_post'] = True
+        context["filter_categories"] = (
+            Category.objects.filter(posts__author=self.request.user)
+            .distinct()
+            .order_by("title")
+        )
         return context
 
 

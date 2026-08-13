@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Твои статьи - CourseMC</title>
-    <link rel="stylesheet" href="{% static 'Course/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'Course/css/style.css' %}?v=20260812-5">
     <link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}" type="image/x-icon">
 </head>
 <style>
@@ -31,22 +31,33 @@
                 <button><a href="{% url 'my_post' %}">Мои статьи</a></button>
             {% endif %}
             <div class="filter">
-                <div class="select" onclick="activeFilter()">
+                <button class="select" type="button" onclick="activeFilter()"
+                        aria-label="Открыть фильтр статей">
                     <p>Фильтровать</p>
                     <ion-icon name="chevron-down-outline"></ion-icon>
-
-                </div>
+                </button>
 
                 <div class="dropdown-filter">
-                    <div class="active">Все</div>
-                    <div>Новая тема</div>
-                    <div>Ключевая тема</div>
+                    <div class="active">
+                        <button type="button" data-blog-filter="">Все</button>
+                    </div>
+                    {% for category in filter_categories %}
+                        <div>
+                            <button type="button"
+                                    data-blog-filter="{{ category.title }}">
+                                {{ category.title }}
+                            </button>
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
     </div>
 
     <div class="list blog"></div>
+    <p class="blog-empty-state" hidden>
+        В этой категории пока нет статей.
+    </p>
 
     <nav class="pagination-container">
         <button class="back">
@@ -71,19 +82,13 @@
                     name: '{{ post.title|escapejs }}',
                     text: '{{ post.description|escapejs }}',
                     autor: '{{ post.author|escapejs }}',
-                    date: '{{ post.created_at|escapejs }}',
+                    date: '{{ post.created_at|date:"j E Y г. H:i"|escapejs }}',
                     image: '{{ post.image.url|escapejs }}',
                     url: 'onclick="document.location=`{% url 'post_view' post.pk %}`"'
                 },
             {% endif %}
         {% endfor %}
     ].reverse()
-
-    function setMark(elem) {
-        if (elem === undefined) return ''
-        if (elem === 'new') return 'Новая тема'
-        if (elem === 'primary') return 'Ключевая тема'
-    }
 
     box.innerHTML = itemsMain.map(item => (
         `<div id="dropdown-blog" class="item" ${item.url}>
@@ -114,80 +119,113 @@
     )).join(' ')
 
 
-    const listItemsBlog = document.querySelectorAll("#dropdown-blog");
+    const listItemsBlog = Array.from(document.querySelectorAll("#dropdown-blog"));
     const backBlog = document.querySelector(".back");
     const nextBlog = document.querySelector(".next");
+    const paginationNumbersBlog = document.getElementById("pagination-numbers");
+    const paginationContainerBlog = document.querySelector(".pagination-container");
+    const emptyStateBlog = document.querySelector(".blog-empty-state");
+    const blogFilter = document.querySelector(".title.blog .filter");
+    const blogFilterDropdown = blogFilter.querySelector(".dropdown-filter");
+    const blogFilterButtons = blogFilter.querySelectorAll("[data-blog-filter]");
 
     const paginationLimitBlog = 9;
-    const pageCountBlog = Math.ceil(listItemsBlog.length / paginationLimitBlog);
+    let filteredItemsBlog = listItemsBlog;
+    let pageCountBlog = Math.ceil(filteredItemsBlog.length / paginationLimitBlog);
     let currentPageBlog = 1;
 
     const appendPageNumberBlog = (index) => {
         const pageNumberBlog = document.createElement("button");
-        pageNumberBlog.className = "pagination-number";
+        pageNumberBlog.className = "blog-pagination-number";
         pageNumberBlog.innerHTML = index;
         pageNumberBlog.setAttribute("page-index", index);
-        pageNumberBlog.setAttribute("aria-label", "Page " + index);
+        pageNumberBlog.setAttribute("aria-label", "Страница " + index);
+        pageNumberBlog.addEventListener("click", () => {
+            setCurrentPageBlog(index);
+        });
 
-        paginationNumbers.appendChild(pageNumberBlog);
+        paginationNumbersBlog.appendChild(pageNumberBlog);
     };
 
     const getPaginationNumbersBlog = () => {
+        paginationNumbersBlog.innerHTML = "";
+        pageCountBlog = Math.ceil(filteredItemsBlog.length / paginationLimitBlog);
         for (let i = 1; i <= pageCountBlog; i++) {
             appendPageNumberBlog(i);
         }
+        paginationContainerBlog.hidden = pageCountBlog <= 1;
     };
 
     const handleActivePageNumberBlog = () => {
-        document.querySelectorAll(".pagination-number").forEach((button) => {
+        document.querySelectorAll(".blog-pagination-number").forEach((button) => {
             button.classList.remove("active");
             const pageIndex = Number(button.getAttribute("page-index"));
-            if (pageIndex == currentPageBlog) {
+            if (pageIndex === currentPageBlog) {
                 button.classList.add("active");
             }
         });
     };
 
-    function setcurrentPageBlog(pageNum) {
+    function setCurrentPageBlog(pageNum) {
         currentPageBlog = pageNum;
         handleActivePageNumberBlog();
 
         const prevRange = (pageNum - 1) * paginationLimitBlog;
         const currRange = pageNum * paginationLimitBlog;
 
-        listItemsBlog.forEach((item, index) => {
-            item.classList.add("hidden");
+        listItemsBlog.forEach((item) => item.classList.add("hidden"));
+        filteredItemsBlog.forEach((item, index) => {
             if (index >= prevRange && index < currRange) {
                 item.classList.remove("hidden");
             }
         });
     };
 
+    function applyBlogFilter(category) {
+        filteredItemsBlog = listItemsBlog.filter((item, index) => (
+            !category || itemsMain[index].categories.includes(category)
+        ));
+
+        blogFilterButtons.forEach((button) => {
+            button.parentElement.classList.toggle(
+                "active",
+                button.dataset.blogFilter === category
+            );
+        });
+
+        emptyStateBlog.hidden = filteredItemsBlog.length > 0;
+        getPaginationNumbersBlog();
+        if (filteredItemsBlog.length > 0) {
+            setCurrentPageBlog(1);
+        } else {
+            listItemsBlog.forEach((item) => item.classList.add("hidden"));
+        }
+
+        blogFilterDropdown.classList.remove("active");
+        blogFilter.classList.remove("active");
+    }
+
+    blogFilterButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            applyBlogFilter(button.dataset.blogFilter);
+        });
+    });
+
     backBlog.addEventListener('click', () => {
         if (currentPageBlog > 1) {
-            setcurrentPageBlog(currentPageBlog - 1);
+            setCurrentPageBlog(currentPageBlog - 1);
         }
     })
 
     nextBlog.addEventListener('click', () => {
         if (currentPageBlog < pageCountBlog) {
-            setcurrentPageBlog(currentPageBlog + 1);
+            setCurrentPageBlog(currentPageBlog + 1);
         }
     })
 
     window.addEventListener("load", () => {
         getPaginationNumbersBlog();
-        setcurrentPageBlog(1);
-
-        document.querySelectorAll(".pagination-number").forEach((button) => {
-            const pageIndex = Number(button.getAttribute("page-index"));
-
-            if (pageIndex) {
-                button.addEventListener("click", () => {
-                    setcurrentPageBlog(pageIndex);
-                });
-            }
-        });
+        setCurrentPageBlog(1);
     });
 </script>
 

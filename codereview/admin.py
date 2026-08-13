@@ -4,6 +4,7 @@ from django.db.models import Q
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
+from unfold.admin import ModelAdmin
 
 from Course.models import Student
 from .ai_review import AIReviewStateError, generate_ai_review_draft
@@ -75,7 +76,7 @@ class ProjectStudentListFilter(SimpleListFilter):
 
 
 @admin.register(ProjectCategories)
-class ProjectCategoriesAdmin(admin.ModelAdmin):
+class ProjectCategoriesAdmin(ModelAdmin):
     """
     Категории проектов.
     """
@@ -103,7 +104,7 @@ class ProjectCategoriesAdmin(admin.ModelAdmin):
 
 
 @admin.register(ProjectForReview)
-class ProjectForReviewAdmin(admin.ModelAdmin):
+class ProjectForReviewAdmin(ModelAdmin):
     """
     Проекты на ревью.
     """
@@ -163,7 +164,7 @@ class ProjectForReviewAdmin(admin.ModelAdmin):
 
 
 @admin.register(CodeReview)
-class CodeReviewAdmin(admin.ModelAdmin):
+class CodeReviewAdmin(ModelAdmin):
     """
     Ревью проектов.
     """

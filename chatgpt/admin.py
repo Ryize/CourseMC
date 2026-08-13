@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
+from unfold.admin import ModelAdmin
 
 from chatgpt.models import RequestsGPT
 
@@ -43,7 +44,7 @@ class DecadeBornListFilter(admin.SimpleListFilter):
 
 
 @admin.register(RequestsGPT)
-class RequestsGPTAdmin(admin.ModelAdmin):
+class RequestsGPTAdmin(ModelAdmin):
     fields = (
         "user",
         "text_request_safe",

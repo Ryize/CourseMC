@@ -1282,6 +1282,10 @@ body.black .scheduleSection .previosPayments {
     position: relative;
 }
 
+.scheduleSection .title.blog .filter {
+    min-width: 220px;
+}
+
 .scheduleSection .options .right .select,
 .scheduleSection .title.blog .select {
     height: 46px;
@@ -1295,6 +1299,8 @@ body.black .scheduleSection .previosPayments {
 
 .scheduleSection .title.blog .select {
     border: 2px solid #FF977E;
+    width: 100%;
+    justify-content: space-between;
 }
 
 .scheduleSection .options .right .select p,
@@ -1372,7 +1378,8 @@ body.black .scheduleSection .title.blog .dropdown-filter.active {
 }
 
 .scheduleSection .options .right .dropdown-filter div a,
-.scheduleSection .options .right .dropdown-filter div button {
+.scheduleSection .options .right .dropdown-filter div button,
+.scheduleSection .title.blog .dropdown-filter div button {
     width: 100%;
     padding: 15px 20px;
     display: block;
@@ -1380,7 +1387,8 @@ body.black .scheduleSection .title.blog .dropdown-filter.active {
     text-decoration: none;
 }
 
-.scheduleSection .options .right .dropdown-filter div button {
+.scheduleSection .options .right .dropdown-filter div button,
+.scheduleSection .title.blog .dropdown-filter div button {
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -1388,6 +1396,32 @@ body.black .scheduleSection .title.blog .dropdown-filter.active {
     cursor: pointer;
     font: inherit;
     text-align: left;
+}
+
+.scheduleSection .options .right .dropdown-filter div button:hover,
+.scheduleSection .title.blog .dropdown-filter div button:hover {
+    transform: none;
+}
+
+.scheduleSection .title.blog .dropdown-filter div {
+    padding: 0;
+}
+
+.scheduleSection .title.blog .dropdown-filter.active {
+    max-height: min(60vh, 520px);
+    overflow-y: auto;
+}
+
+.scheduleSection .title.blog .select {
+    cursor: pointer;
+}
+
+.scheduleSection .blog-empty-state {
+    width: 100%;
+    margin: 40px 0;
+    text-align: center;
+    color: #777;
+    font-size: 20px;
 }
 
 body.black .scheduleSection .options .right .dropdown-filter div,
@@ -2777,6 +2811,10 @@ header .right .header-dropdown-trigger {
         width: 100%;
     }
 
+    .scheduleSection .title.blog .filter {
+        min-width: 0;
+    }
+
     .homeSection:nth-child(9) .container {
         flex-direction: column;
         gap: 50px;
@@ -3239,6 +3277,14 @@ ul {
 
 .black .post-create form {
 	color: var(--color-white);
+}
+
+.black .post-create h1 {
+	color: var(--color-white);
+}
+
+.black .post-create h6 {
+	color: rgba(247, 247, 247, 0.7);
 }
 @media (max-width: 425.98px) {
 	.form-login {

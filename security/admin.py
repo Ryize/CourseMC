@@ -1,9 +1,10 @@
 from security.models import BlockedIPAddress, IPVisitors
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 
 
 @admin.register(BlockedIPAddress)
-class BlockedIPAddressAdmin(admin.ModelAdmin):
+class BlockedIPAddressAdmin(ModelAdmin):
     fields = ('ip',)
     list_display = ('ip',)
     list_display_links = ('ip',)
@@ -12,7 +13,7 @@ class BlockedIPAddressAdmin(admin.ModelAdmin):
 
 
 @admin.register(IPVisitors)
-class IPVisitorsAdmin(admin.ModelAdmin):
+class IPVisitorsAdmin(ModelAdmin):
     fields = ('user', 'ip',)
     list_display = ('user', 'ip',)
     list_display_links = ('user', 'ip',)

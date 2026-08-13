@@ -1,12 +1,13 @@
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django import forms
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 
 from .models import *
 
 
 @admin.register(Review)
-class ReviewAdmin(admin.ModelAdmin):
+class ReviewAdmin(ModelAdmin):
     content = forms.CharField(widget=CKEditorUploadingWidget())
     fields = ("author_id", "content", "pub_date")
     list_display = ("author_id", "pub_date")

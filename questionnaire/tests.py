@@ -276,6 +276,21 @@ class QuestionnaireResultsTests(TestCase):
         self.assertContains(response, "Выбранный неверный вариант")
         self.assertContains(response, "Правильный вариант")
 
+    def test_result_does_not_change_after_answer_key_is_edited(self):
+        chosen_answer = UserAnswer.objects.get(
+            quiz=self.quiz,
+            question__question="Верный вопрос",
+            user=self.participant,
+        )
+        chosen_answer.answers.correct = False
+        chosen_answer.answers.save(update_fields=("correct",))
+        self.client.force_login(self.owner)
+
+        response = self.client.get(reverse("poll_results", args=(self.quiz.pk,)))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "50%")
+
     def test_non_owner_cannot_see_results(self):
         self.client.force_login(self.other)
 
@@ -445,6 +460,22 @@ class QuestionnaireFlowTests(TestCase):
         )
         self.assertEqual(answers.count(), 1)
         self.assertEqual(answers.get().answers, alternative)
+        self.assertFalse(answers.get().is_correct)
+
+    def test_answer_result_is_saved_as_a_snapshot(self):
+        answer = UserAnswer.objects.create(
+            quiz=self.quiz,
+            question=self.question_one,
+            answers=self.answer_one,
+            user=self.participant,
+        )
+        self.assertTrue(answer.is_correct)
+
+        self.answer_one.correct = False
+        self.answer_one.save(update_fields=("correct",))
+        answer.refresh_from_db()
+
+        self.assertTrue(answer.is_correct)
 
     def test_finishing_poll_creates_one_completion_record(self):
         url = reverse("take_poll", args=(self.quiz.pk,))

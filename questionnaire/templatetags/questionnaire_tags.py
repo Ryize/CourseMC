@@ -22,7 +22,7 @@ def get_statistic(poll, user_id):
     if not user_quiz:
         return "На вопросы пока никто не ответил."
 
-    wrong_answer = [i.answers for i in user_quiz if not i.answers.correct]
+    wrong_answer = [i.answers for i in user_quiz if not i.is_correct]
     result_number = round(
         (len(user_quiz) - len(wrong_answer)) / len(user_quiz) * 100, 1
     )

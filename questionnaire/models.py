@@ -94,6 +94,35 @@ class UserAnswer(models.Model):
         verbose_name="Пользователь",
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создан")
+    is_correct = models.BooleanField(
+        default=False,
+        db_index=True,
+        editable=False,
+        verbose_name="Ответ был правильным",
+        help_text="Снимок результата в момент выбора ответа.",
+    )
+
+    def save(self, *args, **kwargs):
+        should_update_snapshot = self._state.adding
+        if not should_update_snapshot and self.pk:
+            previous_answer_id = (
+                type(self).objects
+                .filter(pk=self.pk)
+                .values_list("answers_id", flat=True)
+                .first()
+            )
+            should_update_snapshot = previous_answer_id != self.answers_id
+
+        if should_update_snapshot and self.answers_id:
+            self.is_correct = (
+                AnswerQuestion.objects
+                .values_list("correct", flat=True)
+                .get(pk=self.answers_id)
+            )
+            update_fields = kwargs.get("update_fields")
+            if update_fields is not None:
+                kwargs["update_fields"] = set(update_fields) | {"is_correct"}
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Ответ пользователя"

@@ -405,7 +405,7 @@ class AdminFilterTests(TimetableTests):
         def apply_filter(filter_class, parameter_name, value):
             filter_instance = filter_class(
                 request,
-                {parameter_name: value},
+                {parameter_name: [value]},
                 LessonSolution,
                 model_admin,
             )
@@ -474,6 +474,8 @@ class LessonSolutionTests(TimetableTests):
         )
         self.assertEqual(solution.status, LessonSolution.Status.PENDING)
         self.assertEqual(solution.files.count(), 2)
+        submission = solution.submissions.get()
+        self.assertEqual(submission.attempt_number, 1)
         self.assertTrue(
             solution.files.first().file.name.startswith(
                 f'solution_uploads/{self.student.pk}/',
@@ -509,6 +511,15 @@ class LessonSolutionTests(TimetableTests):
         self.assertIsNone(solution.reviewed_by)
         self.assertEqual(solution.files.count(), 1)
         self.assertEqual(solution.files.get().original_name, 'second.py')
+        self.assertEqual(
+            list(
+                solution.submissions.order_by('attempt_number').values_list(
+                    'attempt_number',
+                    flat=True,
+                )
+            ),
+            [1, 2],
+        )
         self.assertFalse(old_file_storage.exists(old_file_name))
 
     def test_upload_rejects_an_unavailable_lesson_and_unsupported_file(self):
