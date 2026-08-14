@@ -1,0 +1,73 @@
+name: coursemc
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ${COURSEMC_ENV_FILE:-.env}
+    volumes:
+      - ./data/database:/data
+      - ./data/backups:/backups
+      - ./data/static:/app/staticfiles
+      - ./data/media:/app/media
+      - ./data/private_media:/app/private_media
+    expose:
+      - "8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          request = urllib.request.Request(
+              'http://127.0.0.1:8000/ready/',
+              headers={'X-Forwarded-Proto': 'https'}
+          );
+          urllib.request.urlopen(request, timeout=5).read()
+      interval: 20s
+      timeout: 8s
+      retries: 5
+      start_period: 60s
+    networks:
+      - backend
+
+  nginx:
+    image: nginx:1.28-alpine
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./runtime/nginx:/etc/nginx/conf.d:ro
+      - ./data/static:/srv/static:ro
+      - ./data/media:/srv/media:ro
+      - ./data/certbot/www:/var/www/certbot:ro
+      - ./data/certbot/conf:/etc/letsencrypt:ro
+    command: >-
+      /bin/sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload;
+      done & nginx -g 'daemon off;'"
+    networks:
+      - backend
+
+  certbot:
+    image: certbot/certbot:v5.7.0
+    restart: unless-stopped
+    profiles:
+      - https
+    volumes:
+      - ./data/certbot/www:/var/www/certbot
+      - ./data/certbot/conf:/etc/letsencrypt
+    entrypoint: >-
+      /bin/sh -c "trap exit TERM; while :; do certbot renew --webroot
+      --webroot-path=/var/www/certbot --quiet; sleep 12h & wait $${!}; done"
+
+networks:
+  backend:
+    driver: bridge

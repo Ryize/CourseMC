@@ -1,2 +1,7 @@
-SECRET_KEY = 'live_5Zj3vmnudl9EHm7SW4iuNUQk0Hh0izHhaODyFk2wJe4'
-SHOP_ID = '986660'
+"""YooKassa credentials loaded from the server environment."""
+
+import os
+
+
+SECRET_KEY = os.environ.get("YOOKASSA_SECRET_KEY", "")
+SHOP_ID = os.environ.get("YOOKASSA_SHOP_ID", "")

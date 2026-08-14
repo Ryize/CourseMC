@@ -2,6 +2,7 @@
 
 Django==5.2.17
 djangorestframework==3.16.1
+gunicorn==26.0.0
 
 django-allauth==65.14.3
 django-colorfield==0.14.0

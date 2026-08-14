@@ -3,12 +3,24 @@ from django.core.exceptions import PermissionDenied
 from security.models import IPVisitors, BlockedIPAddress
 
 
+PROBE_PATHS = {'/health/', '/ready/'}
+
+
+def get_client_ip(request):
+    """Return the address set by the trusted Nginx proxy when available."""
+
+    return request.META.get('HTTP_X_REAL_IP') or request.META.get('REMOTE_ADDR')
+
+
 class IPVisitorsMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        ip = request.META.get('REMOTE_ADDR')
+        if request.path in PROBE_PATHS:
+            return self.get_response(request)
+
+        ip = get_client_ip(request)
         if ip:
             user_id = (
                 request.user.pk if request.user.is_authenticated else None
@@ -35,7 +47,10 @@ class FilterIPMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        ip = request.META.get('REMOTE_ADDR')
+        if request.path in PROBE_PATHS:
+            return self.get_response(request)
+
+        ip = get_client_ip(request)
         if ip and BlockedIPAddress.objects.filter(ip=ip).exists():
             raise PermissionDenied
 

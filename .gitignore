@@ -13,6 +13,9 @@ venvv/
 
 # Local configuration and secrets
 config.py
+.env
+.env.*
+!.env.example
 
 # Django local state
 db.sqlite3
@@ -21,6 +24,8 @@ db.sqlite3-*
 media/
 private_media/
 staticfiles/
+data/
+runtime/
 *.log
 
 # IDE and operating system files

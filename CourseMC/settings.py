@@ -16,6 +16,24 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+def env_bool(name, default=False):
+    """Read a conventional boolean value from the environment."""
+
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def env_list(name, default=()):
+    """Read a comma-separated environment variable without empty items."""
+
+    value = os.environ.get(name)
+    if value is None:
+        return list(default)
+    return [item.strip() for item in value.split(",") if item.strip()]
+
 try:
     from config import PROXYAPI_API_KEY as LOCAL_PROXYAPI_API_KEY
 except ImportError:
@@ -25,10 +43,14 @@ except ImportError:
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "r)+kik+8x6o+%a+55hdjkf44@5_rezvzv$m5b(51lkij=pbasgfhde(__gshw"
-SOCIAL_AUTH_VK_OAUTH2_KEY = "7951107"
-SOCIAL_AUTH_VK_OAUTH2_SECRET = (
-    "ab825789ab825789ab82578950abfb048aaab82ab825789cac22c88943e5f898833038e"
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-local-development-only-change-me",
+)
+SOCIAL_AUTH_VK_OAUTH2_KEY = os.environ.get("SOCIAL_AUTH_VK_OAUTH2_KEY", "")
+SOCIAL_AUTH_VK_OAUTH2_SECRET = os.environ.get(
+    "SOCIAL_AUTH_VK_OAUTH2_SECRET",
+    "",
 )
 LOGIN_REDIRECT_URL = "/"
 ACCOUNT_LOGIN_METHODS = {"username", "email"}
@@ -54,9 +76,31 @@ PROXYAPI_REVIEW_API_URL = os.environ.get(
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env_bool("DJANGO_DEBUG", True)
 
-ALLOWED_HOSTS = ["coursemc.ru", "www.coursemc.ru", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = env_list(
+    "DJANGO_ALLOWED_HOSTS",
+    ("coursemc.ru", "www.coursemc.ru", "localhost", "127.0.0.1"),
+)
+CSRF_TRUSTED_ORIGINS = env_list(
+    "DJANGO_CSRF_TRUSTED_ORIGINS",
+    ("https://coursemc.ru", "https://www.coursemc.ru"),
+)
+
+# Nginx is the only published container and overwrites these proxy headers.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
+
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = env_bool("DJANGO_SECURE_SSL_REDIRECT", True)
+    SECURE_HSTS_SECONDS = int(os.environ.get("DJANGO_SECURE_HSTS_SECONDS", "3600"))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool(
+        "DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS",
+        True,
+    )
+    SECURE_HSTS_PRELOAD = env_bool("DJANGO_SECURE_HSTS_PRELOAD", False)
 
 # Application definition
 
@@ -156,6 +200,9 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": os.environ.get("COURSEMC_DB_PATH", BASE_DIR / "db.sqlite3"),
+        "OPTIONS": {
+            "timeout": int(os.environ.get("COURSEMC_SQLITE_TIMEOUT", "20")),
+        },
     }
 }
 
@@ -191,12 +238,11 @@ REST_FRAMEWORK = {
     },
 }
 
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = os.environ.get("COURSEMC_MEDIA_ROOT", BASE_DIR / "media")
 MEDIA_URL = "/media/"
-PRIVATE_SOLUTION_MEDIA_ROOT = os.path.join(
-    BASE_DIR,
-    "private_media",
-    "lesson_solutions",
+PRIVATE_SOLUTION_MEDIA_ROOT = os.environ.get(
+    "COURSEMC_PRIVATE_MEDIA_ROOT",
+    BASE_DIR / "private_media" / "lesson_solutions",
 )
 
 # Internationalization
@@ -219,7 +265,7 @@ SITE_ID = 1
 
 STATIC_URL = "/static/"
 
-STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+STATIC_ROOT = os.environ.get("COURSEMC_STATIC_ROOT", BASE_DIR / "staticfiles")
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "CourseMC/static"),

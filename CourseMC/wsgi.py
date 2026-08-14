@@ -14,9 +14,3 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CourseMC.settings")
 
 application = get_wsgi_application()
-
-# Модели уже загружены, поэтому фоновая проверка не обращается к базе во время
-# инициализации приложений Django.
-from billing.check_billing import start_payment_checker
-
-start_payment_checker()

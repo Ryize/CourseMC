@@ -1,5 +1,4 @@
-import ckeditor_uploader.fields
-from django.db import migrations
+from django.db import migrations, models
 
 
 def fill_missing_plans(apps, schema_editor):
@@ -23,7 +22,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='schedule',
             name='plan',
-            field=ckeditor_uploader.fields.RichTextUploadingField(
+            field=models.TextField(
                 default='План не указан!',
                 verbose_name='План урока',
             ),

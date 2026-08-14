@@ -4,9 +4,11 @@ from django.contrib import admin
 from django.urls import include, path
 
 from .rich_text import rich_text_image_upload
-from .views import page_not_found_view
+from .views import health_check, page_not_found_view, readiness_check
 
 urlpatterns = [
+    path('health/', health_check, name='health_check'),
+    path('ready/', readiness_check, name='readiness_check'),
     path('coursemc_control/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
     path(
@@ -30,8 +32,9 @@ urlpatterns = [
     path('<path:url>/', page_not_found_view),
 ]
 
-from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+if settings.DEBUG:
+    from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
-urlpatterns += staticfiles_urlpatterns()
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += staticfiles_urlpatterns()
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns.append( path('<path:url>', page_not_found_view))

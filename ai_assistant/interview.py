@@ -1,6 +1,7 @@
-import os
 import requests
 import json
+
+from django.conf import settings
 
 
 class Interview:
@@ -55,7 +56,7 @@ class Interview:
             question (str): Вопрос для собеседования.
             user_question (str): Ответ пользователя, который необходимо оценить.
         """
-        token = 'sk-59J1nXyKKDgwIt31fmxhoLn1JnoLHPdw'
+        self.token = settings.PROXYAPI_API_KEY
         self.question = question
         self.user_question = user_question
 
@@ -83,7 +84,6 @@ class InterviewThisOutOfOpenAI(Interview):
             question (str): Вопрос для собеседования.
             user_question (str): Ответ пользователя, который необходимо оценить.
         """
-        self.token = 'sk-59J1nXyKKDgwIt31fmxhoLn1JnoLHPdw'
         super().__init__(question, user_question)
 
     def get_response(self) -> str:
