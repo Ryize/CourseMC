@@ -14,7 +14,7 @@ from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
-from unfold.admin import ModelAdmin
+from unfold.admin import ModelAdmin, TabularInline
 from unfold.forms import (
     AdminPasswordChangeForm,
     UserChangeForm,
@@ -389,6 +389,31 @@ class CurriculumLessonAdmin(ModelAdmin):
     list_per_page = 100
     ordering = ('version', 'position', 'pk')
 
+    @staticmethod
+    def _rich_text_preview(value):
+        if not value:
+            return '-пустой-'
+        return format_html(
+            '<div class="cm-rich-text-preview">{}</div>',
+            mark_safe(value),
+        )
+
+    @admin.display(description='План урока')
+    def plan_preview(self, obj):
+        return self._rich_text_preview(obj.plan)
+
+    @admin.display(description='Материалы к уроку')
+    def lesson_materials_preview(self, obj):
+        return self._rich_text_preview(obj.lesson_materials)
+
+    def get_fields(self, request, obj=None):
+        if obj and not self.has_change_permission(request, obj):
+            return (
+                'version', 'source_schedule', 'position', 'theme',
+                'plan_preview', 'lesson_materials_preview', 'lesson_type',
+            )
+        return super().get_fields(request, obj)
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'version':
             kwargs['queryset'] = CurriculumVersion.objects.filter(
@@ -397,10 +422,10 @@ class CurriculumLessonAdmin(ModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_readonly_fields(self, request, obj=None):
-        if obj and obj.version.status != CurriculumVersion.Status.DRAFT:
+        if obj and not self.has_change_permission(request, obj):
             return (
                 'version', 'source_schedule', 'position', 'theme',
-                'plan', 'lesson_materials', 'lesson_type',
+                'plan_preview', 'lesson_materials_preview', 'lesson_type',
             )
         return ('source_schedule',)
 
@@ -475,6 +500,48 @@ class ScheduleAdmin(ModelAdmin):
         'theme',
         'lesson_materials',
     )
+
+    @staticmethod
+    def _rich_text_preview(value):
+        if not value:
+            return '-пустой-'
+        return format_html(
+            '<div class="cm-rich-text-preview">{}</div>',
+            mark_safe(value),
+        )
+
+    @admin.display(description='План урока')
+    def plan_preview(self, obj):
+        return self._rich_text_preview(obj.plan)
+
+    @admin.display(description='Материалы к уроку')
+    def lesson_materials_preview(self, obj):
+        return self._rich_text_preview(obj.lesson_materials)
+
+    def get_fieldsets(self, request, obj=None):
+        if obj and not self.has_change_permission(request, obj):
+            return (
+                ('Порядок в программе', {
+                    'fields': ('direction', 'position', 'is_archived'),
+                    'description': (
+                        'Это опубликованная программа. Изменения вносите '
+                        'через «Версии программы».'
+                    ),
+                }),
+                ('Содержание урока', {
+                    'fields': (
+                        'theme', 'plan_preview',
+                        'lesson_materials_preview', 'lesson_type',
+                    ),
+                }),
+            )
+        return super().get_fieldsets(request, obj)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+        if obj and not self.has_change_permission(request, obj):
+            readonly.extend(('plan_preview', 'lesson_materials_preview'))
+        return tuple(readonly)
 
     def has_add_permission(self, request):
         return request.user.is_superuser and super().has_add_permission(request)
@@ -766,6 +833,20 @@ class AdditionalLessonsAdmin(ModelAdmin):
     list_max_show_all = 8
 
 
+class LessonSolutionSubmissionInline(TabularInline):
+    model = LessonSolutionSubmission
+    fields = ('attempt_number', 'submitted_at')
+    readonly_fields = ('attempt_number', 'submitted_at')
+    extra = 0
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(LessonSolution)
 class LessonSolutionAdmin(ModelAdmin):
     fields = (
@@ -813,6 +894,7 @@ class LessonSolutionAdmin(ModelAdmin):
     )
     list_select_related = ('student', 'student__groups', 'schedule', 'reviewed_by')
     list_per_page = 50
+    inlines = (LessonSolutionSubmissionInline,)
 
     def get_queryset(self, request):
         queryset = (
@@ -875,7 +957,11 @@ class LessonSolutionAdmin(ModelAdmin):
         super().save_model(request, obj, form, change)
 
     def has_view_permission(self, request, obj=None):
-        if not super().has_view_permission(request, obj):
+        has_permission = (
+            super().has_view_permission(request, obj)
+            or request.user.has_perm('Course.view_lessonsolution')
+        )
+        if not has_permission:
             return False
         return (
             obj is None
@@ -907,9 +993,31 @@ class LessonSolutionSubmissionAdmin(ModelAdmin):
     readonly_fields = ('solution', 'attempt_number', 'submitted_at')
     list_select_related = (
         'solution__student__user',
+        'solution__student__groups__teacher__user',
         'solution__schedule',
     )
     date_hierarchy = 'submitted_at'
+
+    def has_module_permission(self, request):
+        """Keep drill-down URLs available without cluttering the admin menu."""
+        return False
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if request.user.is_superuser:
+            return queryset
+        return queryset.filter(
+            solution__student__groups__teacher__user=request.user,
+        )
+
+    def has_view_permission(self, request, obj=None):
+        if not super().has_view_permission(request, obj):
+            return False
+        return (
+            obj is None
+            or request.user.is_superuser
+            or obj.solution.student.groups.teacher.user_id == request.user.pk
+        )
 
     def has_add_permission(self, request):
         return False
@@ -957,6 +1065,10 @@ class TeacherNotificationAdmin(ModelAdmin):
     actions = ('mark_as_read',)
     date_hierarchy = 'created_at'
     list_select_related = ('recipient',)
+
+    def has_module_permission(self, request):
+        """Notifications power badges and links but are not a menu section."""
+        return False
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)

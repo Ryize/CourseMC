@@ -17,6 +17,13 @@
 
         textarea.dataset.editorInitialised = "true";
         const uploadUrl = textarea.dataset.editorUploadUrl;
+        const requestedHeight = Number.parseInt(
+            textarea.dataset.editorHeight || "430",
+            10
+        );
+        const editorHeight = Number.isFinite(requestedHeight)
+            ? Math.max(requestedHeight, 280)
+            : 430;
         const editor = Jodit.make(textarea, {
             language: "ru",
             theme: (
@@ -24,9 +31,13 @@
                 || document.body.classList.contains("dark")
                 || document.body.classList.contains("black")
             ) ? "dark" : "default",
-            height: 430,
+            height: editorHeight,
             minHeight: 280,
-            toolbarAdaptive: true,
+            // Keep the complete editing toolset visible. Jodit wraps the
+            // toolbar onto additional rows when the editor becomes narrower,
+            // which is more convenient here than hiding commands in the
+            // overflow menu.
+            toolbarAdaptive: false,
             toolbarSticky: true,
             showCharsCounter: true,
             showWordsCounter: true,
@@ -34,11 +45,15 @@
             askBeforePasteFromWord: false,
             defaultActionOnPaste: "insert_clear_html",
             buttons: [
-                "source", "|", "undo", "redo", "|", "paragraph", "brush",
-                "|", "bold", "italic", "underline", "strikethrough", "|",
-                "ul", "ol", "outdent", "indent", "|", "left", "center",
-                "right", "justify", "|", "link", "image", "table", "hr",
-                "|", "eraser", "copyformat", "fullsize", "preview"
+                "source", "|", "undo", "redo", "print", "|",
+                "paragraph", "font", "fontsize", "lineHeight", "brush", "|",
+                "bold", "italic", "underline", "strikethrough",
+                "superscript", "subscript", "|",
+                "ul", "ol", "outdent", "indent", "|",
+                "left", "center", "right", "justify", "|",
+                "link", "image", "video", "table", "hr", "symbols", "|",
+                "copyformat", "eraser", "selectall", "spellcheck", "|",
+                "fullsize", "preview"
             ],
             uploader: uploadUrl ? {
                 url: uploadUrl,

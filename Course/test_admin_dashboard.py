@@ -217,6 +217,10 @@ class AdminDashboardTests(TestCase):
         self.assertContains(response, 'Требует внимания')
         self.assertContains(response, 'Самые сложные вопросы')
         self.assertContains(response, 'Разделы админки')
+        self.assertContains(response, 'myadmins/admin_interactions.css')
+        self.assertContains(response, 'myadmins/admin_row_navigation.js')
+        self.assertContains(response, 'id="nav-sidebar-apps"')
+        self.assertContains(response, 'admin-nav-section')
         document = BeautifulSoup(response.content, 'html.parser')
         self.assertFalse(any(link.find_parent('a') for link in document.find_all('a')))
 
@@ -230,6 +234,17 @@ class AdminDashboardTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'myadmins/admin_row_navigation.js')
         self.assertContains(response, 'myadmins/admin_interactions.css')
+
+    def test_admin_app_index_loads_sidebar_assets(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse('admin:app_list', args=('blog',)))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'myadmins/admin_interactions.css')
+        self.assertContains(response, 'myadmins/admin_row_navigation.js')
+        self.assertContains(response, 'id="nav-sidebar-apps"')
+        self.assertContains(response, 'admin-nav-section')
 
     def test_student_admin_does_not_offer_group_filter(self):
         self.client.force_login(self.admin_user)

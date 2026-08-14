@@ -33,6 +33,53 @@ class PostAccessTests(TestCase):
         self.assertEqual(author_response.status_code, 200)
 
 
+class PostAdminEditorTests(TestCase):
+    def setUp(self):
+        self.admin_user = User.objects.create_superuser(
+            "blog-admin",
+            email="admin@example.com",
+            password="password",
+        )
+        self.post = Post.objects.create(
+            title="Статья с редактором",
+            description="Описание",
+            content="<p><strong>Текст статьи</strong></p>",
+            author=self.admin_user,
+        )
+
+    def test_change_form_loads_rich_text_editor_assets(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(
+            reverse("admin:blog_post_change", args=(self.post.pk,)),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "cm-rich-text-editor")
+        self.assertContains(response, "myadmins/vendor/jodit/jodit.min.js")
+        self.assertContains(response, "myadmins/rich_text_editor_v4.js")
+
+
+class PostPublicEditorTests(TestCase):
+    def setUp(self):
+        self.author = User.objects.create_user(
+            "post-writer",
+            password="password",
+        )
+
+    def test_create_form_uses_wide_fields_and_tall_editor(self):
+        self.client.force_login(self.author)
+
+        response = self.client.get(reverse("create_post"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "css/post_form.css")
+        self.assertContains(response, "post-create__form")
+        self.assertContains(response, "post-form-control", count=2)
+        self.assertContains(response, 'data-editor-height="600"')
+        self.assertContains(response, "post-create__field--editor")
+
+
 class PostFilterTests(TestCase):
     def setUp(self):
         self.author = User.objects.create_user("author", password="password")

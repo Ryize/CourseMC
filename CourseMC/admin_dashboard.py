@@ -168,8 +168,8 @@ def _solution_activity(student_ids, start, now):
         links=[
             _admin_filter_url(
                 LessonSolutionSubmission,
-                submitted_at__gte=week.isoformat(),
-                submitted_at__lt=(week + timedelta(days=7)).isoformat(),
+                submitted_at__date__gte=week.isoformat(),
+                submitted_at__date__lt=(week + timedelta(days=7)).isoformat(),
             )
             for week in weeks
         ] if has_activity else [],
@@ -379,8 +379,8 @@ def _quiz_activity(completions, start, now):
         links=[
             _admin_filter_url(
                 PassedPolls,
-                created_at__gte=week.isoformat(),
-                created_at__lt=(week + timedelta(days=7)).isoformat(),
+                created_at__date__gte=week.isoformat(),
+                created_at__date__lt=(week + timedelta(days=7)).isoformat(),
             )
             for week in weeks
         ] if has_activity else [],

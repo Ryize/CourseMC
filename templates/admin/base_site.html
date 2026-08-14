@@ -1,15 +1,5 @@
 {% extends "admin/base.html" %}
-{% load i18n static %}
-
-{% block extrastyle %}
-    {{ block.super }}
-    <link rel="stylesheet" href="{% static 'myadmins/admin_interactions.css' %}">
-{% endblock %}
-
-{% block extrahead %}
-    {{ block.super }}
-    <script src="{% static 'myadmins/admin_row_navigation.js' %}" defer></script>
-{% endblock %}
+{% load i18n %}
 
 {% block title %}
     {% if subtitle %}{{ subtitle }} | {% endif %}

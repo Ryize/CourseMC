@@ -110,9 +110,18 @@ class CommentAuthorListFilter(AuthorListFilter):
     model = Comment
 
 
+class PostAdminForm(forms.ModelForm):
+    class Meta:
+        model = Post
+        fields = '__all__'
+        widgets = {
+            'content': RichTextEditorWidget(),
+        }
+
+
 @admin.register(Post)
 class PostAdmin(ModelAdmin):
-    content = forms.CharField(widget=RichTextEditorWidget())
+    form = PostAdminForm
     fields = (
         "title",
         "description",

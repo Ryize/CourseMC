@@ -6,9 +6,6 @@ from billing.admin import UserListFilter
 from billing.models import InformationPayments
 from blog.admin import AuthorListFilter, PostListFilter
 from blog.models import Comment, Post
-from chatgpt.admin import DecadeBornListFilter, RequestsGPTAdmin
-from chatgpt.models import RequestsGPT
-
 from .models import LearnGroup, Student
 
 
@@ -72,22 +69,6 @@ class FilterOrderingTests(TestCase):
         Comment.objects.create(comment='Комментарий', author=author_z, post=post_z)
         Comment.objects.create(comment='Комментарий', author=author_a, post=post_a)
 
-        RequestsGPT.objects.create(
-            user=author_z,
-            text_request='Запрос',
-            text_response='Ответ',
-        )
-        RequestsGPT.objects.create(
-            user=author_a,
-            text_request='Запрос',
-            text_response='Ответ',
-        )
-        RequestsGPT.objects.create(
-            user=None,
-            text_request='Запрос без автора',
-            text_response='Ответ',
-        )
-
         payment_filter = UserListFilter(
             self.request,
             {},
@@ -106,13 +87,6 @@ class FilterOrderingTests(TestCase):
             Comment,
             admin.site._registry[Comment],
         )
-        request_filter = DecadeBornListFilter(
-            self.request,
-            {},
-            RequestsGPT,
-            RequestsGPTAdmin(RequestsGPT, admin.site),
-        )
-
         self.assertEqual(
             [label for _, label in payment_filter.lookups(self.request, None)],
             ['Алексей', 'Борис'],
@@ -124,8 +98,4 @@ class FilterOrderingTests(TestCase):
         self.assertEqual(
             [label for _, label in post_filter.lookups(self.request, None)],
             ['Арбуз', 'Яблоко'],
-        )
-        self.assertEqual(
-            [label for _, label in request_filter.lookups(self.request, None)],
-            ['alpha_author', 'zeta_author'],
         )

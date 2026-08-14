@@ -46,6 +46,16 @@ class QuestionAdmin(ModelAdmin):
     search_fields = ('question', 'quiz__title')
     list_select_related = ('quiz',)
 
+    def has_module_permission(self, request):
+        """Questions are managed through a quiz and opened from analytics."""
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        return (
+            super().has_view_permission(request, obj)
+            or request.user.has_perm('questionnaire.view_quiz')
+        )
+
 
 @admin.register(PassedPolls)
 class PassedPollsAdmin(ModelAdmin):
@@ -54,6 +64,29 @@ class PassedPollsAdmin(ModelAdmin):
     search_fields = ('quiz__title', 'passed_user__username')
     list_select_related = ('quiz', 'passed_user')
     date_hierarchy = 'created_at'
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if request.user.is_superuser:
+            return queryset
+        return queryset.filter(
+            passed_user__course_profile__groups__teacher__user=request.user,
+        )
+
+    def has_view_permission(self, request, obj=None):
+        has_permission = (
+            super().has_view_permission(request, obj)
+            or request.user.has_perm('questionnaire.view_quiz')
+        )
+        if not has_permission:
+            return False
+        if obj is None or request.user.is_superuser:
+            return True
+        profile = getattr(obj.passed_user, 'course_profile', None)
+        return bool(
+            profile
+            and profile.groups.teacher.user_id == request.user.pk
+        )
 
 
 @admin.register(AnswerQuestion)
@@ -71,3 +104,30 @@ class UserAnswerAdmin(ModelAdmin):
     search_fields = ('user__username', 'quiz__title', 'question__question')
     readonly_fields = ('is_correct', 'created_at')
     list_select_related = ('user', 'quiz', 'question', 'answers')
+
+    def has_module_permission(self, request):
+        """Raw answers remain available by URL but are not a menu section."""
+        return False
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if request.user.is_superuser:
+            return queryset
+        return queryset.filter(
+            user__course_profile__groups__teacher__user=request.user,
+        )
+
+    def has_view_permission(self, request, obj=None):
+        has_permission = (
+            super().has_view_permission(request, obj)
+            or request.user.has_perm('questionnaire.view_quiz')
+        )
+        if not has_permission:
+            return False
+        if obj is None or request.user.is_superuser:
+            return True
+        profile = getattr(obj.user, 'course_profile', None)
+        return bool(
+            profile
+            and profile.groups.teacher.user_id == request.user.pk
+        )

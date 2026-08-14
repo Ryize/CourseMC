@@ -1,0 +1,60 @@
+{% load i18n %}
+
+{% if app_list %}
+    <div id="nav-sidebar-apps" class="admin-nav h-0 grow overflow-auto scrollbar-default-hover">
+        {% for app in app_list %}
+            <div class="admin-nav-section app-{{ app.app_label }} module{% if app.app_url in request.path %} current-app{% endif %}">
+                <ol class="admin-nav-section__inner">
+                    {% if app.models and not app.hidden %}
+                        <li>
+                            {% if app.name %}
+                                <h2>
+                                    <a href="{{ app.app_url }}" class="admin-nav-section__title" title="{% blocktranslate with name=app.name %}Models in the {{ name }} application{% endblocktranslate %}">
+                                        <span class="admin-nav-section__marker" aria-hidden="true"></span>
+                                        <span class="truncate">{{ app.name }}</span>
+                                    </a>
+                                </h2>
+                            {% endif %}
+
+                            <ol class="admin-nav-models flex flex-col">
+                                {% for model in app.models %}
+                                    {% if not model.hidden %}
+                                        <li class="model-{{ model.object_name|lower }}{% if model.admin_url in request.path|urlencode %} current-model{% endif %}">
+                                            {% if model.header %}
+                                                <h3 class="font-medium my-2 text-base-900 text-sm dark:text-base-200">
+                                                    {{ model.header }}
+                                                </h3>
+                                            {% endif %}
+
+                                            {% if model.admin_url %}
+                                                <a href="{{ model.admin_url }}" id="link-{{ app.app_label }}-{{ model.object_name|lower }}"
+                                                   class="admin-nav-model flex items-center{% if model.admin_url in request.path|urlencode %} is-active active{% endif %}">
+                                                    <span class="min-w-0 truncate">{{ model.name }}</span>
+
+                                                    {% if app.app_label == "Course" and model.object_name == "LessonSolution" and lesson_solution_notification_count %}
+                                                        {% include "unfold/helpers/badge.html" with value=lesson_solution_notification_count|stringformat:"+d" style="solid" variant="danger" class="ml-auto" %}
+                                                    {% elif app.app_label == "Course" and model.object_name == "StudentQuestion" and student_question_notification_count %}
+                                                        {% include "unfold/helpers/badge.html" with value=student_question_notification_count|stringformat:"+d" style="solid" variant="danger" class="ml-auto" %}
+                                                    {% elif app.app_label == "codereview" and model.object_name == "ProjectForReview" and code_review_notification_count %}
+                                                        {% include "unfold/helpers/badge.html" with value=code_review_notification_count|stringformat:"+d" style="solid" variant="danger" class="ml-auto" %}
+                                                    {% endif %}
+                                                </a>
+                                            {% else %}
+                                                {{ model.name }}
+                                            {% endif %}
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ol>
+                        </li>
+                    {% endif %}
+                </ol>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>
+        {% trans "You don’t have permission to view or edit anything." as error_message %}
+        {% include "unfold/helpers/messages/error.html" with error=error_message %}
+    </p>
+{% endif %}

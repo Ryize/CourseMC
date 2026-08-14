@@ -21,3 +21,200 @@
 .dark #result_list tr.data-row.cm-clickable-row:focus-visible > th {
     background-color: rgb(129 140 248 / 10%);
 }
+
+/* Clear visual hierarchy for the long Unfold sidebar navigation. */
+#nav-sidebar-apps.admin-nav {
+    padding: 8px 12px 24px;
+}
+
+.admin-nav-section {
+    border-bottom: 1px solid rgb(226 232 240 / 85%);
+    padding: 12px 0 14px;
+}
+
+.admin-nav-section:first-child {
+    padding-top: 4px;
+}
+
+.admin-nav-section:last-child {
+    border-bottom: 0;
+}
+
+.admin-nav-section__inner {
+    padding: 0;
+}
+
+.admin-nav-section__title {
+    align-items: center;
+    color: rgb(100 116 139);
+    display: flex;
+    font-size: 11px;
+    font-weight: 750;
+    gap: 9px;
+    letter-spacing: .085em;
+    line-height: 1.35;
+    padding: 4px 10px 8px;
+    text-transform: uppercase;
+    transition: color 140ms ease;
+}
+
+.admin-nav-section__title:hover {
+    color: rgb(124 58 237);
+}
+
+.admin-nav-section__marker {
+    background: rgb(147 51 234);
+    border-radius: 999px;
+    box-shadow: 0 0 0 3px rgb(147 51 234 / 12%);
+    flex: 0 0 7px;
+    height: 7px;
+}
+
+.admin-nav-models {
+    gap: 3px;
+}
+
+.admin-nav-model {
+    border: 1px solid transparent;
+    border-radius: 9px;
+    color: rgb(71 85 105);
+    min-height: 40px;
+    padding: 7px 10px 7px 25px;
+    position: relative;
+    transition: background-color 140ms ease, border-color 140ms ease,
+        color 140ms ease, transform 140ms ease;
+}
+
+.admin-nav-model::before {
+    background: rgb(148 163 184 / 55%);
+    border-radius: 999px;
+    content: "";
+    height: 4px;
+    left: 11px;
+    position: absolute;
+    width: 4px;
+}
+
+.admin-nav-model:hover {
+    background: rgb(248 250 252);
+    border-color: rgb(226 232 240);
+    color: rgb(88 28 135);
+    transform: translateX(2px);
+}
+
+.admin-nav-model.is-active {
+    background: rgb(245 243 255);
+    border-color: rgb(221 214 254);
+    box-shadow: inset 3px 0 0 rgb(147 51 234);
+    color: rgb(126 34 206);
+    font-weight: 650;
+}
+
+.admin-nav-model.is-active::before {
+    background: rgb(147 51 234);
+}
+
+.admin-nav-model:focus-visible,
+.admin-nav-section__title:focus-visible {
+    outline: 2px solid rgb(139 92 246);
+    outline-offset: 2px;
+}
+
+.dark .admin-nav-section {
+    border-bottom-color: rgb(51 65 85 / 70%);
+}
+
+.dark .admin-nav-section__title {
+    color: rgb(148 163 184);
+}
+
+.dark .admin-nav-section__title:hover {
+    color: rgb(196 181 253);
+}
+
+.dark .admin-nav-section__marker {
+    background: rgb(168 85 247);
+    box-shadow: 0 0 0 3px rgb(168 85 247 / 16%);
+}
+
+.dark .admin-nav-model {
+    color: rgb(203 213 225);
+}
+
+.dark .admin-nav-model::before {
+    background: rgb(100 116 139);
+}
+
+.dark .admin-nav-model:hover {
+    background: rgb(255 255 255 / 4%);
+    border-color: rgb(148 163 184 / 14%);
+    color: rgb(233 213 255);
+}
+
+.dark .admin-nav-model.is-active {
+    background: rgb(168 85 247 / 13%);
+    border-color: rgb(168 85 247 / 30%);
+    box-shadow: inset 3px 0 0 rgb(168 85 247);
+    color: rgb(216 180 254);
+}
+
+.dark .admin-nav-model.is-active::before {
+    background: rgb(192 132 252);
+}
+
+/* Match the self-hosted Jodit editor to Unfold instead of its grey theme. */
+.dark .jodit_theme_dark {
+    --jd-dark-background-color: rgb(15 23 42);
+    --jd-dark-background-darknes: rgb(11 17 32);
+    --jd-dark-background-ligher: rgb(71 85 105);
+    --jd-dark-border-color: rgb(51 65 85);
+    --jd-dark-icon-color: rgb(203 213 225);
+    --jd-dark-text-color: rgb(226 232 240);
+    --jd-dark-toolbar-color: rgb(30 41 59);
+    --jd-color-border: rgb(51 65 85);
+    --jd-color-button-background-hover: rgb(51 65 85);
+    --jd-color-placeholder: rgb(148 163 184);
+    --jd-color-source-area: rgb(11 17 32);
+}
+
+.dark .jodit_theme_dark .jodit-wysiwyg,
+.dark .jodit_theme_dark .jodit-wysiwyg_iframe,
+.dark .jodit_theme_dark .jodit-source__mirror,
+.dark .jodit_theme_dark textarea.jodit-source {
+    background: rgb(15 23 42);
+    color: rgb(226 232 240);
+}
+
+.cm-rich-text-preview {
+    color: inherit;
+    line-height: 1.65;
+    max-width: 1000px;
+    overflow-wrap: anywhere;
+}
+
+.cm-rich-text-preview > :first-child {
+    margin-top: 0;
+}
+
+.cm-rich-text-preview > :last-child {
+    margin-bottom: 0;
+}
+
+.cm-rich-text-preview p,
+.cm-rich-text-preview ol,
+.cm-rich-text-preview ul {
+    margin: .45rem 0;
+}
+
+.cm-rich-text-preview ol,
+.cm-rich-text-preview ul {
+    padding-left: 1.4rem;
+}
+
+.cm-rich-text-preview ol {
+    list-style: decimal;
+}
+
+.cm-rich-text-preview ul {
+    list-style: disc;
+}

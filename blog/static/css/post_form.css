@@ -1,0 +1,200 @@
+.post-create-page,
+body:not(.black) {
+    background: rgb(241 243 250);
+}
+
+.post-create-page {
+    width: 100%;
+}
+
+.post-create {
+    padding: 0 24px;
+    width: 100%;
+}
+
+.post-create__heading {
+    margin: 32px auto 48px;
+    max-width: 1180px;
+    text-align: center;
+}
+
+.post-create__heading h1 {
+    color: #20242b;
+    font-size: clamp(34px, 4vw, 54px);
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+.post-create__heading p {
+    color: #596170;
+    font-size: 18px;
+    margin: 0;
+    text-align: center;
+}
+
+.post-create__container {
+    margin: 0 auto 64px;
+    max-width: 1180px;
+    width: 100%;
+}
+
+.post-create__form {
+    background: #fff;
+    border: 1px solid #dfe3ec;
+    border-radius: 16px;
+    box-shadow: 0 18px 50px rgb(45 55 80 / 8%);
+    padding: 36px;
+}
+
+.post-create__field {
+    border-bottom: 1px solid #e4e7ee;
+    display: grid;
+    gap: 10px;
+    padding: 0 0 26px;
+}
+
+.post-create__field + .post-create__field {
+    padding-top: 26px;
+}
+
+.post-create__field label {
+    color: #242933;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.post-create__field input[type="text"],
+.post-create__field input[type="file"],
+.post-create__field select {
+    background: #fff;
+    border: 1px solid #cbd1dc;
+    border-radius: 9px;
+    color: #252a33;
+    font-size: 16px;
+    min-height: 52px;
+    padding: 12px 15px;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+    width: 100%;
+}
+
+.post-create__field input[type="file"] {
+    cursor: pointer;
+    padding: 9px 12px;
+}
+
+.post-create__field select[multiple] {
+    min-height: 150px;
+}
+
+.post-create__field input:focus,
+.post-create__field select:focus {
+    border-color: #6f7bf0;
+    box-shadow: 0 0 0 3px rgb(111 123 240 / 16%);
+    outline: none;
+}
+
+.post-create__field .jodit-container {
+    border-color: #cbd1dc;
+    border-radius: 9px;
+    max-width: none;
+    width: 100%;
+}
+
+.post-create__help {
+    color: #717987;
+    font-size: 13px;
+}
+
+.post-create__error {
+    color: #d9304f;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.post-create__actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 30px;
+}
+
+.post-create__submit {
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+    min-width: 220px;
+}
+
+body.black .post-create__heading h1,
+body.black .post-create__field label {
+    color: #f7f7f7;
+}
+
+body.black .post-create__heading p,
+body.black .post-create__help {
+    color: #aeb4c2;
+}
+
+body.black .post-create__form {
+    background: #242424;
+    border-color: #3b3b3b;
+    box-shadow: 0 18px 50px rgb(0 0 0 / 20%);
+}
+
+body.black .post-create__field {
+    border-bottom-color: #404040;
+}
+
+body.black .post-create__field input[type="text"],
+body.black .post-create__field input[type="file"],
+body.black .post-create__field select {
+    background: #1e1e1e;
+    border-color: #505050;
+    color: #f7f7f7;
+}
+
+body.black .post-create .jodit_theme_dark {
+    --jd-dark-background-color: #1e1e1e;
+    --jd-dark-background-darknes: #181818;
+    --jd-dark-background-ligher: #505050;
+    --jd-dark-border-color: #505050;
+    --jd-dark-icon-color: #d5d8e0;
+    --jd-dark-text-color: #f0f1f4;
+    --jd-dark-toolbar-color: #292929;
+    --jd-color-border: #505050;
+    --jd-color-button-background-hover: #454545;
+    --jd-color-placeholder: #9da3af;
+    --jd-color-source-area: #181818;
+}
+
+body.black .post-create .jodit_theme_dark .jodit-wysiwyg,
+body.black .post-create .jodit_theme_dark .jodit-wysiwyg_iframe,
+body.black .post-create .jodit_theme_dark .jodit-source__mirror,
+body.black .post-create .jodit_theme_dark textarea.jodit-source {
+    background: #1e1e1e;
+    color: #f0f1f4;
+}
+
+@media (max-width: 767.98px) {
+    .post-create {
+        padding: 0 14px;
+    }
+
+    .post-create__heading {
+        margin: 18px auto 30px;
+    }
+
+    .post-create__heading p {
+        font-size: 15px;
+    }
+
+    .post-create__form {
+        border-radius: 12px;
+        padding: 22px 16px;
+    }
+
+    .post-create__actions,
+    .post-create__submit {
+        width: 100%;
+    }
+}

@@ -619,6 +619,7 @@ class LessonSolutionTests(TimetableTests):
         self.assertContains(response, 'solution.py')
         self.assertContains(response, 'Открыть')
         self.assertContains(response, 'Скачать')
+        self.assertContains(response, 'История отправок решений')
 
     def test_solution_list_prioritizes_pending_reviews(self):
         self.client.force_login(self.user)

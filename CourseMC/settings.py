@@ -100,6 +100,16 @@ UNFOLD = {
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
     "BORDER_RADIUS": "8px",
+    # App index pages inherit directly from ``admin/base.html`` and therefore
+    # bypass the project's ``admin/base_site.html``. Register shared assets in
+    # Unfold itself so the sidebar and row interactions stay styled on every
+    # admin route, including application category pages.
+    "STYLES": [
+        lambda request: "/static/myadmins/admin_interactions.css",
+    ],
+    "SCRIPTS": [
+        lambda request: "/static/myadmins/admin_row_navigation.js",
+    ],
 }
 
 MIDDLEWARE = [
