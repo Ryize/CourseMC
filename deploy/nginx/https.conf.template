@@ -35,6 +35,17 @@ server {
     add_header X-Content-Type-Options nosniff always;
     add_header Referrer-Policy same-origin always;
 
+    # Alpine Nginx does not map .mjs consistently. Module workers are rejected
+    # by browsers unless they are served with a JavaScript MIME type.
+    location = /static/py_interpreter/worker.mjs {
+        alias /srv/static/py_interpreter/worker.mjs;
+        default_type application/javascript;
+        access_log off;
+        expires 7d;
+        add_header Cache-Control "public, max-age=604800";
+        add_header X-Content-Type-Options nosniff always;
+    }
+
     location /static/ {
         alias /srv/static/;
         access_log off;

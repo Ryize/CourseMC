@@ -1,3 +1,6 @@
+from pathlib import Path
+
+from django.conf import settings
 from django.urls import reverse
 from django.test import TestCase
 
@@ -18,3 +21,17 @@ class PythonInterpreterViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 405)
+
+    def test_module_worker_has_javascript_mime_type_in_nginx(self):
+        nginx_template = (
+            Path(settings.BASE_DIR)
+            / 'deploy'
+            / 'nginx'
+            / 'https.conf.template'
+        ).read_text(encoding='utf-8')
+
+        self.assertIn(
+            'location = /static/py_interpreter/worker.mjs',
+            nginx_template,
+        )
+        self.assertIn('default_type application/javascript;', nginx_template)
