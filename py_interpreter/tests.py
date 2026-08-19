@@ -10,7 +10,7 @@ class PythonInterpreterViewTests(TestCase):
         response = self.client.get(reverse('py_interpreter'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'py_interpreter/worker.mjs')
+        self.assertContains(response, 'py_interpreter/worker.mjs?v=2')
         self.assertContains(response, 'Код выполняется только в вашем браузере')
         self.assertNotContains(response, 'pyscript.net')
 
