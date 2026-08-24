@@ -13,7 +13,7 @@ from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
 from django.db.models import Max
-from django.http import FileResponse, HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -28,6 +28,7 @@ from Course.models import LearnGroup, Schedule, Student, StudentQuestion, \
     ApplicationsForTraining, AdditionalLessons, LessonSolution, \
     LessonSolutionFile, LessonSolutionSubmission
 from Course.report import get_content_disposition, get_content_type
+from Course.services import lesson_solution_file_response
 from billing.models import Absences
 from reviews.models import Review
 
@@ -375,12 +376,18 @@ class LessonSolutionFileDownloadView(LoginRequiredMixin, View):
         )
         solution = solution_file.solution
         if request.user.is_superuser:
-            return self._file_response(solution_file, request.GET.get('view') != '1')
+            return lesson_solution_file_response(
+                solution_file,
+                as_attachment=request.GET.get('view') != '1',
+            )
 
         if request.user.is_staff:
             if solution.student.groups.teacher.user_id != request.user.pk:
                 raise PermissionDenied('Вы не ведёте группу этого ученика.')
-            return self._file_response(solution_file, request.GET.get('view') != '1')
+            return lesson_solution_file_response(
+                solution_file,
+                as_attachment=request.GET.get('view') != '1',
+            )
 
         student = Student.objects.for_user(request.user)
         if (
@@ -389,23 +396,10 @@ class LessonSolutionFileDownloadView(LoginRequiredMixin, View):
             or student.pk != solution.student_id
         ):
             raise PermissionDenied('Этот файл недоступен.')
-        return self._file_response(solution_file, request.GET.get('view') != '1')
-
-    @staticmethod
-    def _file_response(solution_file, as_attachment):
-        response = FileResponse(
-            solution_file.file.open('rb'),
-            as_attachment=as_attachment,
-            filename=solution_file.original_name,
+        return lesson_solution_file_response(
+            solution_file,
+            as_attachment=request.GET.get('view') != '1',
         )
-        if not as_attachment:
-            extension = os.path.splitext(solution_file.original_name)[1].lower()
-            if extension in {'.py', '.txt', '.md'}:
-                response['Content-Type'] = 'text/plain; charset=utf-8'
-            elif extension == '.ipynb':
-                response['Content-Type'] = 'application/json; charset=utf-8'
-        response['X-Content-Type-Options'] = 'nosniff'
-        return response
 
 
 @login_required

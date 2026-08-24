@@ -1,6 +1,26 @@
+import os
+
 from django.db.models import Exists, OuterRef
+from django.http import FileResponse
 
 from .models import LearnGroup, Student
+
+
+def lesson_solution_file_response(solution_file, *, as_attachment=True):
+    """Безопасно отдаёт файл решения с корректным типом содержимого."""
+    response = FileResponse(
+        solution_file.file.open('rb'),
+        as_attachment=as_attachment,
+        filename=solution_file.original_name,
+    )
+    if not as_attachment:
+        extension = os.path.splitext(solution_file.original_name)[1].lower()
+        if extension in {'.py', '.txt', '.md'}:
+            response['Content-Type'] = 'text/plain; charset=utf-8'
+        elif extension == '.ipynb':
+            response['Content-Type'] = 'application/json; charset=utf-8'
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 
 def sync_group_activity(group_ids=None):

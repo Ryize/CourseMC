@@ -3,7 +3,10 @@ from urllib.parse import unquote
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.db import transaction
+from django.db.models import OuterRef, Subquery
 from django.http import JsonResponse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.response import Response
@@ -12,7 +15,10 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from Course.models import (LearnGroup, Schedule, Student, StudentQuestion,
-                           ClassesTimetable, ApplicationsForTraining)
+                           ClassesTimetable, ApplicationsForTraining,
+                           LessonSolution, LessonSolutionFile,
+                           LessonSolutionSubmission)
+from Course.services import lesson_solution_file_response
 from billing.models import Absences, InformationPayments
 from codereview.models import ProjectForReview
 from billing.views import get_cost_classes
@@ -24,7 +30,9 @@ from .serializers import (LearnGroupListSerializer, ScheduleListSerializer,
                           PaymentAmountSerializer, MissingSerializer,
                           ProjectForReviewSerializer,
                           InterviewQuestionCategorySerializer, InterviewQuestionSerializer,
-                          QuestionAnswerSerializer)
+                          QuestionAnswerSerializer,
+                          BotLessonSolutionSerializer,
+                          BotLessonSolutionReviewSerializer)
 from interview.models import InterviewQuestionCategory, InterviewQuestion
 
 from ai_assistant.models import QuestionAnswer
@@ -32,6 +40,33 @@ from ai_assistant.models import QuestionAnswer
 from ai_assistant.interview import InterviewThisOutOfOpenAI
 
 from .permissions import HasCourseMCBotToken
+
+
+def bot_lesson_solution_queryset():
+    """Возвращает решения с данными их последней отправки без N+1 запросов."""
+    latest_submission = (
+        LessonSolutionSubmission.objects
+        .filter(solution_id=OuterRef('pk'))
+        .order_by('-attempt_number', '-pk')
+    )
+    return (
+        LessonSolution.objects
+        .select_related(
+            'student__user',
+            'student__groups__teacher__user',
+            'schedule__direction',
+        )
+        .prefetch_related('files')
+        .annotate(
+            latest_submission_id=Subquery(latest_submission.values('pk')[:1]),
+            latest_attempt_number=Subquery(
+                latest_submission.values('attempt_number')[:1],
+            ),
+            latest_submitted_at=Subquery(
+                latest_submission.values('submitted_at')[:1],
+            ),
+        )
+    )
 
 
 class ScheduleViewSet(APIView):
@@ -152,6 +187,180 @@ class BotGroupStudentsView(APIView):
             .values_list('user__username', flat=True)
         )
         return Response({'usernames': usernames})
+
+
+class BotLessonSolutionListView(APIView):
+    """Очередь последних отправок решений для уведомлений в боте."""
+
+    authentication_classes = ()
+    permission_classes = (HasCourseMCBotToken,)
+
+    def get(self, request):
+        try:
+            after = int(request.query_params.get('after', 0))
+            limit = int(request.query_params.get('limit', 50))
+        except (TypeError, ValueError):
+            return Response(
+                {'detail': 'Параметры after и limit должны быть целыми числами.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if after < 0 or not 1 <= limit <= 100:
+            return Response(
+                {'detail': 'after не может быть меньше 0, limit — от 1 до 100.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        solutions = bot_lesson_solution_queryset().filter(
+            status=LessonSolution.Status.PENDING,
+            latest_submission_id__gt=after,
+        )
+        teacher_username = request.query_params.get('teacher_username', '').strip()
+        if teacher_username:
+            teacher = User.objects.filter(
+                username=teacher_username,
+                is_active=True,
+                is_staff=True,
+            ).first()
+            if teacher is None:
+                return Response(
+                    {'detail': 'Активный преподаватель с таким логином не найден.'},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            if not teacher.is_superuser:
+                solutions = solutions.filter(
+                    student__groups__teacher__user=teacher,
+                )
+
+        solutions = list(solutions.order_by('latest_submission_id')[:limit])
+        serializer = BotLessonSolutionSerializer(
+            solutions,
+            many=True,
+            context={'request': request},
+        )
+        next_cursor = after
+        if solutions:
+            next_cursor = solutions[-1].latest_submission_id
+        return Response({
+            'count': len(solutions),
+            'next_cursor': next_cursor,
+            'results': serializer.data,
+        })
+
+
+class BotLessonSolutionFileView(APIView):
+    """Скачивание закрытого файла решения по токену доверенного бота."""
+
+    authentication_classes = ()
+    permission_classes = (HasCourseMCBotToken,)
+
+    def get(self, request, file_id):
+        solution_file = get_object_or_404(
+            LessonSolutionFile.objects.select_related('solution'),
+            pk=file_id,
+        )
+        return lesson_solution_file_response(solution_file)
+
+
+class BotLessonSolutionReviewView(APIView):
+    """Меняет статус и комментарий решения от имени преподавателя."""
+
+    authentication_classes = ()
+    permission_classes = (HasCourseMCBotToken,)
+
+    def patch(self, request, solution_id):
+        serializer = BotLessonSolutionReviewSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        reviewer = User.objects.filter(
+            username=serializer.validated_data['reviewer_username'],
+            is_active=True,
+            is_staff=True,
+        ).first()
+        if reviewer is None:
+            return Response(
+                {'detail': 'Активный преподаватель с таким логином не найден.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        with transaction.atomic():
+            solution = get_object_or_404(
+                bot_lesson_solution_queryset().select_for_update(),
+                pk=solution_id,
+            )
+            group_teacher_id = solution.student.groups.teacher.user_id
+            if not reviewer.is_superuser and reviewer.pk != group_teacher_id:
+                return Response(
+                    {'detail': 'Преподаватель не ведёт группу этого ученика.'},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            new_status = serializer.validated_data['status']
+            solution.status = new_status
+            solution.teacher_comment = serializer.validated_data.get(
+                'teacher_comment',
+                '',
+            )
+            if new_status == LessonSolution.Status.PENDING:
+                solution.reviewed_by = None
+                solution.reviewed_at = None
+            else:
+                solution.reviewed_by = reviewer
+                solution.reviewed_at = timezone.now()
+            solution.save(update_fields=(
+                'status',
+                'teacher_comment',
+                'reviewed_by',
+                'reviewed_at',
+                'updated_at',
+            ))
+
+        return Response({
+            'id': solution.pk,
+            'status': solution.status,
+            'status_display': solution.get_status_display(),
+            'teacher_comment': solution.teacher_comment,
+            'reviewer_username': (
+                solution.reviewed_by.username if solution.reviewed_by else None
+            ),
+            'reviewed_at': solution.reviewed_at,
+        })
+
+
+class BotLessonSolutionDocsView(APIView):
+    """Краткая документация интеграции проверки решений с ботом."""
+
+    authentication_classes = ()
+    permission_classes = (HasCourseMCBotToken,)
+
+    def get(self, request):
+        base_url = request.build_absolute_uri('/api/v1/bot/lesson-solutions/')
+        return Response({
+            'authentication': {
+                'header': 'X-CourseMC-Bot-Token',
+                'note': 'Один секрет задаётся в окружении сайта и бота.',
+            },
+            'workflow': [
+                'Запросите очередь GET с сохранённым after.',
+                'Скачайте файлы по download_url с тем же заголовком.',
+                'Отправьте администраторам уведомления и файлы.',
+                'Только после успешной отправки сохраните next_cursor.',
+                'После проверки отправьте PATCH со статусом и комментарием.',
+            ],
+            'endpoints': {
+                'queue': f'{base_url}?after=0&limit=50',
+                'queue_for_teacher': (
+                    f'{base_url}?after=0&teacher_username=teacher'
+                ),
+                'download': f'{base_url}files/<file_id>/',
+                'review': f'{base_url}<solution_id>/review/',
+            },
+            'review_body': {
+                'reviewer_username': 'teacher',
+                'status': LessonSolution.Status.NEEDS_REVISION,
+                'teacher_comment': 'Исправьте обработку пустого списка.',
+            },
+            'statuses': dict(LessonSolution.Status.choices),
+            'full_documentation': 'docs/BOT_LESSON_SOLUTIONS_API.md',
+        })
 
 
 class LearnGroupViewSet(APIView):

@@ -1,7 +1,9 @@
 from rest_framework import serializers
+from rest_framework.reverse import reverse
 
 from Course.models import (LearnGroup, Schedule, Student, StudentQuestion,
-                           ClassesTimetable, ApplicationsForTraining)
+                           ClassesTimetable, ApplicationsForTraining,
+                           LessonSolution, LessonSolutionFile)
 from codereview.models import ProjectForReview
 
 from interview.models import InterviewQuestion, InterviewQuestionCategory
@@ -122,3 +124,92 @@ class QuestionAnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuestionAnswer
         fields = ['question', 'answer']
+
+
+class BotLessonSolutionFileSerializer(serializers.ModelSerializer):
+    """Файл решения без раскрытия внутреннего пути хранения."""
+
+    download_url = serializers.SerializerMethodField()
+    size = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LessonSolutionFile
+        fields = ('id', 'original_name', 'size', 'uploaded_at', 'download_url')
+
+    def get_size(self, obj):
+        return obj.file.size
+
+    def get_download_url(self, obj):
+        request = self.context['request']
+        return reverse(
+            'bot_lesson_solution_file',
+            kwargs={'file_id': obj.pk},
+            request=request,
+        )
+
+
+class BotLessonSolutionSerializer(serializers.ModelSerializer):
+    """Текущее решение и последняя попытка, подготовленные для бота."""
+
+    submission_id = serializers.IntegerField(source='latest_submission_id')
+    attempt_number = serializers.IntegerField(source='latest_attempt_number')
+    submitted_at = serializers.DateTimeField(source='latest_submitted_at')
+    status_display = serializers.CharField(source='get_status_display')
+    student = serializers.SerializerMethodField()
+    group = serializers.SerializerMethodField()
+    lesson = serializers.SerializerMethodField()
+    files = BotLessonSolutionFileSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = LessonSolution
+        fields = (
+            'id', 'submission_id', 'attempt_number', 'student', 'group',
+            'lesson', 'status', 'status_display', 'teacher_comment',
+            'submitted_at', 'files',
+        )
+
+    def get_student(self, obj):
+        user = obj.student.user
+        return {
+            'id': obj.student_id,
+            'username': user.username,
+            'display_name': user.get_full_name() or user.username,
+        }
+
+    def get_group(self, obj):
+        return {
+            'id': obj.student.groups_id,
+            'title': obj.student.groups.title,
+        }
+
+    def get_lesson(self, obj):
+        return {
+            'id': obj.schedule_id,
+            'number': obj.schedule.position,
+            'title': obj.schedule.theme,
+            'direction': obj.schedule.direction.title,
+        }
+
+
+class BotLessonSolutionReviewSerializer(serializers.Serializer):
+    """Проверка решения доверенным ботом от имени преподавателя."""
+
+    reviewer_username = serializers.CharField(max_length=150)
+    status = serializers.ChoiceField(choices=LessonSolution.Status.choices)
+    teacher_comment = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        trim_whitespace=True,
+    )
+
+    def validate(self, attrs):
+        if (
+            attrs['status'] == LessonSolution.Status.NEEDS_REVISION
+            and not attrs.get('teacher_comment', '')
+        ):
+            raise serializers.ValidationError({
+                'teacher_comment': (
+                    'Для статуса «Нужна доработка» добавьте комментарий.'
+                ),
+            })
+        return attrs

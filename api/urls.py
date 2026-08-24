@@ -8,7 +8,9 @@ from .views import (LearnGroupViewSet, ScheduleGet, ScheduleViewSet,
                     InterviewQuestionCategoryViewSet, InterviewQuestionViewSet,
                     ClassesTimetableWeekdayView,
                     GetQuestionView, CheckAnswerView,
-                    BotStudentAuthenticationView, BotGroupStudentsView)
+                    BotStudentAuthenticationView, BotGroupStudentsView,
+                    BotLessonSolutionListView, BotLessonSolutionFileView,
+                    BotLessonSolutionReviewView, BotLessonSolutionDocsView)
 
 urlpatterns = [
     path('schedule/', ScheduleViewSet.as_view()),
@@ -18,6 +20,16 @@ urlpatterns = [
          name='bot_student_authenticate'),
     path('bot/groups/<int:group_id>/students/', BotGroupStudentsView.as_view(),
          name='bot_group_students'),
+    path('bot/lesson-solutions/', BotLessonSolutionListView.as_view(),
+         name='bot_lesson_solution_list'),
+    path('bot/lesson-solutions/docs/', BotLessonSolutionDocsView.as_view(),
+         name='bot_lesson_solution_docs'),
+    path('bot/lesson-solutions/files/<int:file_id>/',
+         BotLessonSolutionFileView.as_view(),
+         name='bot_lesson_solution_file'),
+    path('bot/lesson-solutions/<int:solution_id>/review/',
+         BotLessonSolutionReviewView.as_view(),
+         name='bot_lesson_solution_review'),
     path('groups/', LearnGroupViewSet.as_view()),
     path('student_question/', StudentQuestionView.as_view()),
     path('classes_timetable/<str:user_name>/', ClassesTimetableView.as_view()),
