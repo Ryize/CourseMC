@@ -1,14 +1,14 @@
 {% extends 'questionnaire/template/base.html' %}
 {% load questionnaire_tags %}
 
-{% block title %}Мои опросы — CourseMC{% endblock %}
+{% block title %}Опросы — CourseMC{% endblock %}
 
 {% block content %}
     <section class="questionnaire-section-heading">
         <div>
             <p class="questionnaire-kicker">Кабинет автора</p>
-            <h1>Мои опросы</h1>
-            <p>Здесь собраны вопросы, ссылки для учеников и результаты прохождений.</p>
+            <h1>Опросы</h1>
+            <p>Здесь собраны твои опросы и опросы, к которым преподаватели открыли доступ.</p>
         </div>
         <a class="questionnaire-link-button questionnaire-link-button--warm"
            href="{% url 'create_poll' %}">Создать опрос</a>
@@ -26,6 +26,9 @@
                             {% else %}
                                 <span class="questionnaire-status questionnaire-status--expired">Завершён</span>
                             {% endif %}
+                            {% if not poll.can_manage %}
+                                <span class="questionnaire-status questionnaire-status--shared">Доступ преподавателя</span>
+                            {% endif %}
                             <h2 class="questionnaire-poll-title">{{ poll.title }}</h2>
                             <p class="questionnaire-poll-description">{{ poll.description }}</p>
                             <div class="questionnaire-poll-meta">
@@ -36,8 +39,10 @@
                             </div>
                         </div>
                         <div class="questionnaire-poll-actions">
-                            <a class="questionnaire-link-button"
-                               href="{% url 'create_question' poll.pk %}">Настроить</a>
+                            {% if poll.can_manage %}
+                                <a class="questionnaire-link-button"
+                                   href="{% url 'create_question' poll.pk %}">Настроить</a>
+                            {% endif %}
                             <button type="button"
                                     class="questionnaire-button questionnaire-button--secondary"
                                     data-questionnaire-copy="{{ poll.share_url }}">
@@ -109,8 +114,8 @@
         {% include 'questionnaire/includes/pagination.html' %}
     {% else %}
         <section class="questionnaire-card questionnaire-empty">
-            <h2>Активных опросов пока нет</h2>
-            <p>Создай новый опрос или верни прежний из архива.</p>
+            <h2>Доступных опросов пока нет</h2>
+            <p>Создай новый опрос или попроси коллегу открыть доступ к существующему.</p>
             <a class="questionnaire-link-button questionnaire-link-button--warm"
                href="{% url 'create_poll' %}">Создать опрос</a>
         </section>

@@ -228,6 +228,41 @@ class TeacherNotificationTests(LearningTeamMixin, TestCase):
         )
         self.assertEqual(html.count('sidebar-badge'), 3)
 
+    def test_solution_notification_closes_after_review_and_returns_on_resubmit(self):
+        solution = LessonSolution.objects.create(
+            schedule=self.lesson,
+            student=self.student,
+        )
+        LessonSolutionSubmission.objects.create(
+            solution=solution,
+            attempt_number=1,
+            submitted_at=timezone.now(),
+        )
+
+        unread = TeacherNotification.objects.filter(
+            recipient=self.teacher_user,
+            kind=TeacherNotification.Kind.LESSON_SOLUTION,
+            read_at__isnull=True,
+        )
+        self.assertEqual(unread.count(), 1)
+
+        solution.status = LessonSolution.Status.NEEDS_REVISION
+        solution.save(update_fields=('status',))
+        self.assertEqual(unread.count(), 0)
+
+        solution.status = LessonSolution.Status.PENDING
+        solution.save(update_fields=('status',))
+        LessonSolutionSubmission.objects.create(
+            solution=solution,
+            attempt_number=2,
+            submitted_at=timezone.now(),
+        )
+        self.assertEqual(unread.count(), 1)
+
+        solution.status = LessonSolution.Status.ACCEPTED
+        solution.save(update_fields=('status',))
+        self.assertEqual(unread.count(), 0)
+
 
 class DashboardDrilldownPermissionTests(LearningTeamMixin, TestCase):
     def setUp(self):

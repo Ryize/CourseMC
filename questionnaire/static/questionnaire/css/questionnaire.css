@@ -1260,6 +1260,135 @@ body.questionnaire-page.black .questionnaire-status--archived {
     transform: translate(-50%, 0);
 }
 
+.questionnaire-page .questionnaire-status--shared {
+    background: rgba(112, 123, 255, 0.14);
+    color: var(--questionnaire-accent);
+}
+
+.questionnaire-page .questionnaire-access-settings {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--questionnaire-border);
+}
+
+.questionnaire-page .questionnaire-access-settings h3 {
+    margin: 0 0 8px;
+}
+
+.questionnaire-page .questionnaire-teacher-list ul {
+    display: grid;
+    gap: 8px;
+    margin: 16px 0;
+    padding: 0;
+    list-style: none;
+}
+
+.questionnaire-page .questionnaire-teacher-list label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 42px;
+    padding: 9px 12px;
+    border: 1px solid var(--questionnaire-border);
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.questionnaire-page .questionnaire-teacher-list input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+
+.questionnaire-page .questionnaire-muted {
+    color: var(--questionnaire-muted);
+}
+
+.questionnaire-page .questionnaire-result-answers {
+    display: grid;
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.questionnaire-page .questionnaire-result-answer {
+    padding: 24px;
+    border-left: 5px solid var(--questionnaire-border);
+}
+
+.questionnaire-page .questionnaire-result-answer.is-correct {
+    border-left-color: var(--questionnaire-success);
+}
+
+.questionnaire-page .questionnaire-result-answer.is-wrong {
+    border-left-color: var(--questionnaire-danger);
+}
+
+.questionnaire-page .questionnaire-result-answer-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.questionnaire-page .questionnaire-result-number {
+    display: grid;
+    place-items: center;
+    flex: 0 0 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--questionnaire-surface-muted);
+    color: var(--questionnaire-text);
+    font-weight: 700;
+}
+
+.questionnaire-page .questionnaire-result-answer h2 {
+    margin: 0 0 5px;
+    font-size: clamp(18px, 2vw, 22px);
+}
+
+.questionnaire-page .questionnaire-result-state {
+    color: var(--questionnaire-muted);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.questionnaire-page .questionnaire-result-answer.is-correct .questionnaire-result-state {
+    color: var(--questionnaire-success);
+}
+
+.questionnaire-page .questionnaire-result-answer.is-wrong .questionnaire-result-state {
+    color: var(--questionnaire-danger);
+}
+
+.questionnaire-page .questionnaire-result-answer-copy {
+    display: grid;
+    gap: 8px;
+    margin-top: 18px;
+    padding-left: 52px;
+}
+
+.questionnaire-page .questionnaire-result-answer-copy p {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+}
+
+.questionnaire-page .questionnaire-result-answer-copy p > span {
+    color: var(--questionnaire-muted);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.questionnaire-page .questionnaire-metric-date {
+    font-size: 20px;
+}
+
+.questionnaire-page .questionnaire-result-actions {
+    display: flex;
+    align-items: center;
+    margin-top: 22px;
+}
+
 @media (max-width: 900px) {
     .questionnaire-page .questionnaire-home-hero,
     .questionnaire-page .questionnaire-guide,
@@ -1370,5 +1499,9 @@ body.questionnaire-page.black .questionnaire-status--archived {
         top: 70px;
         right: 15px;
         width: calc(100vw - 30px);
+    }
+
+    .questionnaire-page .questionnaire-result-answer-copy {
+        padding-left: 0;
     }
 }

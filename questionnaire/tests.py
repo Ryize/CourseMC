@@ -298,6 +298,46 @@ class QuestionnaireResultsTests(TestCase):
 
         self.assertEqual(response.status_code, 404)
 
+    def test_teacher_with_explicit_access_sees_poll_and_results_but_cannot_edit(self):
+        self.quiz.teachers_with_access.add(self.other)
+        self.client.force_login(self.other)
+
+        dashboard = self.client.get(reverse("my_poll"))
+        results = self.client.get(reverse("poll_results", args=(self.quiz.pk,)))
+        edit = self.client.get(reverse("create_question", args=(self.quiz.pk,)))
+
+        self.assertContains(dashboard, self.quiz.title)
+        self.assertContains(dashboard, "Доступ преподавателя")
+        self.assertNotContains(
+            dashboard,
+            reverse("create_question", args=(self.quiz.pk,)),
+        )
+        self.assertEqual(results.status_code, 200)
+        self.assertContains(results, "participant")
+        self.assertEqual(edit.status_code, 404)
+
+    def test_participant_sees_own_result_and_answer_review(self):
+        self.client.force_login(self.participant)
+
+        response = self.client.get(
+            reverse("participant_poll_result", args=(self.quiz.pk,))
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Твой результат")
+        self.assertContains(response, "50%")
+        self.assertContains(response, "Выбранный неверный вариант")
+        self.assertContains(response, "Правильный вариант")
+
+    def test_user_without_completion_cannot_open_participant_result(self):
+        self.client.force_login(self.other)
+
+        response = self.client.get(
+            reverse("participant_poll_result", args=(self.quiz.pk,))
+        )
+
+        self.assertEqual(response.status_code, 404)
+
     def test_dashboard_distinguishes_answer_result_from_poll_rating(self):
         self.client.force_login(self.owner)
 
@@ -359,6 +399,22 @@ class QuestionnaireFlowTests(TestCase):
             correct=True,
         )
         self.client.force_login(self.participant)
+
+    def test_missing_poll_uses_questionnaire_unavailable_page(self):
+        response = self.client.get(reverse("take_poll", args=(999999,)))
+
+        self.assertEqual(response.status_code, 404)
+        self.assertContains(
+            response,
+            "Такого опроса нет или он был удалён.",
+            status_code=404,
+        )
+        self.assertContains(response, "К опроснику", status_code=404)
+        self.assertNotContains(
+            response,
+            "No Quiz matches the given query",
+            status_code=404,
+        )
 
     def test_poll_navigation_does_not_depend_on_sequential_ids(self):
         first_response = self.client.get(
@@ -501,11 +557,9 @@ class QuestionnaireFlowTests(TestCase):
             },
         )
 
-        self.assertRedirects(
-            response,
-            reverse("rating", args=(self.quiz.pk,)),
-        )
-        self.assertEqual(repeated_response.status_code, 404)
+        result_url = reverse("participant_poll_result", args=(self.quiz.pk,))
+        self.assertRedirects(response, result_url)
+        self.assertRedirects(repeated_response, result_url)
         self.assertEqual(
             PassedPolls.objects.filter(
                 quiz=self.quiz,
@@ -513,6 +567,10 @@ class QuestionnaireFlowTests(TestCase):
             ).count(),
             1,
         )
+
+        result_response = self.client.get(result_url)
+        self.assertContains(result_response, "100%")
+        self.assertContains(result_response, "2 из 2")
 
     def test_rating_is_scoped_to_current_quiz_and_is_updated(self):
         another_quiz = Quiz.objects.create(

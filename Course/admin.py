@@ -15,6 +15,7 @@ from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 from unfold.admin import ModelAdmin, TabularInline
+from unfold.decorators import display
 from unfold.forms import (
     AdminPasswordChangeForm,
     UserChangeForm,
@@ -864,14 +865,14 @@ class LessonSolutionAdmin(ModelAdmin):
         'student',
         'schedule',
         'group',
-        'status',
+        'status_badge',
         'submitted_at',
     )
     list_display_links = (
         'student',
         'schedule',
         'group',
-        'status',
+        'status_badge',
         'submitted_at',
     )
     list_filter = (
@@ -925,6 +926,18 @@ class LessonSolutionAdmin(ModelAdmin):
         return obj.student.groups
 
     group.short_description = 'Группа'
+
+    @display(
+        description='Статус проверки',
+        ordering='status',
+        label={
+            LessonSolution.Status.PENDING: 'warning',
+            LessonSolution.Status.ACCEPTED: 'success',
+            LessonSolution.Status.NEEDS_REVISION: 'danger',
+        },
+    )
+    def status_badge(self, obj):
+        return obj.status, obj.get_status_display()
 
     @admin.display(description='Файлы решения')
     def file_links(self, obj):

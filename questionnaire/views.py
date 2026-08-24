@@ -1,13 +1,20 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.generic import ListView
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 
-from questionnaire.forms import AnswerForm, QuestionEditForm, QuestionForm, QuizForm
+from questionnaire.forms import (
+    AnswerForm,
+    QuestionEditForm,
+    QuestionForm,
+    QuizAccessForm,
+    QuizForm,
+)
 from questionnaire.models import (
     AnswerQuestion,
     PassedPolls,
@@ -26,15 +33,20 @@ class QuizListView(LoginRequiredMixin, ListView):
     paginate_by = 16
 
     def get_poll_queryset(self, is_archived):
+        visibility = Q(user=self.request.user)
+        if not is_archived:
+            visibility |= Q(teachers_with_access=self.request.user)
         return (
             Quiz.objects
-            .filter(user=self.request.user, is_archived=is_archived)
+            .filter(visibility, is_archived=is_archived)
+            .distinct()
             .order_by("-created_at")
             .prefetch_related(
                 "questions__answers",
                 "passed_quiz__passed_user",
                 "user_quiz__answers",
                 "rating",
+                "teachers_with_access",
             )
         )
 
@@ -52,6 +64,7 @@ class QuizListView(LoginRequiredMixin, ListView):
             )
             poll.completed_count = len(poll.passed_quiz.all())
             poll.is_active = poll_is_active(poll)
+            poll.can_manage = poll.user_id == self.request.user.pk
             poll.share_url = self.request.build_absolute_uri(
                 reverse("take_poll", args=(poll.pk,))
             )
@@ -135,6 +148,10 @@ def create_question(request, quiz_id):
             "ready_question_count": sum(
                 bool(question.answers.all()) for question in questions
             ),
+            "access_form": QuizAccessForm(
+                instance=quiz,
+                owner=request.user,
+            ),
         },
     )
 
@@ -166,6 +183,10 @@ def create_answer(request, quiz_id):
             "ready_question_count": sum(
                 bool(question.answers.all()) for question in questions
             ),
+            "access_form": QuizAccessForm(
+                instance=quiz,
+                owner=request.user,
+            ),
         },
     )
 
@@ -189,6 +210,10 @@ def edit_question(request, quiz_id, question_id):
             "quiz": quiz,
             "question": question,
             "has_completed_responses": quiz.passed_quiz.exists(),
+            "access_form": QuizAccessForm(
+                instance=quiz,
+                owner=request.user,
+            ),
         },
     )
 
@@ -212,6 +237,10 @@ def edit_answer(request, quiz_id, answer_id):
             "quiz": quiz,
             "answer": answer,
             "has_completed_responses": quiz.passed_quiz.exists(),
+            "access_form": QuizAccessForm(
+                instance=quiz,
+                owner=request.user,
+            ),
         },
     )
 
@@ -262,9 +291,31 @@ def restore_poll(request, quiz_id):
 
 
 @login_required
-def poll_results(request, quiz_id):
-    """Показывает автору опроса результаты всех завершённых прохождений."""
+@require_POST
+def update_poll_access(request, quiz_id):
     quiz = get_object_or_404(Quiz, pk=quiz_id, user=request.user)
+    form = QuizAccessForm(
+        request.POST,
+        instance=quiz,
+        owner=request.user,
+    )
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Доступ преподавателей обновлён.")
+    else:
+        messages.error(request, "Не удалось обновить доступ. Проверьте выбранных преподавателей.")
+    return redirect("create_question", quiz.pk)
+
+
+@login_required
+def poll_results(request, quiz_id):
+    """Показывает результаты владельцу и приглашённым преподавателям."""
+    quiz = get_object_or_404(
+        Quiz.objects.filter(
+            Q(user=request.user) | Q(teachers_with_access=request.user)
+        ).distinct(),
+        pk=quiz_id,
+    )
     questions = list(
         quiz.questions
         .prefetch_related("answers")
@@ -352,6 +403,64 @@ def poll_results(request, quiz_id):
 
 
 @login_required
+def participant_poll_result(request, quiz_id):
+    quiz = get_object_or_404(Quiz, pk=quiz_id)
+    completion = get_object_or_404(
+        PassedPolls.objects.select_related("quiz"),
+        quiz=quiz,
+        passed_user=request.user,
+    )
+    questions = available_questions(quiz)
+    answers = {
+        answer.question_id: answer
+        for answer in (
+            UserAnswer.objects
+            .filter(quiz=quiz, user=request.user)
+            .select_related("question", "answers")
+        )
+    }
+    result_rows = []
+    correct_count = 0
+    for number, question in enumerate(questions, start=1):
+        user_answer = answers.get(question.pk)
+        is_correct = bool(user_answer and user_answer.is_correct)
+        correct_count += is_correct
+        result_rows.append({
+            "number": number,
+            "question": question,
+            "selected_answer": user_answer.answers if user_answer else None,
+            "correct_answer": ", ".join(
+                answer.answer
+                for answer in question.answers.all()
+                if answer.correct
+            ),
+            "is_correct": is_correct,
+        })
+
+    answer_count = len(result_rows)
+    return render(
+        request,
+        "questionnaire/participant_result.html",
+        {
+            "poll": quiz,
+            "completion": completion,
+            "result_rows": result_rows,
+            "answer_count": answer_count,
+            "correct_count": correct_count,
+            "correctness_percent": (
+                round(correct_count / answer_count * 100)
+                if answer_count
+                else 0
+            ),
+            "has_rating": Rating.objects.filter(
+                quiz=quiz,
+                user=request.user,
+            ).exists(),
+        },
+    )
+
+
+@login_required
 def go_poll(request):
     if request.method == "GET":
         return render(request, "questionnaire/go_poll.html")
@@ -399,13 +508,15 @@ def render_question(request, poll, questions, question):
 
 @login_required
 def take_poll(request, poll_id):
-    poll = get_object_or_404(Quiz, pk=poll_id)
+    poll = Quiz.objects.filter(pk=poll_id).first()
+    if poll is None:
+        return unavailable(request, "Такого опроса нет или он был удалён.")
     if poll.is_archived:
         return unavailable(request, "Автор перенёс этот опрос в архив.")
     if not poll_is_active(poll):
         return unavailable(request, "Срок действия этого опроса уже истёк.")
     if PassedPolls.objects.filter(quiz=poll, passed_user=request.user).exists():
-        return unavailable(request, "Вы уже прошли этот опрос.")
+        return redirect("participant_poll_result", poll.pk)
 
     questions = available_questions(poll)
     if not questions:
@@ -474,8 +585,8 @@ def take_poll(request, poll_id):
         )
 
     PassedPolls.objects.get_or_create(quiz=poll, passed_user=request.user)
-    messages.success(request, "Опрос пройден. Оцените его, пожалуйста.")
-    return redirect("rating", poll.pk)
+    messages.success(request, "Опрос пройден. Посмотрите свой результат.")
+    return redirect("participant_poll_result", poll.pk)
 
 
 @login_required
@@ -510,6 +621,6 @@ def rating(request, poll_id):
             saved_rating.save(update_fields=("answer_number", "comment"))
 
         messages.success(request, "Спасибо за отзыв!")
-        return redirect("questionnaireIndex")
+        return redirect("participant_poll_result", quiz.pk)
 
     return render(request, "questionnaire/rating.html", {"poll": quiz})

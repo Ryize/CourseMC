@@ -14,4 +14,23 @@
             <button class="questionnaire-button questionnaire-button--danger" type="submit">Архивировать опрос</button>
         </form>
     {% endif %}
+
+    <div class="questionnaire-access-settings">
+        <h3>Доступ преподавателей</h3>
+        <p>Выбранные преподаватели смогут видеть опрос и результаты учеников. Изменять вопросы и ответы они не смогут.</p>
+        <form method="post" action="{% url 'update_poll_access' quiz.pk %}">
+            {% csrf_token %}
+            {% if access_form.teachers_with_access.field.queryset.exists %}
+                <div class="questionnaire-teacher-list">
+                    {{ access_form.teachers_with_access }}
+                </div>
+                {{ access_form.teachers_with_access.errors }}
+                <button class="questionnaire-button questionnaire-button--secondary" type="submit">
+                    Сохранить доступ
+                </button>
+            {% else %}
+                <p class="questionnaire-muted">Других активных преподавателей пока нет.</p>
+            {% endif %}
+        </form>
+    </div>
 </section>

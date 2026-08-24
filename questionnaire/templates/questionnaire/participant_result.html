@@ -1,0 +1,75 @@
+{% extends 'questionnaire/template/base.html' %}
+{% load questionnaire_tags %}
+
+{% block title %}Твой результат — CourseMC{% endblock %}
+
+{% block content %}
+    <section class="questionnaire-section-heading questionnaire-results-heading">
+        <div>
+            <p class="questionnaire-kicker">Опрос завершён</p>
+            <h1>Твой результат</h1>
+            <p>{{ poll.title }}</p>
+        </div>
+        <a class="questionnaire-link-button questionnaire-link-button--secondary"
+           href="{% url 'questionnaireIndex' %}">К опроснику</a>
+    </section>
+
+    <section class="questionnaire-card questionnaire-results-overview" aria-label="Твой результат">
+        <div class="questionnaire-results-grid">
+            <div class="questionnaire-metric">
+                <span>Результат</span>
+                <strong>{{ correctness_percent }}%</strong>
+            </div>
+            <div class="questionnaire-metric">
+                <span>Правильных ответов</span>
+                <strong>{{ correct_count }} из {{ answer_count }}</strong>
+            </div>
+            <div class="questionnaire-metric">
+                <span>Завершён</span>
+                <strong class="questionnaire-metric-date">{{ completion.created_at|date:'d.m.Y в H:i' }}</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="questionnaire-result-answers" aria-label="Разбор ответов">
+        {% for row in result_rows %}
+            <article class="questionnaire-card questionnaire-result-answer {% if row.is_correct %}is-correct{% else %}is-wrong{% endif %}">
+                <div class="questionnaire-result-answer-header">
+                    <span class="questionnaire-result-number">{{ row.number }}</span>
+                    <div>
+                        <h2>{{ row.question.question|questionnaire_text }}</h2>
+                        <span class="questionnaire-result-state">
+                            {% if row.is_correct %}Верно{% else %}Есть ошибка{% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="questionnaire-result-answer-copy">
+                    <p><span>Твой ответ</span>
+                        {% if row.selected_answer %}
+                            {{ row.selected_answer.answer|questionnaire_text }}
+                        {% else %}
+                            Ответ не сохранён
+                        {% endif %}
+                    </p>
+                    {% if not row.is_correct %}
+                        <p class="questionnaire-correct-answer"><span>Правильный ответ</span>{{ row.correct_answer|questionnaire_text }}</p>
+                    {% endif %}
+                </div>
+            </article>
+        {% empty %}
+            <section class="questionnaire-card questionnaire-empty">
+                <h2>Ответы не найдены</h2>
+                <p>Результат прохождения сохранён, но вопросов с вариантами ответа в опросе больше нет.</p>
+            </section>
+        {% endfor %}
+    </section>
+
+    <section class="questionnaire-result-actions">
+        {% if has_rating %}
+            <span class="questionnaire-status questionnaire-status--active">Оценка опроса отправлена</span>
+        {% else %}
+            <a class="questionnaire-link-button questionnaire-link-button--warm"
+               href="{% url 'rating' poll.pk %}">Оценить опрос</a>
+        {% endif %}
+    </section>
+{% endblock %}

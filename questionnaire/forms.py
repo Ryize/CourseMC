@@ -1,4 +1,12 @@
-from django.forms import DateTimeInput, HiddenInput, ModelForm, Select
+from django.contrib.auth import get_user_model
+from django.db.models import Q
+from django.forms import (
+    CheckboxSelectMultiple,
+    DateTimeInput,
+    HiddenInput,
+    ModelForm,
+    Select,
+)
 
 from .models import AnswerQuestion, Question, Quiz
 
@@ -18,6 +26,37 @@ class QuizForm(ModelForm):
         )
         widgets = {
             "lifetime": DateTimeInput(),
+        }
+
+
+class QuizAccessForm(ModelForm):
+    def __init__(self, *args, owner=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        teachers = (
+            get_user_model().objects
+            .filter(is_active=True)
+            .filter(
+                Q(groups__name="Учитель")
+                | Q(course_profile__learngroups__isnull=False)
+            )
+            .distinct()
+            .order_by("first_name", "last_name", "username")
+        )
+        if owner is not None:
+            teachers = teachers.exclude(pk=owner.pk)
+        access_field = self.fields["teachers_with_access"]
+        access_field.queryset = teachers
+        access_field.label_from_instance = lambda user: (
+            f"{user.get_full_name()} ({user.username})"
+            if user.get_full_name()
+            else user.username
+        )
+
+    class Meta:
+        model = Quiz
+        fields = ("teachers_with_access",)
+        widgets = {
+            "teachers_with_access": CheckboxSelectMultiple(),
         }
 
 

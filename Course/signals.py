@@ -1,10 +1,12 @@
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 from django.urls import reverse
+from django.utils import timezone
 
 from codereview.models import ProjectForReview
 
 from .models import (
+    LessonSolution,
     LessonSolutionSubmission,
     LearnGroup,
     Student,
@@ -75,6 +77,48 @@ def notify_about_lesson_solution(sender, instance, created, **kwargs):
         ),
         event_key=f'lesson-submission:{instance.pk}',
     )
+
+
+@receiver(pre_save, sender=LessonSolution)
+def remember_previous_lesson_solution_status(sender, instance, **kwargs):
+    if not instance.pk:
+        instance._previous_status = None
+        return
+    instance._previous_status = (
+        sender.objects
+        .filter(pk=instance.pk)
+        .values_list('status', flat=True)
+        .first()
+    )
+
+
+@receiver(post_save, sender=LessonSolution)
+def close_reviewed_lesson_solution_notifications(
+    sender,
+    instance,
+    created,
+    **kwargs,
+):
+    previous_status = getattr(instance, '_previous_status', None)
+    if (
+        created
+        or instance.status == LessonSolution.Status.PENDING
+        or previous_status == instance.status
+    ):
+        return
+
+    event_keys = [
+        f'lesson-submission:{submission_id}'
+        for submission_id in instance.submissions.values_list('pk', flat=True)
+    ]
+    if not event_keys:
+        return
+
+    TeacherNotification.objects.filter(
+        kind=TeacherNotification.Kind.LESSON_SOLUTION,
+        event_key__in=event_keys,
+        read_at__isnull=True,
+    ).update(read_at=timezone.now())
 
 
 @receiver(post_save, sender=StudentQuestion)

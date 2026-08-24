@@ -14,6 +14,13 @@ class Quiz(models.Model):
         null=True,
         verbose_name="Пользователь",
     )
+    teachers_with_access = models.ManyToManyField(
+        User,
+        blank=True,
+        related_name="questionnaire_access",
+        verbose_name="Преподаватели с доступом",
+        help_text="Могут просматривать опрос и результаты, но не изменять его.",
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создан")
     is_archived = models.BooleanField(default=False, verbose_name="В архиве")
     archived_at = models.DateTimeField(

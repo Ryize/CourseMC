@@ -38,6 +38,16 @@ urlpatterns = [
         name="poll_results",
     ),
     path(
+        "poll/<int:quiz_id>/my-result/",
+        views.participant_poll_result,
+        name="participant_poll_result",
+    ),
+    path(
+        "poll/<int:quiz_id>/access/",
+        views.update_poll_access,
+        name="update_poll_access",
+    ),
+    path(
         "poll/<int:quiz_id>/archive/",
         views.archive_poll,
         name="archive_poll",

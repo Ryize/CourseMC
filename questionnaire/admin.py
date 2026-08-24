@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Q
 from unfold.admin import ModelAdmin
 
 from .models import *
@@ -38,6 +39,34 @@ class QuizAdmin(ModelAdmin):
     search_fields = ('title', 'description', 'topic', 'user__username')
     list_select_related = ('user',)
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if request.user.is_superuser:
+            return queryset
+        return queryset.filter(
+            Q(user=request.user) | Q(teachers_with_access=request.user)
+        ).distinct()
+
+    def has_view_permission(self, request, obj=None):
+        if not super().has_view_permission(request, obj):
+            return False
+        if obj is None or request.user.is_superuser:
+            return True
+        return (
+            obj.user_id == request.user.pk
+            or obj.teachers_with_access.filter(pk=request.user.pk).exists()
+        )
+
+    def has_change_permission(self, request, obj=None):
+        if not super().has_change_permission(request, obj):
+            return False
+        return obj is None or request.user.is_superuser or obj.user_id == request.user.pk
+
+    def has_delete_permission(self, request, obj=None):
+        if not super().has_delete_permission(request, obj):
+            return False
+        return obj is None or request.user.is_superuser or obj.user_id == request.user.pk
+
 
 @admin.register(Question)
 class QuestionAdmin(ModelAdmin):
@@ -70,8 +99,10 @@ class PassedPollsAdmin(ModelAdmin):
         if request.user.is_superuser:
             return queryset
         return queryset.filter(
-            passed_user__course_profile__groups__teacher__user=request.user,
-        )
+            Q(quiz__user=request.user)
+            | Q(quiz__teachers_with_access=request.user)
+            | Q(passed_user__course_profile__groups__teacher__user=request.user)
+        ).distinct()
 
     def has_view_permission(self, request, obj=None):
         has_permission = (
@@ -82,11 +113,13 @@ class PassedPollsAdmin(ModelAdmin):
             return False
         if obj is None or request.user.is_superuser:
             return True
+        if (
+            obj.quiz.user_id == request.user.pk
+            or obj.quiz.teachers_with_access.filter(pk=request.user.pk).exists()
+        ):
+            return True
         profile = getattr(obj.passed_user, 'course_profile', None)
-        return bool(
-            profile
-            and profile.groups.teacher.user_id == request.user.pk
-        )
+        return bool(profile and profile.groups.teacher.user_id == request.user.pk)
 
 
 @admin.register(AnswerQuestion)
@@ -114,8 +147,10 @@ class UserAnswerAdmin(ModelAdmin):
         if request.user.is_superuser:
             return queryset
         return queryset.filter(
-            user__course_profile__groups__teacher__user=request.user,
-        )
+            Q(quiz__user=request.user)
+            | Q(quiz__teachers_with_access=request.user)
+            | Q(user__course_profile__groups__teacher__user=request.user)
+        ).distinct()
 
     def has_view_permission(self, request, obj=None):
         has_permission = (
@@ -126,8 +161,10 @@ class UserAnswerAdmin(ModelAdmin):
             return False
         if obj is None or request.user.is_superuser:
             return True
+        if (
+            obj.quiz.user_id == request.user.pk
+            or obj.quiz.teachers_with_access.filter(pk=request.user.pk).exists()
+        ):
+            return True
         profile = getattr(obj.user, 'course_profile', None)
-        return bool(
-            profile
-            and profile.groups.teacher.user_id == request.user.pk
-        )
+        return bool(profile and profile.groups.teacher.user_id == request.user.pk)
