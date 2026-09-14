@@ -16,6 +16,8 @@ def sync_feature_permissions():
                 'curriculumlesson',
                 'teachernotification',
                 'lessonsolutionsubmission',
+                'studentcard',
+                'studentnote',
                 'passedpolls',
                 'question',
                 'useranswer',
@@ -68,6 +70,23 @@ def sync_feature_permissions():
             )
             if permission:
                 additions.append(permission)
+
+        if ('Course', 'view_student') in existing:
+            for model in ('studentcard', 'studentnote'):
+                permission = target_permissions.get(
+                    ('Course', f'view_{model}'),
+                )
+                if permission:
+                    additions.append(permission)
+
+        if ('Course', 'change_student') in existing:
+            for action in ('add', 'change'):
+                for model in ('studentcard', 'studentnote'):
+                    permission = target_permissions.get(
+                        ('Course', f'{action}_{model}'),
+                    )
+                    if permission:
+                        additions.append(permission)
 
         if ('questionnaire', 'view_quiz') in existing:
             for model in ('passedpolls', 'question', 'useranswer'):

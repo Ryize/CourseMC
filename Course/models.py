@@ -409,6 +409,195 @@ class ClassesTimetable(models.Model):
         return f'{self.group}, {self.weekday}-{self.time_lesson}'
 
 
+class StudentCard(models.Model):
+    """Карточка знакомства, существующая до регистрации ученика."""
+
+    class Status(models.TextChoices):
+        NEW = 'new', 'Новый'
+        CALL_SCHEDULED = 'call_scheduled', 'Назначен созвон'
+        CALL_COMPLETED = 'call_completed', 'Созвон проведён'
+        AWAITING_DECISION = 'awaiting_decision', 'Ожидает решения'
+        READY_TO_START = 'ready_to_start', 'Готов начать'
+        REGISTERED = 'registered', 'Зарегистрирован'
+        STUDYING = 'studying', 'Обучается'
+        DEFERRED = 'deferred', 'Отложил обучение'
+        DECLINED = 'declined', 'Отказался'
+        COMPLETED = 'completed', 'Завершил обучение'
+
+    student = models.OneToOneField(
+        Student,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='intake_card',
+        verbose_name='Связанный ученик',
+        help_text=(
+            'Оставьте пустым до регистрации. После создания аккаунта выберите '
+            'здесь соответствующего ученика.'
+        ),
+    )
+    full_name = models.CharField(max_length=150, verbose_name='Имя ученика')
+    phone = models.CharField(max_length=32, blank=True, verbose_name='Телефон')
+    telegram = models.CharField(
+        max_length=128,
+        blank=True,
+        verbose_name='Telegram',
+    )
+    email = models.EmailField(blank=True, verbose_name='Email')
+    source = models.CharField(
+        max_length=150,
+        blank=True,
+        verbose_name='Откуда пришёл',
+    )
+    status = models.CharField(
+        max_length=24,
+        choices=Status.choices,
+        default=Status.NEW,
+        db_index=True,
+        verbose_name='Статус',
+    )
+    desired_direction = models.ForeignKey(
+        DirectionStudy,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='prospective_student_cards',
+        verbose_name='Желаемое направление',
+    )
+    responsible_teacher = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        limit_choices_to={'is_staff': True, 'is_active': True},
+        related_name='responsible_student_cards',
+        verbose_name='Ответственный преподаватель',
+    )
+    current_level = models.TextField(
+        blank=True,
+        verbose_name='Текущий уровень',
+    )
+    previous_experience = models.TextField(
+        blank=True,
+        verbose_name='Предыдущий опыт',
+    )
+    learning_goals = models.TextField(
+        blank=True,
+        verbose_name='Цели обучения',
+    )
+    expectations = models.TextField(
+        blank=True,
+        verbose_name='Ожидания и пожелания',
+    )
+    schedule_preferences = models.TextField(
+        blank=True,
+        verbose_name='Предпочтения по расписанию',
+    )
+    time_commitment = models.TextField(
+        blank=True,
+        verbose_name='Время на самостоятельную работу',
+    )
+    concerns = models.TextField(
+        blank=True,
+        verbose_name='Сложности и опасения',
+    )
+    consultation_summary = models.TextField(
+        blank=True,
+        verbose_name='Итог первого созвона',
+    )
+    next_step = models.TextField(
+        blank=True,
+        verbose_name='Следующий шаг и договорённости',
+    )
+    next_contact_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name='Следующий контакт',
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_student_cards',
+        verbose_name='Создал',
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создана')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Обновлена')
+
+    class Meta:
+        verbose_name = 'Карточка ученика'
+        verbose_name_plural = 'Карточки учеников'
+        ordering = ('-updated_at', '-pk')
+        permissions = (
+            ('view_all_student_cards', 'Может видеть все карточки учеников'),
+        )
+
+    def __str__(self):
+        return self.full_name
+
+    @property
+    def primary_contact(self):
+        return self.telegram or self.phone or self.email or 'Не указан'
+
+
+class StudentNote(models.Model):
+    """Неизменяемая по смыслу хронология общения с учеником."""
+
+    class Kind(models.TextChoices):
+        INTRO_CALL = 'intro_call', 'Первый созвон'
+        LESSON = 'lesson', 'Занятие'
+        FEEDBACK = 'feedback', 'Обратная связь'
+        ORGANIZATIONAL = 'organizational', 'Организационный вопрос'
+        OTHER = 'other', 'Другое'
+
+    card = models.ForeignKey(
+        StudentCard,
+        on_delete=models.CASCADE,
+        related_name='notes',
+        verbose_name='Карточка ученика',
+    )
+    kind = models.CharField(
+        max_length=24,
+        choices=Kind.choices,
+        default=Kind.OTHER,
+        verbose_name='Тип записи',
+    )
+    text = models.TextField(verbose_name='Заметка')
+    next_step = models.TextField(
+        blank=True,
+        verbose_name='Следующий шаг',
+    )
+    remind_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name='Напомнить',
+    )
+    reminder_done = models.BooleanField(
+        default=False,
+        verbose_name='Напоминание выполнено',
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='student_notes',
+        verbose_name='Автор',
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Добавлена')
+
+    class Meta:
+        verbose_name = 'Заметка по ученику'
+        verbose_name_plural = 'Заметки и созвоны'
+        ordering = ('-created_at', '-pk')
+
+    def __str__(self):
+        return f'{self.card}: {self.get_kind_display()}'
+
+
 class ApplicationsForTraining(models.Model):
     student = models.ForeignKey(
         Student,

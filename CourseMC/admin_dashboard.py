@@ -5,7 +5,7 @@ from collections import defaultdict
 from datetime import timedelta
 from urllib.parse import urlencode
 
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.urls import reverse
 from django.utils import timezone
 
@@ -15,6 +15,8 @@ from Course.models import (
     LessonSolution,
     LessonSolutionSubmission,
     Student,
+    StudentCard,
+    StudentNote,
     StudentQuestion,
 )
 from codereview.models import CodeReview, ProjectForReview
@@ -473,7 +475,7 @@ def _item(obj, title, subtitle, now, moment=None, tone='warning'):
     }
 
 
-def _attention_sections(student_ids, group_ids, now):
+def _attention_sections(request, student_ids, group_ids, now):
     pending = (
         LessonSolution.objects
         .filter(student_id__in=student_ids, status=LessonSolution.Status.PENDING)
@@ -528,6 +530,39 @@ def _attention_sections(student_ids, group_ids, now):
         .select_related('student__user')
         .order_by('created_at')
     )
+    cards_to_contact = StudentCard.objects.filter(
+        next_contact_at__lt=now,
+    ).exclude(
+        status__in=(
+            StudentCard.Status.DECLINED,
+            StudentCard.Status.COMPLETED,
+        ),
+    ).select_related('student__user', 'responsible_teacher')
+    notes_to_remind = StudentNote.objects.filter(
+        remind_at__lt=now,
+        reminder_done=False,
+    ).exclude(
+        card__status__in=(
+            StudentCard.Status.DECLINED,
+            StudentCard.Status.COMPLETED,
+        ),
+    ).select_related('card', 'author')
+    if not request.user.is_superuser and not request.user.has_perm(
+        'Course.view_all_student_cards',
+    ):
+        card_scope = (
+            Q(responsible_teacher=request.user)
+            | Q(created_by=request.user)
+            | Q(student__groups_id__in=group_ids)
+        )
+        cards_to_contact = cards_to_contact.filter(card_scope).distinct()
+        notes_to_remind = notes_to_remind.filter(
+            Q(card__responsible_teacher=request.user)
+            | Q(card__created_by=request.user)
+            | Q(card__student__groups_id__in=group_ids),
+        ).distinct()
+    cards_to_contact = cards_to_contact.order_by('next_contact_at')
+    notes_to_remind = notes_to_remind.order_by('remind_at')
 
     return [
         {
@@ -635,6 +670,38 @@ def _attention_sections(student_ids, group_ids, now):
                 for application in applications[:4]
             ],
         },
+        {
+            'title': 'Контакты с учениками',
+            'count': cards_to_contact.count() + notes_to_remind.count(),
+            'url': _admin_filter_url(
+                StudentCard,
+                student_card_attention='overdue',
+            ),
+            'items': [
+                *[
+                    _item(
+                        card,
+                        card.full_name,
+                        _shorten(card.next_step or 'Запланирован контакт', 64),
+                        now,
+                        card.next_contact_at,
+                        'danger',
+                    )
+                    for card in cards_to_contact[:2]
+                ],
+                *[
+                    _item(
+                        note,
+                        note.card.full_name,
+                        _shorten(note.next_step or note.text, 64),
+                        now,
+                        note.remind_at,
+                        'danger',
+                    )
+                    for note in notes_to_remind[:2]
+                ],
+            ],
+        },
     ]
 
 
@@ -736,6 +803,7 @@ def dashboard_callback(request, context):
         'interview_progress_chart': interview_chart,
         'interview_answered_percent': interview_answered_percent,
         'attention_sections': _attention_sections(
+            request,
             student_ids,
             group_ids,
             now,

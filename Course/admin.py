@@ -1,4 +1,5 @@
 from datetime import timedelta
+from urllib.parse import urlencode
 
 from django import forms
 from django.contrib import admin, messages
@@ -164,6 +165,84 @@ class MyGroupsListFilter(SimpleListFilter):
         )
 
 
+class StudentCardAttentionFilter(SimpleListFilter):
+    title = 'Быстрый фильтр'
+    parameter_name = 'student_card_attention'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('overdue', 'Просрочен следующий контакт'),
+            ('unlinked', 'Без аккаунта'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'overdue':
+            return queryset.filter(
+                next_contact_at__lt=timezone.now(),
+            ).exclude(
+                status__in=(
+                    StudentCard.Status.DECLINED,
+                    StudentCard.Status.COMPLETED,
+                ),
+            )
+        if self.value() == 'unlinked':
+            return queryset.filter(student__isnull=True)
+        return queryset
+
+
+class StudentCardAdminForm(forms.ModelForm):
+    class Meta:
+        model = StudentCard
+        fields = '__all__'
+        widgets = {
+            'current_level': forms.Textarea(attrs={'rows': 3}),
+            'previous_experience': forms.Textarea(attrs={'rows': 3}),
+            'learning_goals': forms.Textarea(attrs={'rows': 3}),
+            'expectations': forms.Textarea(attrs={'rows': 3}),
+            'schedule_preferences': forms.Textarea(attrs={'rows': 3}),
+            'time_commitment': forms.Textarea(attrs={'rows': 3}),
+            'concerns': forms.Textarea(attrs={'rows': 3}),
+            'consultation_summary': forms.Textarea(attrs={'rows': 5}),
+            'next_step': forms.Textarea(attrs={'rows': 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['responsible_teacher'].queryset = User.objects.filter(
+            is_staff=True,
+            is_active=True,
+        ).order_by('first_name', 'last_name', 'username')
+        available_students = Student.objects.filter(
+            is_learned=True,
+            intake_card__isnull=True,
+        )
+        if self.instance and self.instance.pk and self.instance.student_id:
+            available_students = Student.objects.filter(
+                is_learned=True,
+            ).filter(
+                Q(intake_card__isnull=True) | Q(pk=self.instance.student_id),
+            )
+        self.fields['student'].queryset = available_students.select_related(
+            'user',
+        ).order_by('-created_at', '-pk')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        student = cleaned_data.get('student')
+        status = cleaned_data.get('status')
+        registered_statuses = {
+            StudentCard.Status.REGISTERED,
+            StudentCard.Status.STUDYING,
+            StudentCard.Status.COMPLETED,
+        }
+        if status in registered_statuses and not student:
+            self.add_error(
+                'student',
+                'Для этого статуса сначала свяжите карточку с аккаунтом ученика.',
+            )
+        return cleaned_data
+
+
 @admin.register(Student)
 class StudentAdmin(ModelAdmin):
     fields = (
@@ -172,6 +251,7 @@ class StudentAdmin(ModelAdmin):
         'direction',
         'groups',
         'is_learned',
+        'student_card_link',
         'created_at',
     )
     list_display = (
@@ -193,7 +273,7 @@ class StudentAdmin(ModelAdmin):
         'is_learned',
         'direction',
     )
-    readonly_fields = ('created_at',)
+    readonly_fields = ('student_card_link', 'created_at')
     autocomplete_fields = ('user',)
     list_select_related = ('user', 'groups')
     empty_value_display = '-пустой-'
@@ -208,6 +288,24 @@ class StudentAdmin(ModelAdmin):
     def account(self, obj):
         return obj.user.username
 
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(
+            request,
+            queryset,
+            search_term,
+        )
+        if (
+            request.GET.get('app_label') == 'Course'
+            and request.GET.get('model_name') == 'studentcard'
+            and request.GET.get('field_name') == 'student'
+        ):
+            queryset = queryset.filter(
+                is_learned=True,
+                intake_card__isnull=True,
+            ).order_by('-created_at', '-pk')
+            use_distinct = True
+        return queryset, use_distinct
+
     def directions(self, obj) -> str:
         """
         Список направлений ученика.
@@ -215,6 +313,303 @@ class StudentAdmin(ModelAdmin):
         return ', '.join([i.title for i in obj.direction.all()])
 
     directions.short_description = 'Направление'
+
+    @admin.display(description='Карточка знакомства')
+    def student_card_link(self, obj):
+        if not obj or not obj.pk:
+            return 'Станет доступна после создания ученика.'
+        card = getattr(obj, 'intake_card', None)
+        if card:
+            return format_html(
+                '<a href="{}">Открыть карточку «{}»</a>',
+                reverse('admin:Course_studentcard_change', args=(card.pk,)),
+                card.full_name,
+            )
+        user = obj.user
+        full_name = user.get_full_name() or user.username
+        query = urlencode({
+            'student': obj.pk,
+            'full_name': full_name,
+            'email': user.email,
+            'status': StudentCard.Status.REGISTERED,
+        })
+        return format_html(
+            '<a href="{}?{}">Создать и связать карточку</a>',
+            reverse('admin:Course_studentcard_add'),
+            query,
+        )
+
+
+class StudentNoteInlineForm(forms.ModelForm):
+    class Meta:
+        model = StudentNote
+        fields = '__all__'
+        widgets = {
+            'text': forms.Textarea(attrs={'rows': 3}),
+            'next_step': forms.Textarea(attrs={'rows': 2}),
+        }
+
+
+class StudentNoteInline(TabularInline):
+    model = StudentNote
+    form = StudentNoteInlineForm
+    fields = (
+        'kind',
+        'text',
+        'next_step',
+        'remind_at',
+        'reminder_done',
+        'author',
+        'created_at',
+    )
+    readonly_fields = ('author', 'created_at')
+    extra = 1
+    show_change_link = True
+
+
+@admin.register(StudentCard)
+class StudentCardAdmin(ModelAdmin):
+    form = StudentCardAdminForm
+    fieldsets = (
+        (
+            'Контакты и этап работы',
+            {
+                'fields': (
+                    'full_name',
+                    'phone',
+                    'telegram',
+                    'email',
+                    'source',
+                    'status',
+                    'responsible_teacher',
+                    'next_contact_at',
+                ),
+            },
+        ),
+        (
+            'Регистрация и обучение',
+            {
+                'fields': (
+                    'student',
+                    'desired_direction',
+                ),
+                'description': (
+                    'Карточку можно заполнить до регистрации. Когда ученик '
+                    'создаст аккаунт, выберите его в поле «Связанный ученик».'
+                ),
+            },
+        ),
+        (
+            'Информация с первого созвона',
+            {
+                'fields': (
+                    'current_level',
+                    'previous_experience',
+                    'learning_goals',
+                    'expectations',
+                    'schedule_preferences',
+                    'time_commitment',
+                    'concerns',
+                    'consultation_summary',
+                    'next_step',
+                ),
+            },
+        ),
+        (
+            'Служебная информация',
+            {
+                'fields': ('created_by', 'created_at', 'updated_at'),
+                'classes': ('collapse',),
+            },
+        ),
+    )
+    list_display = (
+        'full_name',
+        'primary_contact_display',
+        'status_badge',
+        'desired_direction',
+        'responsible_teacher',
+        'next_contact_at',
+        'linked_account',
+    )
+    list_display_links = (
+        'full_name',
+        'primary_contact_display',
+        'status_badge',
+        'desired_direction',
+        'responsible_teacher',
+        'next_contact_at',
+        'linked_account',
+    )
+    list_filter = (
+        StudentCardAttentionFilter,
+        'status',
+        'desired_direction',
+        'responsible_teacher',
+    )
+    search_fields = (
+        'full_name',
+        'phone',
+        'telegram',
+        'email',
+        'student__user__username',
+        'student__user__email',
+    )
+    autocomplete_fields = (
+        'student',
+        'desired_direction',
+    )
+    readonly_fields = ('created_by', 'created_at', 'updated_at')
+    list_select_related = (
+        'student',
+        'student__user',
+        'desired_direction',
+        'responsible_teacher',
+        'created_by',
+    )
+    inlines = (StudentNoteInline,)
+    date_hierarchy = 'created_at'
+    list_per_page = 50
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if request.user.is_superuser or request.user.has_perm(
+            'Course.view_all_student_cards',
+        ):
+            return queryset
+        return queryset.filter(
+            Q(responsible_teacher=request.user)
+            | Q(created_by=request.user)
+            | Q(student__groups__teacher__user=request.user),
+        ).distinct()
+
+    def save_model(self, request, obj, form, change):
+        if not obj.created_by_id:
+            obj.created_by = request.user
+        if not obj.responsible_teacher_id:
+            obj.responsible_teacher = request.user
+        if obj.student_id and obj.status in {
+            StudentCard.Status.NEW,
+            StudentCard.Status.CALL_SCHEDULED,
+            StudentCard.Status.CALL_COMPLETED,
+            StudentCard.Status.AWAITING_DECISION,
+            StudentCard.Status.READY_TO_START,
+        }:
+            obj.status = StudentCard.Status.REGISTERED
+        super().save_model(request, obj, form, change)
+
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=False)
+        for deleted_object in formset.deleted_objects:
+            deleted_object.delete()
+        for instance in instances:
+            if isinstance(instance, StudentNote) and not instance.author_id:
+                instance.author = request.user
+            instance.save()
+        formset.save_m2m()
+
+    @admin.display(description='Контакт')
+    def primary_contact_display(self, obj):
+        return obj.primary_contact
+
+    @admin.display(description='Аккаунт')
+    def linked_account(self, obj):
+        return obj.student.user.username if obj.student_id else 'Не привязан'
+
+    @display(
+        description='Статус',
+        ordering='status',
+        label={
+            StudentCard.Status.NEW: 'info',
+            StudentCard.Status.CALL_SCHEDULED: 'warning',
+            StudentCard.Status.CALL_COMPLETED: 'info',
+            StudentCard.Status.AWAITING_DECISION: 'warning',
+            StudentCard.Status.READY_TO_START: 'success',
+            StudentCard.Status.REGISTERED: 'info',
+            StudentCard.Status.STUDYING: 'success',
+            StudentCard.Status.DEFERRED: 'warning',
+            StudentCard.Status.DECLINED: 'danger',
+            StudentCard.Status.COMPLETED: 'success',
+        },
+    )
+    def status_badge(self, obj):
+        return obj.status, obj.get_status_display()
+
+
+@admin.register(StudentNote)
+class StudentNoteAdmin(ModelAdmin):
+    fields = (
+        'card',
+        'kind',
+        'text',
+        'next_step',
+        'remind_at',
+        'reminder_done',
+        'author',
+        'created_at',
+    )
+    list_display = (
+        'card',
+        'kind',
+        'short_text',
+        'remind_at',
+        'reminder_done',
+        'author',
+        'created_at',
+    )
+    list_display_links = (
+        'card',
+        'kind',
+        'short_text',
+        'remind_at',
+        'reminder_done',
+        'author',
+        'created_at',
+    )
+    list_filter = ('reminder_done', 'kind', 'author')
+    search_fields = (
+        'card__full_name',
+        'card__phone',
+        'card__telegram',
+        'text',
+        'next_step',
+    )
+    autocomplete_fields = ('card',)
+    readonly_fields = ('author', 'created_at')
+    list_select_related = ('card', 'author')
+    date_hierarchy = 'created_at'
+    list_per_page = 50
+    actions = ('mark_reminders_done',)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if request.user.is_superuser or request.user.has_perm(
+            'Course.view_all_student_cards',
+        ):
+            return queryset
+        return queryset.filter(
+            Q(card__responsible_teacher=request.user)
+            | Q(card__created_by=request.user)
+            | Q(card__student__groups__teacher__user=request.user),
+        ).distinct()
+
+    def save_model(self, request, obj, form, change):
+        if not obj.author_id:
+            obj.author = request.user
+        super().save_model(request, obj, form, change)
+
+    @admin.display(description='Заметка')
+    def short_text(self, obj):
+        return obj.text if len(obj.text) <= 80 else f'{obj.text[:77]}...'
+
+    @admin.action(description='Отметить напоминания выполненными')
+    def mark_reminders_done(self, request, queryset):
+        updated = queryset.update(reminder_done=True)
+        self.message_user(
+            request,
+            f'Выполнено напоминаний: {updated}.',
+            messages.SUCCESS,
+        )
 
 
 @admin.register(LearnGroup)
@@ -264,6 +659,7 @@ class DirectionStudyAdmin(ModelAdmin):
     empty_value_display = '-пустой-'
     list_per_page = 64
     list_max_show_all = 8
+    search_fields = ('title',)
     actions = ('create_program_draft',)
 
     @admin.action(description='Создать черновик из опубликованной программы')
