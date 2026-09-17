@@ -1,0 +1,93 @@
+{% extends 'interview/mock_base.html' %}
+
+{% block title %}Тестовое собеседование{% endblock %}
+
+{% block content %}
+<section class="mock-hero">
+    <div>
+        <span class="mock-eyebrow">Твой собес</span>
+        <h1>Тестовое собеседование</h1>
+        <p>Ответьте на вопросы по общей разработке, Python, ООП и выбранным фреймворкам. Затем выполните практическое задание и получите разбор.</p>
+    </div>
+    <a class="mock-secondary-link" href="{% url 'mock_interview_history' %}">История прохождений</a>
+</section>
+
+{% if active_interview %}
+<section class="mock-panel mock-resume-card">
+    <div>
+        <span class="mock-status-pill mock-status-{{ active_interview.status }}">{{ active_interview.get_status_display }}</span>
+        <h2>У вас есть незавершённое собеседование</h2>
+        <p>Начато {{ active_interview.started_at|date:"d.m.Y в H:i" }}. Ответы и выбранный стек сохранены.</p>
+    </div>
+    <div class="mock-resume-actions">
+        <a class="mock-primary-link" href="{% url 'mock_interview_resume' active_interview.pk %}">Продолжить</a>
+        {% if active_interview.status != 'analyzing' %}
+        <form method="post" action="{% url 'mock_interview_abandon' active_interview.pk %}">
+            {% csrf_token %}<button class="mock-text-button" type="submit">Начать заново</button>
+        </form>
+        {% endif %}
+    </div>
+</section>
+{% elif not availability.can_start %}
+<section class="mock-panel mock-limit-card">
+    <span class="mock-status-pill">Лимит на 7 дней</span>
+    <h2>Лимит попыток исчерпан</h2>
+    {% if availability.next_available_at %}
+        <p>Вы использовали {{ availability.used }} из {{ availability.limit }} попыток. Новое собеседование можно начать {{ availability.next_available_at|date:"d.m.Y в H:i" }}.</p>
+    {% else %}
+        <p>Новые мок-собеседования временно отключены администратором.</p>
+    {% endif %}
+    <a class="mock-secondary-link" href="{% url 'mock_interview_history' %}">Посмотреть историю</a>
+</section>
+{% else %}
+<form class="mock-panel mock-start-form" method="post">
+    {% csrf_token %}
+    <div class="mock-step-list" aria-label="Этапы собеседования">
+        <span><b>1</b> Теория</span>
+        <span><b>2</b> Лайвкодинг</span>
+        <span><b>3</b> Разбор</span>
+    </div>
+    <h2>Выберите уровень</h2>
+    <p class="mock-muted">Вопросы и оценка ответов будут соответствовать выбранной позиции.</p>
+    <div class="mock-level-grid">
+        {% for choice in form.level %}
+            <label class="mock-level-choice">{{ choice.tag }} <span><b>{{ choice.choice_label }}</b><small>{% if choice.data.value == 'junior' %}Основы и базовые задачи{% elif choice.data.value == 'middle' %}Практика и архитектурные решения{% else %}Глубокие знания и системный дизайн{% endif %}</small></span></label>
+        {% endfor %}
+    </div>
+    {% if form.level.errors %}<div class="mock-field-error">{{ form.level.errors }}</div>{% endif %}
+    <h2>Выберите фреймворк</h2>
+    <p class="mock-muted">Можно выбрать несколько — для каждого добавится отдельный блок вопросов.</p>
+    {% if form.non_field_errors %}<div class="mock-alert">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="mock-framework-grid">
+        {% for choice in form.frameworks %}
+            <label class="mock-framework-choice">{{ choice.tag }} <span>{{ choice.choice_label }}</span></label>
+        {% empty %}
+            <div class="mock-alert">Пока нет подготовленных вопросов по фреймворкам.</div>
+        {% endfor %}
+    </div>
+    {% if form.frameworks.errors %}<div class="mock-field-error">{{ form.frameworks.errors }}</div>{% endif %}
+    <div class="mock-start-submit">
+        <button class="mock-primary-button" type="submit">Начать собеседование</button>
+        <span>Осталось попыток: {{ availability.remaining }} из {{ availability.limit }}</span>
+    </div>
+</form>
+{% endif %}
+
+{% if history %}
+<section class="mock-history">
+    <div class="mock-section-heading">
+        <div><span class="mock-eyebrow">Динамика</span><h2>Предыдущие попытки</h2></div>
+    </div>
+    <div class="mock-history-grid">
+        {% for item in history %}
+        <a class="mock-history-card" href="{% url 'mock_interview_result' item.pk %}">
+            <strong>{{ item.overall_score }}%</strong>
+            <span>{{ item.get_level_display }} · {{ item.started_at|date:"d.m.Y" }}</span>
+            <small>{% for framework in item.frameworks.all %}{{ framework.title }}{% if not forloop.last %}, {% endif %}{% endfor %}</small>
+        </a>
+        {% endfor %}
+    </div>
+    <a class="mock-history-all" href="{% url 'mock_interview_history' %}">Посмотреть всю историю →</a>
+</section>
+{% endif %}
+{% endblock %}

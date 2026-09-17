@@ -57,8 +57,12 @@
 
         try {
             const response = await fetch(url, {
+                cache: "no-store",
                 credentials: "same-origin",
-                headers: {"X-Requested-With": "XMLHttpRequest"},
+                headers: {
+                    "Accept": "text/html",
+                    "X-Requested-With": "XMLHttpRequest",
+                },
                 signal: request.signal,
             });
 

@@ -1,0 +1,28 @@
+{% extends 'interview/mock_base.html' %}
+
+{% block title %}Теоретическая часть{% endblock %}
+
+{% block content %}
+<section class="mock-page-head">
+    <div><span class="mock-eyebrow">Этап 1 из 3</span><h1>Теоретическая часть</h1></div>
+    <div class="mock-framework-tags"><span>{{ interview.get_level_display }}</span>{% for framework in interview.frameworks.all %}<span>{{ framework.title }}</span>{% endfor %}</div>
+</section>
+
+<form class="mock-theory-form" method="post">
+    {% csrf_token %}
+    {% if error %}<div class="mock-alert">{{ error }}</div>{% endif %}
+    {% for section_title, answers in sections %}
+    <section class="mock-question-section">
+        <div class="mock-section-heading"><span>{{ forloop.counter|stringformat:"02d" }}</span><h2>{{ section_title }}</h2></div>
+        {% for answer in answers %}
+        <article class="mock-question-card">
+            <div class="mock-question-meta"><span>Вопрос {{ answer.position }}</span><small>{{ answer.category_snapshot }}</small></div>
+            <label for="answer-{{ answer.pk }}">{{ answer.question_snapshot }}</label>
+            <textarea id="answer-{{ answer.pk }}" name="answer_{{ answer.pk }}" rows="5" maxlength="8000" required placeholder="Сформулируйте ответ своими словами…">{{ answer.answer_text }}</textarea>
+        </article>
+        {% endfor %}
+    </section>
+    {% endfor %}
+    <div class="mock-sticky-actions"><span>Ответы сохранятся после перехода к практике</span><button class="mock-primary-button" type="submit">Перейти к лайвкодингу</button></div>
+</form>
+{% endblock %}

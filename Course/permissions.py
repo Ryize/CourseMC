@@ -9,7 +9,7 @@ def sync_feature_permissions():
     target_permissions = {
         (permission.content_type.app_label, permission.codename): permission
         for permission in Permission.objects.filter(
-            content_type__app_label__in=('Course', 'questionnaire'),
+            content_type__app_label__in=('Course', 'questionnaire', 'interview'),
             content_type__model__in=(
                 'directionstudy',
                 'curriculumversion',
@@ -21,6 +21,11 @@ def sync_feature_permissions():
                 'passedpolls',
                 'question',
                 'useranswer',
+                'interviewquestion',
+                'livecodingtask',
+                'mockinterview',
+                'mockinterviewanswer',
+                'mockinterviewfile',
             ),
         ).select_related('content_type')
     }
@@ -92,6 +97,29 @@ def sync_feature_permissions():
             for model in ('passedpolls', 'question', 'useranswer'):
                 permission = target_permissions.get(
                     ('questionnaire', f'view_{model}'),
+                )
+                if permission:
+                    additions.append(permission)
+
+        can_view_interviews = bool({
+            ('interview', 'view_interviewquestion'),
+            ('Course', 'view_lessonsolution'),
+        }.intersection(existing))
+        if can_view_interviews:
+            for model in (
+                'mockinterview', 'mockinterviewanswer', 'mockinterviewfile',
+                'livecodingtask',
+            ):
+                permission = target_permissions.get(
+                    ('interview', f'view_{model}'),
+                )
+                if permission:
+                    additions.append(permission)
+
+        for action in ('add', 'change', 'delete'):
+            if ('interview', f'{action}_interviewquestion') in existing:
+                permission = target_permissions.get(
+                    ('interview', f'{action}_livecodingtask'),
                 )
                 if permission:
                     additions.append(permission)

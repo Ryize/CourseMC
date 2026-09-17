@@ -17,8 +17,11 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
+from django.views.decorators.cache import never_cache
+from django.views.decorators.vary import vary_on_headers
 from django.views.generic import ListView
 from django.views.generic.edit import FormView
 
@@ -171,6 +174,8 @@ class StudentRecordView(FormView):
         return context
 
 
+@method_decorator(never_cache, name='dispatch')
+@method_decorator(vary_on_headers('X-Requested-With'), name='dispatch')
 class TimetableView(LoginRequiredMixin, ListView):
     """
     Выводит расписание курса на сайте.

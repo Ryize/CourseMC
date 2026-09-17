@@ -1,0 +1,30 @@
+{% extends 'interview/mock_base.html' %}
+
+{% block title %}История собеседований{% endblock %}
+
+{% block content %}
+<section class="mock-page-head mock-history-head">
+    <div><span class="mock-eyebrow">Твой собес</span><h1>История прохождений</h1></div>
+    <a class="mock-primary-link" href="{% url 'mock_interview_start' %}">Новое собеседование</a>
+</section>
+
+{% if history %}
+<section class="mock-history-list">
+    {% for item in history %}
+    <a class="mock-history-row" href="{% url 'mock_interview_result' item.pk %}">
+        <span class="mock-history-score">{{ item.overall_score }}%</span>
+        <span><b>{{ item.get_level_display }}</b><small>{{ item.started_at|date:"d.m.Y в H:i" }}</small></span>
+        <span><b>{% for framework in item.frameworks.all %}{{ framework.title }}{% if not forloop.last %}, {% endif %}{% endfor %}</b><small>Выбранный стек</small></span>
+        <span class="mock-history-open">Посмотреть разбор →</span>
+    </a>
+    {% endfor %}
+</section>
+{% else %}
+<section class="mock-panel mock-empty-history">
+    <span class="mock-eyebrow">Пока пусто</span>
+    <h2>Здесь появятся завершённые собеседования</h2>
+    <p>Пройдите первое тестовое собеседование, чтобы видеть результаты и динамику.</p>
+    <a class="mock-primary-link" href="{% url 'mock_interview_start' %}">Начать собеседование</a>
+</section>
+{% endif %}
+{% endblock %}

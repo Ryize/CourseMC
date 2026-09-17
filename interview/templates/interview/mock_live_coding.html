@@ -1,0 +1,37 @@
+{% extends 'interview/mock_base.html' %}
+{% load static %}
+
+{% block title %}Лайвкодинг{% endblock %}
+
+{% block content %}
+<section class="mock-page-head">
+    <div><span class="mock-eyebrow">Этап 2 из 3</span><h1>Лайвкодинг</h1></div>
+    <div class="mock-timer" data-minutes="{{ interview.live_coding_task.duration_minutes|default:30 }}"><small>Рекомендуемое время</small><strong id="mock-timer-value">{{ interview.live_coding_task.duration_minutes|default:30 }}:00</strong></div>
+</section>
+
+<section class="mock-panel mock-task-card">
+    <span class="mock-eyebrow">Практическое задание</span>
+    <h2>{{ interview.task_title }}</h2>
+    <div class="mock-task-description">{{ interview.task_description|linebreaks }}</div>
+    {% if interview.live_coding_task.starter_file %}<a class="mock-secondary-link" href="{% url 'mock_task_file_download' interview.pk %}">Скачать файл задания</a>{% endif %}
+</section>
+
+<form class="mock-panel mock-solution-form" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="mock-alert">{{ form.non_field_errors }}</div>{% endif %}
+    <label for="{{ form.solution.id_for_label }}">Ваше решение</label>
+    {{ form.solution }}
+    {% if form.solution.errors %}<div class="mock-field-error">{{ form.solution.errors }}</div>{% endif %}
+    <label class="mock-file-field" for="{{ form.files.id_for_label }}"><b>Файлы решения</b><span>До 5 файлов по 5 МБ: Python, текстовые файлы или ZIP-проект</span>{{ form.files }}</label>
+    {% if form.files.errors %}<div class="mock-field-error">{{ form.files.errors }}</div>{% endif %}
+    <div class="mock-repository-field">
+        <label for="{{ form.repository_url.id_for_label }}">Ссылка на Git-репозиторий</label>
+        <span>Код из публичного GitHub или GitLab автоматически попадёт в разбор; ссылка на другой Git-сервис сохранится для преподавателя</span>
+        {{ form.repository_url }}
+    </div>
+    {% if form.repository_url.errors %}<div class="mock-field-error">{{ form.repository_url.errors }}</div>{% endif %}
+    <button class="mock-primary-button" type="submit">Завершить и отправить на разбор</button>
+</form>
+{% endblock %}
+
+{% block scripts %}<script src="{% static 'interview/mock_timer.js' %}?v=20260914-1"></script>{% endblock %}

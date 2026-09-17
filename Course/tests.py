@@ -208,6 +208,23 @@ class TimetableTests(TestCase):
         self.assertNotContains(response, "<html")
         self.assertEqual(len(response.context["schedules"]), 5)
 
+    def test_timetable_responses_cannot_cache_ajax_fragment_as_full_page(self):
+        self.client.force_login(self.user)
+        schedule_url = reverse("schedule")
+
+        full_response = self.client.get(schedule_url, {"page": 2})
+        ajax_response = self.client.get(
+            schedule_url,
+            {"page": 2},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertContains(full_response, "<html")
+        self.assertNotContains(ajax_response, "<html")
+        for response in (full_response, ajax_response):
+            self.assertIn("no-store", response.headers["Cache-Control"])
+            self.assertIn("X-Requested-With", response.headers["Vary"])
+
     def test_ajax_filter_returns_only_matching_schedule_fragment(self):
         self.client.force_login(self.user)
 

@@ -130,7 +130,9 @@ class AdminDashboardTests(TestCase):
                 passed_user=student.user,
             )
 
-        category = InterviewQuestionCategory.objects.create(title='Python')
+        category, _ = InterviewQuestionCategory.objects.get_or_create(
+            title='Python',
+        )
         interview_question = InterviewQuestion.objects.create(
             title='Что такое список?',
             theme=category,

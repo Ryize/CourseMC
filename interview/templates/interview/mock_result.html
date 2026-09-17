@@ -1,0 +1,40 @@
+{% extends 'interview/mock_base.html' %}
+
+{% block title %}Результат собеседования{% endblock %}
+
+{% block content %}
+<section class="mock-result-hero">
+    <div><span class="mock-eyebrow">Собеседование завершено</span><h1>Ваш результат</h1><p>{{ interview.summary }}</p></div>
+    <div class="mock-score-ring" style="--score: {{ interview.overall_score }}"><strong>{{ interview.overall_score }}%</strong><span>итог</span></div>
+</section>
+
+<section class="mock-score-grid">
+    <article><span>Теория</span><strong>{{ interview.theory_score }}%</strong></article>
+    <article><span>Лайвкодинг</span><strong>{{ interview.live_coding_score }}%</strong></article>
+    <article><span>Уровень</span><strong class="mock-score-stack">{{ interview.get_level_display }}</strong></article>
+    <article><span>Стек</span><strong class="mock-score-stack">{% for framework in interview.frameworks.all %}{{ framework.title }}{% if not forloop.last %} · {% endif %}{% endfor %}</strong></article>
+</section>
+
+<section class="mock-insight-grid">
+    <article class="mock-panel"><h2>Сильные стороны</h2><ul>{% for item in interview.strengths %}<li>{{ item }}</li>{% empty %}<li>Будут видны после следующего разбора.</li>{% endfor %}</ul></article>
+    <article class="mock-panel"><h2>Что повторить</h2><ul>{% for item in interview.weaknesses %}<li>{{ item }}</li>{% empty %}<li>Критичных пробелов не найдено.</li>{% endfor %}</ul></article>
+</section>
+
+<section class="mock-panel mock-live-result"><div><span class="mock-eyebrow">Практика</span><h2>{{ interview.task_title }}</h2></div><p>{{ interview.live_coding_comment|default:"Практическая часть оценена." }}</p>{% if interview.live_coding_repository_url or interview.solution_files.exists %}<div class="mock-file-list">{% if interview.live_coding_repository_url %}<a href="{{ interview.live_coding_repository_url }}" target="_blank" rel="noopener noreferrer">Открыть Git-репозиторий ↗</a>{% endif %}{% for file in interview.solution_files.all %}<a href="{% url 'mock_solution_file_download' file.pk %}">{{ file.original_name }}</a>{% endfor %}</div>{% endif %}</section>
+
+{% for section_title, answers in sections %}
+<section class="mock-result-section">
+    <div class="mock-section-heading"><span>{{ forloop.counter|stringformat:"02d" }}</span><h2>{{ section_title }}</h2></div>
+    {% for answer in answers %}
+    <article class="mock-answer-result mock-answer-{{ answer.result }}">
+        <div><span class="mock-result-pill">{{ answer.get_result_display }}</span><small>{{ answer.category_snapshot }}</small></div>
+        <h3>{{ answer.question_snapshot }}</h3>
+        <p>{{ answer.answer_text|linebreaksbr }}</p>
+        {% if answer.result == 'wrong' and answer.ai_comment %}<aside><b>Комментарий преподавателя ИИ</b>{{ answer.ai_comment }}</aside>{% endif %}
+    </article>
+    {% endfor %}
+</section>
+{% endfor %}
+
+<div class="mock-bottom-links"><a class="mock-primary-link" href="{% url 'mock_interview_history' %}">К истории попыток</a><a class="mock-secondary-link" href="{% url 'test_answer' %}">Обычная тренировка</a></div>
+{% endblock %}

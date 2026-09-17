@@ -9,9 +9,9 @@
           content="width=device-width, initial-scale=1.0">
     <title>Вопросы для интервью</title>
     <link rel="stylesheet"
-          href="{% static 'interview/style.css' %}?v=20260808-4">
+          href="{% static 'interview/style.css' %}?v=20260917-5">
     <link rel="stylesheet"
-          href="{% static 'Course/css/style.css' %}?v=20260808-2">
+          href="{% static 'Course/css/style.css' %}?v=20260915-1">
     <link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}"
           type="image/x-icon">
     <script src="{% static 'interview/form.js' %}?v=20260808-2" defer></script>
@@ -21,83 +21,110 @@
 {% include 'template/header.html' %}
 <main class="interview-content">
     <h1>Вопросы для собеседования</h1>
-    <!-- Create Form -->
-    <form id="form">
-
-        <!-- Details -->
-        <div class="form-control">
-            <label for="question-amount">
-                Количество вопросов (от 10 до 50)
-            </label>
-
-            <input type="number"
-                   id="question-amount"
-                   value="10"
-                   name="amount"
-                   min="10"
-                   max="50"
-                   required>
+    <section class="mock-entry-card">
+        <div>
+            <span class="mock-eyebrow">Новый режим</span>
+            <h2>Мок собеседование</h2>
+            <p>Вопросы по реальным блокам, лайвкодинг и разбор ответов.</p>
         </div>
-        <div class="form-control">
-            <label>Категории
-                <small>(Выберите хотя бы одну)</small>
-            </label>
-            <label><input type="checkbox" name="technologies"
-                          value="random">Случайные</label>
-            {% for i in categories %}
-                <label>
-                    <input type="checkbox"
-                           name="technologies"
-                           value="{{ i }}"
-                           {% if i.title == 'Python' %}
-                               id="python-technology"
-                               aria-controls="python-complexity"
-                               aria-expanded="false"
-                           {% endif %}>
-                    {{ i }}
+        <div class="mock-entry-actions">
+            <a class="mock-primary-link" href="{% url 'mock_interview_start' %}">Пройти мок-собеседование</a>
+            <a class="mock-secondary-link" href="{% url 'mock_interview_history' %}">История прохождений</a>
+        </div>
+    </section>
+    <form id="form" class="quick-training-card">
+        <div class="quick-training-head">
+            <div>
+                <span class="mock-eyebrow">Быстрый режим</span>
+                <h2>Тренировка по вопросам</h2>
+                <p>Соберите короткую подборку по нужным темам и сложности.</p>
+            </div>
+            <div class="quick-amount-field">
+                <label for="question-amount">Количество</label>
+                <span>от 10 до 50 вопросов</span>
+                <input type="number"
+                       id="question-amount"
+                       value="10"
+                       name="amount"
+                       min="10"
+                       max="50"
+                       required>
+            </div>
+        </div>
+
+        <fieldset class="quick-fieldset">
+            <legend>Выберите категории</legend>
+            <p>Можно отметить одну или несколько тем.</p>
+            <div class="quick-category-grid">
+                <label class="quick-choice quick-choice-random">
+                    <input type="checkbox" name="technologies" value="random">
+                    <span>Случайные</span>
                 </label>
-                {% if i.title == 'Python' %}
-                    <label class="range-block"
-                           id="python-complexity"
-                           hidden>
-                        <label>Укажите сложность
-                            <small>(1 - легко, 10 - хард)</small>:
-                        </label>
-                        <label style="display: inline;">
-                            <input type="radio" name="experience_level"
-                                   value="Junior">
-                            Junior
-                        </label>
-
-                        <label style="display: inline;">
-                            <input type="radio" name="experience_level"
-                                   value="Middle">
-                            Middle
-                        </label>
-
-                        <label style="display: inline;">
-                            <input type="radio" name="experience_level"
-                                   value="Senior">
-                            Senior
-                        </label>
-                        <br><br>
-                        <label style="display: inline;" for="complexity-start">От:
-                            <input id="complexity-start"
-                                   style="width: 37px; display: inline;"
-                                   type="number" value="1" max="10"
-                                   name="start"></label>
-                        <label style="display: inline; margin-left: 10px;"
-                               for="complexity-end">До:
-                            <input id="complexity-end"
-                                   style="width: 37px; display: inline;"
-                                   type="number" value="3" max="10"
-                                   name="end"></label>
+                {% for i in categories %}
+                    <label class="quick-choice">
+                        <input type="checkbox"
+                               name="technologies"
+                               value="{{ i }}"
+                               {% if i.title == 'Python' %}
+                                   id="python-technology"
+                                   aria-controls="python-complexity"
+                                   aria-expanded="false"
+                               {% endif %}>
+                        <span>{{ i }}</span>
                     </label>
-                {% endif %}
-            {% endfor %}
-        </div>
+                {% endfor %}
+            </div>
+        </fieldset>
 
-        <div class="interview-submit">
+        {% for i in categories %}
+            {% if i.title == 'Python' %}
+                <fieldset class="quick-complexity range-block"
+                          id="python-complexity"
+                          hidden>
+                    <legend>Сложность Python</legend>
+                    <p>Выберите готовый уровень или настройте диапазон вручную.</p>
+                    <div class="quick-level-grid">
+                        <label class="quick-level-choice">
+                            <input type="radio" name="experience_level" value="Junior">
+                            <span>Junior</span>
+                        </label>
+                        <label class="quick-level-choice">
+                            <input type="radio" name="experience_level" value="Middle">
+                            <span>Middle</span>
+                        </label>
+                        <label class="quick-level-choice">
+                            <input type="radio" name="experience_level" value="Senior">
+                            <span>Senior</span>
+                        </label>
+                    </div>
+                    <div class="quick-range-fields">
+                        <label for="complexity-start">
+                            <span>От</span>
+                            <input id="complexity-start"
+                                   type="number"
+                                   value="1"
+                                   min="1"
+                                   max="10"
+                                   name="start">
+                        </label>
+                        <span class="quick-range-divider">—</span>
+                        <label for="complexity-end">
+                            <span>До</span>
+                            <input id="complexity-end"
+                                   type="number"
+                                   value="3"
+                                   min="1"
+                                   max="10"
+                                   name="end">
+                        </label>
+                        <small>по шкале от 1 до 10</small>
+                    </div>
+                </fieldset>
+            {% endif %}
+        {% endfor %}
+
+        <div class="quick-training-submit">
+            <p>Вопросы, на которые вы ответили, некоторое время не будут повторяться.</p>
             <button id="button" type="submit">Сгенерировать вопросы</button>
         </div>
     </form>

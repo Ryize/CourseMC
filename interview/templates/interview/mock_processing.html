@@ -1,0 +1,16 @@
+{% extends 'interview/mock_base.html' %}
+{% load static %}
+
+{% block title %}Разбор собеседования{% endblock %}
+
+{% block content %}
+<section class="mock-processing-card" data-analyze-url="{% url 'mock_interview_analyze' interview.pk %}" data-result-url="{% url 'mock_interview_result' interview.pk %}">
+    <div class="mock-orbit" aria-hidden="true"><span></span></div>
+    <span class="mock-eyebrow">Этап 3 из 3</span>
+    <h1>{% if interview.status == 'failed' %}Не удалось завершить разбор{% else %}Разбираем собеседование{% endif %}</h1>
+    <p id="mock-processing-message">{% if interview.status == 'failed' %}{{ interview.ai_error }}{% else %}ИИ оценивает ответы и практическое задание. Обычно это занимает до минуты.{% endif %}</p>
+    <button id="mock-analysis-button" class="mock-primary-button" type="button" {% if interview.status != 'failed' %}hidden{% endif %}>Повторить анализ</button>
+</section>
+{% endblock %}
+
+{% block scripts %}<script src="{% static 'interview/mock_processing.js' %}?v=20260914-1"></script>{% endblock %}

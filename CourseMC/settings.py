@@ -67,6 +67,10 @@ PROXYAPI_API_KEY = os.environ.get(
     LOCAL_PROXYAPI_API_KEY,
 )
 PROXYAPI_REVIEW_MODEL = os.environ.get("PROXYAPI_REVIEW_MODEL", "gpt-4o-mini")
+PROXYAPI_MOCK_INTERVIEW_MODEL = os.environ.get(
+    "PROXYAPI_MOCK_INTERVIEW_MODEL",
+    PROXYAPI_REVIEW_MODEL,
+)
 PROXYAPI_REVIEW_API_URL = os.environ.get(
     "PROXYAPI_REVIEW_API_URL",
     "https://api.proxyapi.ru/openai/v1/chat/completions",
