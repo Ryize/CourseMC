@@ -85,13 +85,14 @@ class InterviewQuestionCategoryAdmin(ModelAdmin):
 @admin.register(LiveCodingTask)
 class LiveCodingTaskAdmin(ModelAdmin):
     fields = (
-        'title', 'description', 'starter_file', 'frameworks', 'complexity',
-        'duration_minutes', 'is_active',
+        'title', 'description', 'category', 'level', 'starter_file',
+        'frameworks', 'complexity', 'duration_minutes', 'is_active',
     )
     list_display = (
-        'title', 'framework_names', 'complexity', 'duration_minutes', 'is_active',
+        'title', 'category', 'level', 'framework_names', 'complexity',
+        'duration_minutes', 'is_active',
     )
-    list_filter = ('is_active', 'complexity', 'frameworks')
+    list_filter = ('is_active', 'category', 'level', 'complexity', 'frameworks')
     search_fields = ('title', 'description')
     filter_horizontal = ('frameworks',)
 

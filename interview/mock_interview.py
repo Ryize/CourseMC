@@ -32,6 +32,18 @@ LEVEL_COMPLEXITY_RANGES = {
     MockInterview.Level.MIDDLE: (4, 6),
     MockInterview.Level.SENIOR: (7, 10),
 }
+LIVE_CODING_LEVELS = {
+    MockInterview.Level.JUNIOR: LiveCodingTask.Level.JUNIOR,
+    MockInterview.Level.MIDDLE: LiveCodingTask.Level.MIDDLE,
+    # Для Senior пока используем более сложный пул Middle. Отдельного Senior-пула
+    # нет намеренно: текущий каталог разделён на Junior и Middle.
+    MockInterview.Level.SENIOR: LiveCodingTask.Level.MIDDLE,
+}
+BASE_LIVE_CODING_CATEGORIES = {
+    LiveCodingTask.Category.PYTHON,
+    LiveCodingTask.Category.OOP,
+    LiveCodingTask.Category.ALGORITHMS,
+}
 MOCK_INTERVIEW_LIMIT_WINDOW = timedelta(days=7)
 
 
@@ -144,25 +156,38 @@ def _weighted_sample(queryset, amount):
 
 
 def _task_for_frameworks(frameworks, level):
-    framework_ids = [framework.pk for framework in frameworks]
+    categories = set(BASE_LIVE_CODING_CATEGORIES)
+    framework_titles = {framework.title.casefold() for framework in frameworks}
+    if 'django' in framework_titles:
+        categories.add(LiveCodingTask.Category.DJANGO)
+    if 'fastapi' in framework_titles:
+        categories.add(LiveCodingTask.Category.FASTAPI)
+
+    tasks = list(
+        LiveCodingTask.objects.filter(
+            is_active=True,
+            level=LIVE_CODING_LEVELS[level],
+            category__in=categories,
+        )
+    )
+    if tasks:
+        # Сначала равновероятно выбираем категорию, затем задание внутри неё.
+        # Иначе категория с большим ручным пулом начинала бы выпадать чаще.
+        available_categories = sorted({task.category for task in tasks})
+        selected_category = random.choice(available_categories)
+        return random.choice([
+            task for task in tasks if task.category == selected_category
+        ])
+
+    # Совместимость с базами, где миграция каталога ещё не применена.
     complexity_range = LEVEL_COMPLEXITY_RANGES[level]
-    matching_tasks = (
+    return (
         LiveCodingTask.objects
-        .filter(is_active=True, frameworks__in=framework_ids)
-        .distinct()
+        .filter(is_active=True, complexity__range=complexity_range)
+        .order_by('?')
+        .first()
+        or LiveCodingTask.objects.filter(is_active=True).order_by('?').first()
     )
-    matching = matching_tasks.filter(
-        complexity__range=complexity_range,
-    ).order_by('?').first() or matching_tasks.order_by('?').first()
-    if matching is not None:
-        return matching
-    generic_tasks = (
-        LiveCodingTask.objects
-        .filter(is_active=True, frameworks__isnull=True)
-    )
-    return generic_tasks.filter(
-        complexity__range=complexity_range,
-    ).order_by('?').first() or generic_tasks.order_by('?').first()
 
 
 @transaction.atomic

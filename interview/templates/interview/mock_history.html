@@ -14,7 +14,7 @@
     <a class="mock-history-row" href="{% url 'mock_interview_result' item.pk %}">
         <span class="mock-history-score">{{ item.overall_score }}%</span>
         <span><b>{{ item.get_level_display }}</b><small>{{ item.started_at|date:"d.m.Y в H:i" }}</small></span>
-        <span><b>{% for framework in item.frameworks.all %}{{ framework.title }}{% if not forloop.last %}, {% endif %}{% endfor %}</b><small>Выбранный стек</small></span>
+        <span><b>{% for framework in item.frameworks.all %}{{ framework.title }}{% if not forloop.last %}, {% endif %}{% endfor %}</b><small>Стек · лайвкодинг: {{ item.live_coding_task.get_category_display }}</small></span>
         <span class="mock-history-open">Посмотреть разбор →</span>
     </a>
     {% endfor %}

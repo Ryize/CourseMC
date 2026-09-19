@@ -1050,6 +1050,8 @@ body.mock-interview-page form { max-width: none; margin: 0; background: none; bo
 
 .mock-task-card { padding: 32px; }
 .mock-task-card h2 { margin: 10px 0 18px !important; }
+.mock-task-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.mock-task-meta span { padding: 6px 10px; border: 1px solid var(--mock-border); border-radius: 999px; background: var(--mock-field-bg); color: var(--mock-muted); font-size: 12px; font-weight: 800; }
 .mock-task-description { color: var(--mock-text); }
 .mock-solution-form { margin-top: 20px !important; padding: 32px !important; }
 .mock-solution-form > label:first-of-type { display: block; margin-bottom: 12px; font-size: 20px; font-weight: 800; }

@@ -11,6 +11,10 @@
 
 <section class="mock-panel mock-task-card">
     <span class="mock-eyebrow">Практическое задание</span>
+    <div class="mock-task-meta">
+        <span>{{ interview.live_coding_task.get_category_display }}</span>
+        <span>{{ interview.live_coding_task.get_level_display }}</span>
+    </div>
     <h2>{{ interview.task_title }}</h2>
     <div class="mock-task-description">{{ interview.task_description|linebreaks }}</div>
     {% if interview.live_coding_task.starter_file %}<a class="mock-secondary-link" href="{% url 'mock_task_file_download' interview.pk %}">Скачать файл задания</a>{% endif %}

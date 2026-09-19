@@ -20,7 +20,23 @@
     <article class="mock-panel"><h2>Что повторить</h2><ul>{% for item in interview.weaknesses %}<li>{{ item }}</li>{% empty %}<li>Критичных пробелов не найдено.</li>{% endfor %}</ul></article>
 </section>
 
-<section class="mock-panel mock-live-result"><div><span class="mock-eyebrow">Практика</span><h2>{{ interview.task_title }}</h2></div><p>{{ interview.live_coding_comment|default:"Практическая часть оценена." }}</p>{% if interview.live_coding_repository_url or interview.solution_files.exists %}<div class="mock-file-list">{% if interview.live_coding_repository_url %}<a href="{{ interview.live_coding_repository_url }}" target="_blank" rel="noopener noreferrer">Открыть Git-репозиторий ↗</a>{% endif %}{% for file in interview.solution_files.all %}<a href="{% url 'mock_solution_file_download' file.pk %}">{{ file.original_name }}</a>{% endfor %}</div>{% endif %}</section>
+<section class="mock-panel mock-live-result">
+    <div>
+        <span class="mock-eyebrow">Практика</span>
+        <div class="mock-task-meta">
+            <span>{{ interview.live_coding_task.get_category_display }}</span>
+            <span>{{ interview.live_coding_task.get_level_display }}</span>
+        </div>
+        <h2>{{ interview.task_title }}</h2>
+    </div>
+    <p>{{ interview.live_coding_comment|default:"Практическая часть оценена." }}</p>
+    {% if interview.live_coding_repository_url or interview.solution_files.exists %}
+    <div class="mock-file-list">
+        {% if interview.live_coding_repository_url %}<a href="{{ interview.live_coding_repository_url }}" target="_blank" rel="noopener noreferrer">Открыть Git-репозиторий ↗</a>{% endif %}
+        {% for file in interview.solution_files.all %}<a href="{% url 'mock_solution_file_download' file.pk %}">{{ file.original_name }}</a>{% endfor %}
+    </div>
+    {% endif %}
+</section>
 
 {% for section_title, answers in sections %}
 <section class="mock-result-section">

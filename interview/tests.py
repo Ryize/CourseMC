@@ -270,6 +270,19 @@ class MockInterviewFlowTests(TestCase):
         self.django = InterviewQuestionCategory.objects.get(title='Django')
         self.flask = InterviewQuestionCategory.objects.get(title='Flask')
 
+    def test_live_coding_catalog_has_five_tasks_per_category_and_level(self):
+        for category in LiveCodingTask.Category.values:
+            for level in LiveCodingTask.Level.values:
+                with self.subTest(category=category, level=level):
+                    self.assertEqual(
+                        LiveCodingTask.objects.filter(
+                            category=category,
+                            level=level,
+                            is_active=True,
+                        ).count(),
+                        5,
+                    )
+
     def create_interview(self, *frameworks, level=MockInterview.Level.JUNIOR):
         return create_mock_interview(
             self.user,
@@ -385,6 +398,21 @@ class MockInterviewFlowTests(TestCase):
             interview = self.create_interview(level=level)
 
             self.assertEqual(interview.level, level)
+            expected_task_level = (
+                LiveCodingTask.Level.JUNIOR
+                if level == MockInterview.Level.JUNIOR
+                else LiveCodingTask.Level.MIDDLE
+            )
+            self.assertEqual(interview.live_coding_task.level, expected_task_level)
+            self.assertIn(
+                interview.live_coding_task.category,
+                {
+                    LiveCodingTask.Category.PYTHON,
+                    LiveCodingTask.Category.OOP,
+                    LiveCodingTask.Category.ALGORITHMS,
+                    LiveCodingTask.Category.DJANGO,
+                },
+            )
             self.assertFalse(
                 interview.answers.exclude(original_question__mock_level=level).exists(),
             )
@@ -585,6 +613,14 @@ class MockInterviewFlowTests(TestCase):
 
         self.assertEqual(live_response.status_code, 200)
         self.assertContains(live_response, 'Завершить и отправить на разбор')
+        self.assertContains(
+            live_response,
+            interview.live_coding_task.get_category_display(),
+        )
+        self.assertContains(
+            live_response,
+            interview.live_coding_task.get_level_display(),
+        )
         self.assertEqual(processing_response.status_code, 200)
         self.assertContains(processing_response, 'Разбираем собеседование')
         self.assertIn('csrftoken', processing_response.cookies)

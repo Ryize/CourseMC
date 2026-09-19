@@ -159,10 +159,35 @@ class InterviewQuestionProgress(models.Model):
 class LiveCodingTask(models.Model):
     """Задание практической части тестового собеседования."""
 
+    class Category(models.TextChoices):
+        PYTHON = 'python', 'Python'
+        OOP = 'oop', 'ООП'
+        DJANGO = 'django', 'Django'
+        FASTAPI = 'fastapi', 'FastAPI'
+        ALGORITHMS = 'algorithms', 'Алгоритмы'
+
+    class Level(models.TextChoices):
+        JUNIOR = 'junior', 'Junior'
+        MIDDLE = 'middle', 'Middle'
+
     hard_level = [(i, i) for i in range(1, 11)]
 
     title = models.CharField(max_length=180, verbose_name='Название')
     description = models.TextField(verbose_name='Условие задания')
+    category = models.CharField(
+        max_length=16,
+        choices=Category.choices,
+        default=Category.PYTHON,
+        db_index=True,
+        verbose_name='Категория',
+    )
+    level = models.CharField(
+        max_length=12,
+        choices=Level.choices,
+        default=Level.JUNIOR,
+        db_index=True,
+        verbose_name='Уровень',
+    )
     starter_file = models.FileField(
         upload_to=mock_task_upload_to,
         storage=PrivateMockInterviewStorage(),
@@ -192,7 +217,7 @@ class LiveCodingTask(models.Model):
     class Meta:
         verbose_name = 'Задание лайвкодинга'
         verbose_name_plural = 'Задания лайвкодинга'
-        ordering = ('title', 'pk')
+        ordering = ('category', 'level', 'title', 'pk')
 
     def __str__(self):
         return self.title

@@ -90,7 +90,9 @@ def _active_student(request):
 
 def _owned_interview(request, interview_id):
     return get_object_or_404(
-        MockInterview.objects.prefetch_related('frameworks', 'answers'),
+        MockInterview.objects
+        .select_related('live_coding_task')
+        .prefetch_related('frameworks', 'answers'),
         pk=interview_id,
         user=request.user,
     )
@@ -271,6 +273,7 @@ def mock_interview_history(request):
     history = (
         MockInterview.objects
         .filter(user=request.user, status=MockInterview.Status.COMPLETED)
+        .select_related('live_coding_task')
         .prefetch_related('frameworks')
     )
     return render(request, 'interview/mock_history.html', {
