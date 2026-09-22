@@ -1,7 +1,9 @@
 from datetime import timedelta
 import os
+from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import login_required
+from django.core import signing
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Case, IntegerField, Q, Value, When
@@ -59,6 +61,7 @@ CATEGORY_POPULARITY_ORDER = (
     'Процессы в компании',
     'Общая разработка',
 )
+QUESTION_BATCH_SIGNING_SALT = 'interview.question-batch.v1'
 
 
 def parse_integer(value, default):
@@ -119,13 +122,74 @@ def _private_file_response(field_file, filename):
     return response
 
 
+def _question_batch_url(batch_token):
+    return f'{reverse("test_answer")}?{urlencode({"batch": batch_token})}'
+
+
+def _question_batch(batch_token):
+    try:
+        batch = signing.loads(
+            batch_token,
+            salt=QUESTION_BATCH_SIGNING_SALT,
+        )
+    except signing.BadSignature:
+        return None
+    if not isinstance(batch, dict):
+        return None
+    return batch
+
+
+def _render_question_batch(request, batch, batch_token):
+    question_ids = batch.get('question_ids', [])
+    questions_by_id = InterviewQuestion.objects.filter(
+        pk__in=question_ids,
+    ).select_related('theme').in_bulk()
+    questions = [
+        questions_by_id[question_id]
+        for question_id in question_ids
+        if question_id in questions_by_id
+    ]
+    answered_ids = set(
+        InterviewQuestionProgress.objects.filter(
+            user=request.user,
+            question_id__in=question_ids,
+            status=InterviewQuestionProgress.Status.ANSWERED,
+        ).values_list('question_id', flat=True)
+    )
+    question_cards = [
+        {
+            'question': question,
+            'is_answered': question.pk in answered_ids,
+        }
+        for question in questions
+    ]
+    return render(request, 'interview/questions.html', {
+        'question': questions,
+        'question_cards': question_cards,
+        'batch_token': batch_token,
+        'previous_url': reverse('test_answer'),
+        'amount': batch['amount'],
+        'technologies': batch['technologies'],
+        'start': batch['start'],
+        'end': batch['end'],
+        'random_mode': batch['random_mode'],
+    })
+
+
 @login_required
 def test_answer(request):
     if not _active_student(request):
         return redirect('home')
 
-    amount = parse_integer(request.GET.get('amount'), 0)
     categories = ordered_interview_categories()
+    batch_id = request.GET.get('batch', '').strip()
+    if batch_id:
+        batch = _question_batch(batch_id)
+        if batch is None:
+            return redirect('test_answer')
+        return _render_question_batch(request, batch, batch_id)
+
+    amount = parse_integer(request.GET.get('amount'), 0)
     if not (10 <= amount <= 50):
         return render(request, 'interview/index.html',
                       {'categories': categories})
@@ -162,20 +226,28 @@ def test_answer(request):
         start, end = 1, 3
     questions = questions.select_related('theme')
 
-    question = get_questions(
+    selected_questions = get_questions(
         questions,
         technologies,
         amount,
         user=request.user,
     )
-    mark_questions_as_shown(request.user, question)
-    return render(request, 'interview/questions.html',
-                  {'question': question, 'amount': amount,
-                   'technologies': technologies,
-                   'categories': [i.title for i in categories],
-                   'start': start,
-                   'end': end,
-                   'random_mode': random_mode})
+    mark_questions_as_shown(request.user, selected_questions)
+
+    batch = {
+        'question_ids': [question.pk for question in selected_questions],
+        'amount': amount,
+        'technologies': selected_technologies,
+        'start': start,
+        'end': end,
+        'random_mode': random_mode,
+    }
+    batch_token = signing.dumps(
+        batch,
+        salt=QUESTION_BATCH_SIGNING_SALT,
+        compress=True,
+    )
+    return redirect(_question_batch_url(batch_token))
 
 
 @login_required
@@ -245,6 +317,7 @@ def mock_interview_start(request):
                     request.user,
                     form.cleaned_data['frameworks'],
                     form.cleaned_data['level'],
+                    form.cleaned_data['live_coding_category'],
                 )
             except ValidationError as error:
                 form.add_error(None, error)

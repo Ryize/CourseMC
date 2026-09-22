@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import InterviewQuestionCategory, MockInterview
+from .models import InterviewQuestionCategory, LiveCodingTask, MockInterview
 
 
 FRAMEWORK_TITLES = ('Django', 'Flask', 'FastAPI')
@@ -40,6 +40,19 @@ class MockInterviewStartForm(forms.Form):
         label='Фреймворки',
         help_text='Можно выбрать один или несколько.',
     )
+    live_coding_category = forms.ChoiceField(
+        choices=(
+            ('random', 'Случайная категория'),
+            *LiveCodingTask.Category.choices,
+        ),
+        widget=forms.RadioSelect,
+        label='Категория задачи',
+        initial='random',
+        required=False,
+    )
+
+    def clean_live_coding_category(self):
+        return self.cleaned_data.get('live_coding_category') or 'random'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

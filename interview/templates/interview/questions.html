@@ -9,69 +9,107 @@
           content="width=device-width, initial-scale=1.0">
     <title>Вопросы для интервью</title>
     <link rel="stylesheet"
-          href="{% static 'interview/style.css' %}?v=20260808-4">
+          href="{% static 'interview/style.css' %}?v=20260920-2">
     <link rel="stylesheet"
           href="{% static 'Course/css/style.css' %}?v=20260808-2">
     <link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}"
           type="image/x-icon">
-    <script src="{% static 'interview/questions.js' %}?v=20260812-1" defer></script>
+    <script src="{% static 'interview/questions.js' %}?v=20260920-2" defer></script>
 </head>
 
 <body class="interview-page interview-questions-page">
 {% include 'template/header.html' %}
-<main class="interview-content">
-    <h1>Вопросы для собеседования</h1>
-    <form id="form">
-        {% csrf_token %}
-        <div class="form-control">
-            <input type="hidden"
-                   value="{{ amount }}"
-                   name="amount">
-
-            <input type="hidden" value="{{ start }}" name="start">
-            <input type="hidden" value="{{ end }}" name="end">
+<main class="interview-content questions-shell">
+    <section class="questions-hero">
+        <div>
+            <span class="questions-eyebrow">Быстрый режим</span>
+            <h1>Вопросы для собеседования</h1>
+            <p>Отвечайте вслух и отмечайте вопросы, с которыми справились.</p>
         </div>
-        <div class="form-control">
-            {% if random_mode %}
-                <input type="hidden" name="technologies" value="random">
-            {% else %}
-                {% for i in categories %}
-                    {% if i in technologies %}
-                        <input type="hidden" name="technologies"
-                               value="{{ i }}">
-                    {% endif %}
-                {% endfor %}
-            {% endif %}
-            <small>
-                Нажми на вопрос, если правильно ответил.<br>
-                Неотмеченные вопросы попадут на повторение.<br>
-                Нажатие на номер вопроса откроет поиск в Google.
-            </small><br><br>
-            {% for i in question %}
-                <article class="interview-question" data-question-id="{{ i.pk }}">
+        <div class="questions-summary" aria-label="Параметры подборки">
+            <span><strong>{{ question|length }}</strong> вопросов</span>
+            <span>
+                {% if random_mode %}
+                    Случайные темы
+                {% else %}
+                    {{ technologies|join:", " }}
+                {% endif %}
+            </span>
+        </div>
+    </section>
+
+    <section class="questions-panel">
+        <div class="questions-guide">
+            <div>
+                <span class="questions-guide-icon">✓</span>
+                <p><strong>Отметьте ответ</strong>Нажмите на вопрос, если ответили правильно.</p>
+            </div>
+            <div>
+                <span class="questions-guide-icon">↻</span>
+                <p><strong>Вернитесь позже</strong>Неотмеченные вопросы попадут на повторение.</p>
+            </div>
+            <div>
+                <span class="questions-guide-icon">↗</span>
+                <p><strong>Найдите пояснение</strong>Номер вопроса откроет поиск в Google.</p>
+            </div>
+        </div>
+
+        <div class="questions-list">
+            {% for card in question_cards %}
+                <article class="interview-question{% if card.is_answered %} is-answered{% endif %}"
+                         data-question-id="{{ card.question.pk }}">
                     <a class="question-search"
-                       href="https://www.google.com/search?q=Python+{{ i.title|urlencode }}"
+                       href="https://www.google.com/search?q={{ card.question.title|urlencode }}"
                        target="_blank"
-                       rel="noopener noreferrer">{{ forloop.counter }})</a>
+                       rel="noopener noreferrer"
+                       aria-label="Найти ответ на вопрос {{ forloop.counter }} в Google">{{ forloop.counter }}</a>
                     <div class="interview-question-content">
+                        <div class="question-meta">
+                            <span>{{ card.question.theme.title|default:"Общая разработка" }}</span>
+                        </div>
                         <button type="button"
-                                class="interview-question-toggle"
-                                title="Сложность: {{ i.complexity }}. Нажмите, если ответили на вопрос"
-                                aria-pressed="false"
+                                class="interview-question-toggle{% if card.is_answered %} is-answered{% endif %}"
+                                title="{% if card.is_answered %}Ответ отмечен. Нажмите ещё раз, чтобы вернуть вопрос на повторение{% else %}Нажмите, если ответили на вопрос{% endif %}"
+                                aria-pressed="{% if card.is_answered %}true{% else %}false{% endif %}"
                                 data-action="answered"
-                                data-url="{% url 'interview_question_progress' i.pk %}">{{ i.title }}</button>
-                        <span class="question-action-status" aria-live="polite"></span>
+                                data-url="{% url 'interview_question_progress' card.question.pk %}">{{ card.question.title }}</button>
+                        <span class="question-action-status" aria-live="polite">{% if card.is_answered %}Отвечено{% endif %}</span>
                     </div>
                 </article>
+            {% empty %}
+                <div class="questions-empty">
+                    <h2>Вопросы больше недоступны</h2>
+                    <p>Вернитесь к настройкам и создайте новую подборку.</p>
+                </div>
             {% endfor %}
         </div>
 
-        <div class="interview-submit">
-            <button id="button" type="submit">Сгенерировать заново</button>
-            <br>
-            <a href="javascript:history.back()">⏎ Назад</a>
-        </div>
-    </form>
+        <form id="form"
+              class="questions-actions"
+              method="get"
+              action="{% url 'test_answer' %}"
+              data-batch-token="{{ batch_token }}"
+              data-history-key="interview-question-batches-{{ user.pk }}">
+            {% csrf_token %}
+            <input type="hidden" value="{{ amount }}" name="amount">
+            <input type="hidden" value="{{ start }}" name="start">
+            <input type="hidden" value="{{ end }}" name="end">
+            <input type="hidden" value="1" name="regenerate">
+            {% if random_mode %}
+                <input type="hidden" name="technologies" value="random">
+            {% else %}
+                {% for technology in technologies %}
+                    <input type="hidden" name="technologies" value="{{ technology }}">
+                {% endfor %}
+            {% endif %}
+            <a class="questions-back" href="{{ previous_url }}">
+                <span aria-hidden="true">←</span> Назад
+            </a>
+            <button id="button" type="submit">
+                Сгенерировать заново <span aria-hidden="true">↻</span>
+            </button>
+        </form>
+    </section>
 </main>
 {% include 'template/footer.html' %}
 </body>

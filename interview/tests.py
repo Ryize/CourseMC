@@ -68,7 +68,7 @@ class InterviewViewTests(TestCase):
             'interview.views.Student.objects.for_user',
             return_value=student,
         ):
-            return self.client.get('/interview/', params)
+            return self.client.get('/interview/', params, follow=True)
 
     def test_categories_are_ordered_by_popularity_then_alphabetically(self):
         InterviewQuestion.objects.all().delete()
@@ -161,6 +161,67 @@ class InterviewViewTests(TestCase):
             question.theme.title == 'Python'
             for question in response.context['question']
         ))
+
+    def test_question_batch_does_not_change_when_page_is_refreshed(self):
+        response = self.get_as_student({
+            'amount': 10,
+            'technologies': 'random',
+        })
+        batch_token = response.context['batch_token']
+        original_ids = [
+            question.pk for question in response.context['question']
+        ]
+        original_show_counts = dict(
+            InterviewQuestionProgress.objects.filter(
+                user=self.user,
+                question_id__in=original_ids,
+            ).values_list('question_id', 'shown_count')
+        )
+
+        refreshed = self.get_as_student({'batch': batch_token})
+
+        self.assertEqual(
+            [question.pk for question in refreshed.context['question']],
+            original_ids,
+        )
+        self.assertEqual(
+            dict(
+                InterviewQuestionProgress.objects.filter(
+                    user=self.user,
+                    question_id__in=original_ids,
+                ).values_list('question_id', 'shown_count')
+            ),
+            original_show_counts,
+        )
+
+    def test_regenerate_creates_new_signed_batch_without_server_history(self):
+        params = {'amount': 10, 'technologies': 'random'}
+        first_response = self.get_as_student(params)
+
+        second_response = self.get_as_student({**params, 'regenerate': 1})
+
+        self.assertNotEqual(
+            first_response.context['batch_token'],
+            second_response.context['batch_token'],
+        )
+        self.assertNotIn('interview_question_batches', self.client.session)
+        self.assertContains(
+            second_response,
+            'data-history-key="interview-question-batches-',
+            html=False,
+        )
+
+    def test_modified_question_batch_token_is_rejected(self):
+        response = self.get_as_student({
+            'amount': 10,
+            'technologies': 'random',
+        })
+
+        modified_response = self.get_as_student({
+            'batch': f'{response.context["batch_token"]}modified',
+        })
+
+        self.assertTemplateUsed(modified_response, 'interview/index.html')
 
     def test_answered_question_is_excluded_until_cooldown_ends(self):
         question = InterviewQuestion.objects.filter(theme=self.python).first()
@@ -283,11 +344,17 @@ class MockInterviewFlowTests(TestCase):
                         5,
                     )
 
-    def create_interview(self, *frameworks, level=MockInterview.Level.JUNIOR):
+    def create_interview(
+        self,
+        *frameworks,
+        level=MockInterview.Level.JUNIOR,
+        live_coding_category='random',
+    ):
         return create_mock_interview(
             self.user,
             frameworks or (self.django,),
             level,
+            live_coding_category,
         )
 
     @patch('interview.views._active_student', return_value=SimpleNamespace())
@@ -298,6 +365,9 @@ class MockInterviewFlowTests(TestCase):
         self.assertContains(response, 'Тестовое собеседование')
         self.assertContains(response, 'Django')
         self.assertContains(response, 'FastAPI')
+        self.assertContains(response, 'Выберите категорию задачи')
+        self.assertContains(response, 'Случайная категория')
+        self.assertContains(response, 'Алгоритмы')
         self.assertContains(response, 'Осталось попыток: 3 из 3')
         self.assertContains(
             response,
@@ -406,16 +476,77 @@ class MockInterviewFlowTests(TestCase):
             self.assertEqual(interview.live_coding_task.level, expected_task_level)
             self.assertIn(
                 interview.live_coding_task.category,
-                {
-                    LiveCodingTask.Category.PYTHON,
-                    LiveCodingTask.Category.OOP,
-                    LiveCodingTask.Category.ALGORITHMS,
-                    LiveCodingTask.Category.DJANGO,
-                },
+                LiveCodingTask.Category.values,
             )
             self.assertFalse(
                 interview.answers.exclude(original_question__mock_level=level).exists(),
             )
+
+    def test_live_coding_task_is_never_repeated_for_same_student(self):
+        first_interview = self.create_interview()
+
+        second_interview = self.create_interview()
+
+        self.assertNotEqual(
+            first_interview.live_coding_task_id,
+            second_interview.live_coding_task_id,
+        )
+
+    def test_student_can_choose_live_coding_category(self):
+        interview = self.create_interview(
+            live_coding_category=LiveCodingTask.Category.OOP,
+        )
+
+        self.assertEqual(
+            interview.live_coding_task.category,
+            LiveCodingTask.Category.OOP,
+        )
+
+    def test_invalid_live_coding_category_is_rejected(self):
+        with self.assertRaisesMessage(
+            ValidationError,
+            'Выберите корректную категорию задачи',
+        ):
+            self.create_interview(live_coding_category='invalid')
+
+    def test_live_coding_task_used_by_another_student_remains_available(self):
+        only_task = LiveCodingTask.objects.filter(
+            category=LiveCodingTask.Category.PYTHON,
+            level=LiveCodingTask.Level.JUNIOR,
+        ).first()
+        LiveCodingTask.objects.exclude(pk=only_task.pk).update(is_active=False)
+        other_user = User.objects.create_user(
+            'another-mock-student',
+            password='password',
+        )
+        MockInterview.objects.create(
+            user=other_user,
+            live_coding_task=only_task,
+        )
+
+        interview = self.create_interview()
+
+        self.assertEqual(interview.live_coding_task_id, only_task.pk)
+
+    def test_exhausted_live_coding_pool_does_not_repeat_task(self):
+        only_task = LiveCodingTask.objects.filter(
+            category=LiveCodingTask.Category.PYTHON,
+            level=LiveCodingTask.Level.JUNIOR,
+        ).first()
+        LiveCodingTask.objects.filter(
+            level=LiveCodingTask.Level.JUNIOR,
+            category__in=LiveCodingTask.Category.values,
+        ).exclude(pk=only_task.pk).update(is_active=False)
+        first_interview = self.create_interview()
+
+        with self.assertRaisesMessage(
+            ValidationError,
+            'Вы уже проходили все доступные задания',
+        ):
+            self.create_interview()
+
+        self.assertEqual(first_interview.live_coding_task_id, only_task.pk)
+        self.assertEqual(MockInterview.objects.filter(user=self.user).count(), 1)
 
     def test_recently_assessed_questions_are_not_selected_again(self):
         first_interview = self.create_interview()

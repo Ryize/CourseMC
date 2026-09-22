@@ -66,6 +66,14 @@
         {% endfor %}
     </div>
     {% if form.frameworks.errors %}<div class="mock-field-error">{{ form.frameworks.errors }}</div>{% endif %}
+    <h2>Выберите категорию задачи</h2>
+    <p class="mock-muted">Отработайте конкретную тему или оставьте случайный выбор.</p>
+    <div class="mock-level-grid mock-category-grid">
+        {% for choice in form.live_coding_category %}
+            <label class="mock-level-choice mock-category-choice">{{ choice.tag }} <span><b>{{ choice.choice_label }}</b><small>{% if choice.data.value == 'random' %}Подберём тему автоматически{% elif choice.data.value == 'python' %}Практика с языком и стандартной библиотекой{% elif choice.data.value == 'oop' %}Классы, связи и проектирование объектов{% elif choice.data.value == 'django' %}Задача на Django и веб-разработку{% elif choice.data.value == 'fastapi' %}API, валидация и асинхронный код{% else %}Структуры данных и решение задач{% endif %}</small></span></label>
+        {% endfor %}
+    </div>
+    {% if form.live_coding_category.errors %}<div class="mock-field-error">{{ form.live_coding_category.errors }}</div>{% endif %}
     <div class="mock-start-submit">
         <button class="mock-primary-button" type="submit">Начать собеседование</button>
         <span>Осталось попыток: {{ availability.remaining }} из {{ availability.limit }}</span>

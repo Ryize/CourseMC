@@ -27,11 +27,6 @@ ANSWER_COOLDOWNS = {
     MockInterviewAnswer.Result.PARTIAL: timedelta(days=7),
     MockInterviewAnswer.Result.WRONG: timedelta(days=2),
 }
-LEVEL_COMPLEXITY_RANGES = {
-    MockInterview.Level.JUNIOR: (1, 3),
-    MockInterview.Level.MIDDLE: (4, 6),
-    MockInterview.Level.SENIOR: (7, 10),
-}
 LIVE_CODING_LEVELS = {
     MockInterview.Level.JUNIOR: LiveCodingTask.Level.JUNIOR,
     MockInterview.Level.MIDDLE: LiveCodingTask.Level.MIDDLE,
@@ -39,11 +34,7 @@ LIVE_CODING_LEVELS = {
     # нет намеренно: текущий каталог разделён на Junior и Middle.
     MockInterview.Level.SENIOR: LiveCodingTask.Level.MIDDLE,
 }
-BASE_LIVE_CODING_CATEGORIES = {
-    LiveCodingTask.Category.PYTHON,
-    LiveCodingTask.Category.OOP,
-    LiveCodingTask.Category.ALGORITHMS,
-}
+RANDOM_LIVE_CODING_CATEGORY = 'random'
 MOCK_INTERVIEW_LIMIT_WINDOW = timedelta(days=7)
 
 
@@ -155,48 +146,48 @@ def _weighted_sample(queryset, amount):
     return selected
 
 
-def _task_for_frameworks(frameworks, level):
-    categories = set(BASE_LIVE_CODING_CATEGORIES)
-    framework_titles = {framework.title.casefold() for framework in frameworks}
-    if 'django' in framework_titles:
-        categories.add(LiveCodingTask.Category.DJANGO)
-    if 'fastapi' in framework_titles:
-        categories.add(LiveCodingTask.Category.FASTAPI)
-
-    tasks = list(
-        LiveCodingTask.objects.filter(
-            is_active=True,
-            level=LIVE_CODING_LEVELS[level],
-            category__in=categories,
-        )
+def _live_coding_task(user, level, category):
+    used_task_ids = (
+        MockInterview.objects
+        .filter(user=user, live_coding_task__isnull=False)
+        .values_list('live_coding_task_id', flat=True)
     )
-    if tasks:
-        # Сначала равновероятно выбираем категорию, затем задание внутри неё.
-        # Иначе категория с большим ручным пулом начинала бы выпадать чаще.
+
+    tasks = LiveCodingTask.objects.filter(
+        is_active=True,
+        level=LIVE_CODING_LEVELS[level],
+    ).exclude(pk__in=used_task_ids)
+    if category != RANDOM_LIVE_CODING_CATEGORY:
+        tasks = tasks.filter(category=category)
+    tasks = list(tasks)
+    if not tasks:
+        return None
+
+    if category == RANDOM_LIVE_CODING_CATEGORY:
+        # Категории равновероятны независимо от количества заданий в каждой.
         available_categories = sorted({task.category for task in tasks})
-        selected_category = random.choice(available_categories)
-        return random.choice([
-            task for task in tasks if task.category == selected_category
-        ])
-
-    # Совместимость с базами, где миграция каталога ещё не применена.
-    complexity_range = LEVEL_COMPLEXITY_RANGES[level]
-    return (
-        LiveCodingTask.objects
-        .filter(is_active=True, complexity__range=complexity_range)
-        .order_by('?')
-        .first()
-        or LiveCodingTask.objects.filter(is_active=True).order_by('?').first()
-    )
+        category = random.choice(available_categories)
+        tasks = [task for task in tasks if task.category == category]
+    return random.choice(tasks)
 
 
 @transaction.atomic
-def create_mock_interview(user, frameworks, level=MockInterview.Level.JUNIOR):
+def create_mock_interview(
+    user,
+    frameworks,
+    level=MockInterview.Level.JUNIOR,
+    live_coding_category=RANDOM_LIVE_CODING_CATEGORY,
+):
     frameworks = list(frameworks)
     if not frameworks:
         raise ValidationError('Выберите хотя бы один фреймворк.')
     if level not in MockInterview.Level.values:
         raise ValidationError('Выберите корректный уровень собеседования.')
+    if live_coding_category not in {
+        RANDOM_LIVE_CODING_CATEGORY,
+        *LiveCodingTask.Category.values,
+    }:
+        raise ValidationError('Выберите корректную категорию задачи.')
 
     availability = mock_interview_availability(
         user,
@@ -230,9 +221,12 @@ def create_mock_interview(user, frameworks, level=MockInterview.Level.JUNIOR):
             for question in _weighted_sample(questions, FRAMEWORK_QUESTION_COUNT)
         )
 
-    task = _task_for_frameworks(frameworks, level)
+    task = _live_coding_task(user, level, live_coding_category)
     if task is None:
-        raise ValidationError('Пока не добавлено активное задание лайвкодинга.')
+        raise ValidationError(
+            'Для выбранных уровня и категории пока нет нового задания '
+            'лайвкодинга. Вы уже проходили все доступные задания.',
+        )
 
     interview = MockInterview.objects.create(
         user=user,
