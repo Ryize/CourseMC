@@ -12,19 +12,22 @@
     <link rel="stylesheet"
           href="{% static 'Course/css/style.css' %}">
     <link rel="stylesheet"
-          href="{% static 'py_interpreter/interpreter.css' %}">
-    <script src="{% static 'py_interpreter/interpreter.js' %}" defer></script>
+          href="{% static 'py_interpreter/interpreter.css' %}?v=6">
+    <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/src-min-noconflict/ace.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/src-min-noconflict/ext-language_tools.js" defer></script>
+    <script src="{% static 'py_interpreter/interpreter.js' %}?v=5" defer></script>
 </head>
 <body class="interpreter-page">
 {% include 'template/header.html' %}
 
 <main class="interpreter"
-      data-worker-url="{% static 'py_interpreter/worker.mjs' %}?v=2">
-    <div class="interpreter__heading">
+      data-worker-url="{% static 'py_interpreter/worker.mjs' %}?v=6"
+      data-ace-base-url="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/src-min-noconflict">
+    <div class="interpreter__hero">
         <div>
-            <h1>Твой Интерпретатор</h1>
-            <p>Онлайн запуск Python кода.</p>
-            <p>Код выполняется только в вашем браузере.</p>
+            <span class="interpreter__eyebrow">Практика Python</span>
+            <h1>Твой интерпретатор</h1>
+            <p>Пишите, запускайте и проверяйте Python-код прямо здесь. Код выполняется только в вашем браузере.</p>
         </div>
         <span class="interpreter__status"
               id="interpreter-status"
@@ -32,37 +35,74 @@
     </div>
     <section class="interpreter__workspace"
              aria-label="Python-интерпретатор">
-        <div class="interpreter__panel">
-            <label for="python-code">Код Python</label>
-            <textarea id="python-code"
-                      spellcheck="false"
-                      autocomplete="off"
-                      maxlength="20000">def main():
+        <section class="interpreter__panel interpreter__code-panel" aria-label="Редактор кода">
+            <div class="interpreter__panel-heading">
+                <div>
+                    <span class="interpreter__panel-kicker">Редактор</span>
+                    <h2>main.py</h2>
+                </div>
+                <span class="interpreter__language">Python 3</span>
+            </div>
+            <div class="interpreter__toolbar" aria-label="Действия с кодом">
+                <button type="button" class="interpreter__tool" id="copy-code">Копировать</button>
+                <button type="button" class="interpreter__tool" id="download-code">Скачать .py</button>
+                <button type="button" class="interpreter__tool" id="clear-code">Очистить код</button>
+            </div>
+            <div class="interpreter__editor-shell">
+                <label class="interpreter__visually-hidden" for="python-code">Код Python</label>
+                <textarea id="python-code"
+                          spellcheck="false"
+                          autocomplete="off"
+                          maxlength="20000">def main():
     print("Hello, CourseMC!")
 
 
 main()</textarea>
-        </div>
-
-        <div class="interpreter__panel">
-            <div class="interpreter__output-heading">
-                <label for="python-output">Результат</label>
-                <button type="button"
-                        class="interpreter__clear"
-                        id="clear-output">Очистить</button>
+                <div id="python-editor" role="textbox" aria-label="Редактор Python-кода" aria-multiline="true" hidden></div>
             </div>
-            <pre id="python-output"
-                 tabindex="0"
-                 aria-live="polite">Интерпретатор загружается…</pre>
-        </div>
+            <div class="interpreter__editor-footer">
+                <span id="editor-position">Строка 1, столбец 1</span>
+                <span id="draft-status">Черновик сохраняется в браузере</span>
+            </div>
+        </section>
+
+        <section class="interpreter__panel interpreter__console-panel" aria-label="Консоль">
+            <div class="interpreter__panel-heading">
+                <div>
+                    <span class="interpreter__panel-kicker">Результат</span>
+                    <h2>Консоль</h2>
+                </div>
+                <div class="interpreter__console-tools">
+                    <button type="button" class="interpreter__tool" id="copy-output">Копировать</button>
+                    <button type="button" class="interpreter__tool" id="clear-output">Очистить</button>
+                </div>
+            </div>
+            <div class="interpreter__terminal" id="python-terminal">
+                <pre id="python-output"
+                     tabindex="0"
+                     aria-live="polite">Интерпретатор загружается…</pre>
+                <form id="python-input-form" class="interpreter__input-line" hidden>
+                    <label id="python-input-prompt" for="python-stdin"></label>
+                    <input id="python-stdin"
+                           type="text"
+                           maxlength="10000"
+                           spellcheck="false"
+                           autocomplete="off"
+                           aria-label="Ввод для Python input()">
+                    <button type="submit">Ввод ↵</button>
+                </form>
+            </div>
+        </section>
     </section>
 
     <div class="interpreter__actions">
-        <button type="button" id="run-code" disabled>Запустить</button>
+        <button type="button" class="interpreter__run" id="run-code" disabled>▶ Запустить код</button>
         <button type="button"
                 class="interpreter__stop"
                 id="stop-code"
                 disabled>Остановить</button>
+        <button type="button" class="interpreter__retry" id="retry-python" hidden>Повторить загрузку Python</button>
+        <span class="interpreter__shortcut">Ctrl/⌘ + Enter — запуск · Ctrl/⌘ + Пробел — подсказки</span>
     </div>
 
     <noscript>
