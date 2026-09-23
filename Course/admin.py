@@ -7,10 +7,10 @@ from django.contrib.admin import SimpleListFilter
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group, User
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Case, Count, IntegerField, Q, Value, When
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponseNotAllowed, HttpResponseRedirect
 from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
@@ -27,6 +27,7 @@ from billing.admin import UserListFilter
 from CourseMC.widgets import RichTextEditorWidget
 from .curriculum import create_curriculum_draft, publish_curriculum_version
 from .forms import ScheduleAdminForm
+from .lesson_solution_ai import generate_lesson_solution_review
 from .models import *
 
 
@@ -1232,8 +1233,8 @@ class AdditionalLessonsAdmin(ModelAdmin):
 
 class LessonSolutionSubmissionInline(TabularInline):
     model = LessonSolutionSubmission
-    fields = ('attempt_number', 'submitted_at')
-    readonly_fields = ('attempt_number', 'submitted_at')
+    fields = ('attempt_number', 'submitted_at', 'ai_status', 'ai_reviewed_at')
+    readonly_fields = fields
     extra = 0
     can_delete = False
 
@@ -1246,6 +1247,7 @@ class LessonSolutionSubmissionInline(TabularInline):
 
 @admin.register(LessonSolution)
 class LessonSolutionAdmin(ModelAdmin):
+    change_form_outer_before_template = 'Course/admin/lesson_solution_ai_feedback.html'
     fields = (
         'student',
         'schedule',
@@ -1292,6 +1294,121 @@ class LessonSolutionAdmin(ModelAdmin):
     list_select_related = ('student', 'student__groups', 'schedule', 'reviewed_by')
     list_per_page = 50
     inlines = (LessonSolutionSubmissionInline,)
+
+    def get_urls(self):
+        return [
+            path(
+                '<path:object_id>/apply-ai-feedback/',
+                self.admin_site.admin_view(self.apply_ai_feedback),
+                name='Course_lessonsolution_apply_ai_feedback',
+            ),
+            path(
+                '<path:object_id>/retry-ai-review/',
+                self.admin_site.admin_view(self.retry_ai_review),
+                name='Course_lessonsolution_retry_ai_review',
+            ),
+        ] + super().get_urls()
+
+    @staticmethod
+    def _can_retry_ai(submission):
+        return submission is not None and (
+            submission.ai_status in (
+                LessonSolutionSubmission.AIStatus.FAILED,
+                LessonSolutionSubmission.AIStatus.NOT_REQUESTED,
+            )
+            or (
+                submission.ai_status == LessonSolutionSubmission.AIStatus.PENDING
+                and submission.submitted_at < timezone.now() - timedelta(minutes=2)
+            )
+        )
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        solution = self.get_object(request, object_id)
+        context = dict(extra_context or {})
+        if solution is not None:
+            context['ai_submission'] = solution.submissions.order_by(
+                '-attempt_number', '-pk',
+            ).first()
+            context['ai_retry_allowed'] = self._can_retry_ai(context['ai_submission'])
+            context['ai_apply_url'] = reverse(
+                'admin:Course_lessonsolution_apply_ai_feedback',
+                args=(solution.pk,),
+            )
+            context['ai_retry_url'] = reverse(
+                'admin:Course_lessonsolution_retry_ai_review',
+                args=(solution.pk,),
+            )
+            context['ai_can_change'] = self.has_change_permission(request, solution)
+        return super().change_view(request, object_id, form_url, context)
+
+    def _reviewable_solution(self, request, object_id):
+        solution = self.get_object(request, object_id)
+        if solution is None:
+            raise Http404
+        if not self.has_change_permission(request, solution):
+            raise PermissionDenied
+        return solution
+
+    def apply_ai_feedback(self, request, object_id):
+        if request.method != 'POST':
+            return HttpResponseNotAllowed(['POST'])
+        solution = self._reviewable_solution(request, object_id)
+        with transaction.atomic():
+            solution = LessonSolution.objects.select_for_update().get(pk=solution.pk)
+            submission = solution.submissions.order_by('-attempt_number', '-pk').first()
+            if (
+                submission is None
+                or request.POST.get('submission_id') != str(submission.pk)
+                or solution.status != LessonSolution.Status.PENDING
+                or submission.ai_status not in (
+                    LessonSolutionSubmission.AIStatus.READY,
+                    LessonSolutionSubmission.AIStatus.PARTIAL,
+                )
+                or not submission.ai_issue_count
+                or not submission.ai_feedback.strip()
+            ):
+                self.message_user(
+                    request,
+                    'Рекомендация устарела или пока не готова. Обновите страницу.',
+                    level='error',
+                )
+            else:
+                solution.teacher_comment = submission.ai_feedback
+                solution.status = LessonSolution.Status.NEEDS_REVISION
+                solution.reviewed_by = request.user
+                solution.reviewed_at = timezone.now()
+                solution.save(update_fields=(
+                    'teacher_comment', 'status', 'reviewed_by', 'reviewed_at',
+                    'updated_at',
+                ))
+                self.message_user(request, 'Работа отправлена на доработку с текстом ИИ.')
+        return HttpResponseRedirect(reverse(
+            'admin:Course_lessonsolution_change', args=(solution.pk,),
+        ))
+
+    def retry_ai_review(self, request, object_id):
+        if request.method != 'POST':
+            return HttpResponseNotAllowed(['POST'])
+        solution = self._reviewable_solution(request, object_id)
+        submission = solution.submissions.order_by('-attempt_number', '-pk').first()
+        if (
+            submission is None
+            or request.POST.get('submission_id') != str(submission.pk)
+            or not self._can_retry_ai(submission)
+        ):
+            self.message_user(request, 'Повторная проверка сейчас недоступна.', level='error')
+        else:
+            result = generate_lesson_solution_review(submission.pk, force=True)
+            if result.ai_status in (
+                LessonSolutionSubmission.AIStatus.READY,
+                LessonSolutionSubmission.AIStatus.PARTIAL,
+            ):
+                self.message_user(request, 'Рекомендация ИИ обновлена.')
+            else:
+                self.message_user(request, result.ai_error or 'Проверка не удалась.', level='warning')
+        return HttpResponseRedirect(reverse(
+            'admin:Course_lessonsolution_change', args=(solution.pk,),
+        ))
 
     def get_queryset(self, request):
         queryset = (

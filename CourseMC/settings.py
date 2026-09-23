@@ -71,6 +71,10 @@ PROXYAPI_MOCK_INTERVIEW_MODEL = os.environ.get(
     "PROXYAPI_MOCK_INTERVIEW_MODEL",
     PROXYAPI_REVIEW_MODEL,
 )
+PROXYAPI_LESSON_SOLUTION_MODEL = os.environ.get(
+    "PROXYAPI_LESSON_SOLUTION_MODEL",
+    PROXYAPI_REVIEW_MODEL,
+)
 PROXYAPI_REVIEW_API_URL = os.environ.get(
     "PROXYAPI_REVIEW_API_URL",
     "https://api.proxyapi.ru/openai/v1/chat/completions",

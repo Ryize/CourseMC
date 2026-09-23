@@ -1,0 +1,39 @@
+{% if ai_submission %}
+<section class="mb-6 rounded-default border border-base-200 bg-white p-6 dark:border-base-800 dark:bg-base-900" aria-labelledby="ai-review-heading">
+    <div class="flex flex-col gap-2">
+        <h2 id="ai-review-heading" class="text-lg font-semibold">Предварительная проверка ИИ</h2>
+        <p class="text-sm text-base-500">Это рекомендация для преподавателя, а не итоговая оценка. Проверьте замечания перед отправкой ученику.</p>
+        <p class="text-sm"><strong>Состояние:</strong> {{ ai_submission.get_ai_status_display }}</p>
+        {% if ai_submission.ai_source_summary %}
+            <p class="text-sm text-base-500">{{ ai_submission.ai_source_summary }}</p>
+        {% endif %}
+        {% if ai_submission.ai_feedback %}
+            <pre class="whitespace-pre-wrap break-words rounded-default bg-base-50 p-4 text-sm dark:bg-base-800">{{ ai_submission.ai_feedback }}</pre>
+        {% endif %}
+        {% if ai_submission.ai_error %}
+            <p class="text-sm text-red-600" role="alert">{{ ai_submission.ai_error }}</p>
+        {% endif %}
+    </div>
+
+    {% if ai_can_change and original.status == 'pending' and ai_submission.ai_issue_count and ai_submission.ai_feedback %}
+        {% if ai_submission.ai_status == 'ready' or ai_submission.ai_status == 'partial' %}
+        <form method="post" action="{{ ai_apply_url }}" class="mt-5">
+            {% csrf_token %}
+            <input type="hidden" name="submission_id" value="{{ ai_submission.pk }}">
+            <button type="submit" class="rounded-default bg-primary-600 px-4 py-2 font-medium text-white hover:bg-primary-700">
+                Отправить на доработку с этим текстом
+            </button>
+        </form>
+        {% endif %}
+    {% endif %}
+    {% if ai_can_change and ai_retry_allowed %}
+        <form method="post" action="{{ ai_retry_url }}" class="mt-5">
+            {% csrf_token %}
+            <input type="hidden" name="submission_id" value="{{ ai_submission.pk }}">
+            <button type="submit" class="rounded-default border border-base-300 px-4 py-2 font-medium dark:border-base-700">
+                Повторить проверку ИИ
+            </button>
+        </form>
+    {% endif %}
+</section>
+{% endif %}

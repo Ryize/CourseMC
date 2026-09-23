@@ -1,9 +1,14 @@
 import tempfile
+import importlib
+import json
+import requests
 from datetime import timedelta
-from io import StringIO
+from io import BytesIO, StringIO
+from unittest.mock import Mock, patch
 
 from django.contrib import admin
-from django.contrib.auth.models import User
+from django.apps import apps
+from django.contrib.auth.models import Permission, User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.db import IntegrityError, transaction
@@ -17,6 +22,7 @@ from .models import (
     DirectionStudy,
     LearnGroup,
     LessonSolution,
+    LessonSolutionSubmission,
     Schedule,
     Student,
 )
@@ -722,6 +728,300 @@ class LessonSolutionTests(TimetableTests):
         self.assertEqual(response.context['source_code'], '')
         self.assertContains(response, 'Код превышает лимит редактора')
         self.assertContains(response, 'Скачать оригинал')
+
+    @override_settings(PROXYAPI_API_KEY='test-key', PROXYAPI_LESSON_SOLUTION_MODEL='gpt-4o-mini')
+    def test_upload_creates_ai_suggestion_and_admin_can_send_it_for_revision(self):
+        self.client.force_login(self.user)
+        secret = 'sk_abcdefghijklmnopqrstuvwxyz123456'
+        response_payload = {
+            'choices': [{'message': {'content': json.dumps({
+                'summary': 'Есть ошибка в обработке пустого списка.',
+                'issues': [{'file': 'solution.py', 'problem': 'solution.py: Учтите пустой список.'}],
+            })}}],
+        }
+        with patch('Course.lesson_solution_ai.requests.post') as ai_post:
+            ai_post.return_value.json.return_value = response_payload
+            with self.captureOnCommitCallbacks(execute=True):
+                upload_response = self._upload(SimpleUploadedFile(
+                    'solution.py', f'API_KEY = "{secret}"\nprint(1)'.encode(),
+                ))
+
+        self.assertEqual(upload_response.status_code, 302)
+        submission = LessonSolutionSubmission.objects.get()
+        self.assertEqual(submission.ai_status, submission.AIStatus.READY)
+        self.assertEqual(submission.ai_issue_count, 1)
+        self.assertEqual(submission.ai_feedback, '1. Учтите пустой список.')
+        request_payload = ai_post.call_args.kwargs['json']
+        self.assertEqual(request_payload['model'], 'gpt-4o-mini')
+        review_rules = request_payload['messages'][0]['content']
+        self.assertIn('решение начинающего ученика', review_rules)
+        self.assertIn('обычном допустимом примере', review_rules)
+        self.assertIn('Не считай ошибками отсутствие комментариев', review_rules)
+        self.assertIn('Если существенных ошибок нет, верни пустой issues', review_rules)
+        self.assertIn('<REDACTED>', request_payload['messages'][1]['content'])
+        self.assertNotIn(secret, request_payload['messages'][1]['content'])
+
+        student_page = self.client.get(reverse('schedule'))
+        self.assertNotContains(student_page, 'Учтите пустой список.')
+
+        admin_user = User.objects.create_superuser('ai-admin', password='password')
+        self.client.force_login(admin_user)
+        admin_url = reverse('admin:Course_lessonsolution_change', args=(submission.solution_id,))
+        admin_page = self.client.get(admin_url)
+        self.assertContains(admin_page, 'Учтите пустой список.')
+        self.assertContains(admin_page, 'Отправить на доработку с этим текстом')
+
+        apply_response = self.client.post(
+            reverse('admin:Course_lessonsolution_apply_ai_feedback', args=(submission.solution_id,)),
+            {'submission_id': submission.pk},
+        )
+        self.assertRedirects(apply_response, admin_url)
+        solution = submission.solution
+        solution.refresh_from_db()
+        self.assertEqual(solution.status, LessonSolution.Status.NEEDS_REVISION)
+        self.assertEqual(solution.teacher_comment, submission.ai_feedback)
+        self.assertEqual(solution.reviewed_by, admin_user)
+
+    @override_settings(PROXYAPI_API_KEY='test-key')
+    def test_ai_without_issues_does_not_offer_revision_button(self):
+        self.client.force_login(self.user)
+        with patch('Course.lesson_solution_ai.requests.post') as ai_post:
+            ai_post.return_value.json.return_value = {
+                'choices': [{'message': {'content': '{"summary":"OK","issues":[]}'}}],
+            }
+            with self.captureOnCommitCallbacks(execute=True):
+                self._upload(SimpleUploadedFile('solution.py', b'print(1)'))
+
+        submission = LessonSolutionSubmission.objects.get()
+        self.assertEqual(submission.ai_status, submission.AIStatus.READY)
+        self.assertEqual(submission.ai_issue_count, 0)
+        self.assertIn('явных ошибок не найдено', submission.ai_feedback)
+        admin_user = User.objects.create_superuser('no-issue-admin', password='password')
+        self.client.force_login(admin_user)
+        page = self.client.get(reverse(
+            'admin:Course_lessonsolution_change', args=(submission.solution_id,),
+        ))
+        self.assertNotContains(page, 'Отправить на доработку с этим текстом')
+        response = self.client.post(
+            reverse('admin:Course_lessonsolution_apply_ai_feedback', args=(submission.solution_id,)),
+            {'submission_id': submission.pk},
+        )
+        self.assertEqual(response.status_code, 302)
+        submission.solution.refresh_from_db()
+        self.assertEqual(submission.solution.status, LessonSolution.Status.PENDING)
+
+    @override_settings(PROXYAPI_API_KEY='test-key')
+    def test_unsupported_file_is_not_reported_as_error_free(self):
+        self.client.force_login(self.user)
+        with patch('Course.lesson_solution_ai.requests.post') as ai_post:
+            with self.captureOnCommitCallbacks(execute=True):
+                self._upload(SimpleUploadedFile('answer.pdf', b'%PDF-1.7\x00data'))
+
+        submission = LessonSolutionSubmission.objects.get()
+        self.assertEqual(submission.ai_status, submission.AIStatus.UNSUPPORTED)
+        self.assertIn('answer.pdf', submission.ai_source_summary)
+        self.assertEqual(submission.ai_feedback, '')
+        ai_post.assert_not_called()
+
+    @override_settings(PROXYAPI_API_KEY='test-key')
+    def test_mixed_files_are_marked_partially_reviewed(self):
+        self.client.force_login(self.user)
+        with patch('Course.lesson_solution_ai.requests.post') as ai_post:
+            ai_post.return_value.json.return_value = {
+                'choices': [{'message': {'content': '{"summary":"OK","issues":[]}'}}],
+            }
+            with self.captureOnCommitCallbacks(execute=True):
+                self._upload(
+                    SimpleUploadedFile('solution.py', b'print(1)'),
+                    SimpleUploadedFile('diagram.pdf', b'%PDF-1.7\x00data'),
+                )
+
+        submission = LessonSolutionSubmission.objects.get()
+        self.assertEqual(submission.ai_status, submission.AIStatus.PARTIAL)
+        self.assertIn('solution.py', submission.ai_source_summary)
+        self.assertIn('diagram.pdf', submission.ai_source_summary)
+        self.assertIn('Полную проверку провести не удалось', submission.ai_feedback)
+        self.assertNotIn('%PDF', ai_post.call_args.kwargs['json']['messages'][1]['content'])
+
+    @override_settings(PROXYAPI_API_KEY='test-key')
+    def test_docx_text_is_included_in_ai_review(self):
+        from docx import Document
+
+        document = Document()
+        document.add_paragraph('Ответ находится в документе.')
+        table = document.add_table(rows=1, cols=1)
+        table.cell(0, 0).text = 'Проверить граничный случай.'
+        buffer = BytesIO()
+        document.save(buffer)
+        self.client.force_login(self.user)
+        with patch('Course.lesson_solution_ai.requests.post') as ai_post:
+            ai_post.return_value.json.return_value = {
+                'choices': [{'message': {'content': '{"summary":"OK","issues":[]}'}}],
+            }
+            with self.captureOnCommitCallbacks(execute=True):
+                self._upload(SimpleUploadedFile('answer.docx', buffer.getvalue()))
+
+        submission = LessonSolutionSubmission.objects.get()
+        self.assertEqual(submission.ai_status, submission.AIStatus.READY)
+        ai_input = ai_post.call_args.kwargs['json']['messages'][1]['content']
+        self.assertIn('Ответ находится в документе.', ai_input)
+        self.assertIn('Проверить граничный случай.', ai_input)
+
+    @override_settings(PROXYAPI_API_KEY='test-key')
+    def test_old_ai_recommendation_cannot_be_sent_after_new_submission(self):
+        self.client.force_login(self.user)
+        with patch('Course.lesson_solution_ai.requests.post') as ai_post:
+            ai_post.return_value.json.return_value = {
+                'choices': [{'message': {'content': json.dumps({
+                    'summary': 'Ошибка',
+                    'issues': [{'file': 'first.py', 'problem': 'Исправьте условие.'}],
+                })}}],
+            }
+            with self.captureOnCommitCallbacks(execute=True):
+                self._upload(SimpleUploadedFile('first.py', b'print(1)'))
+        first_submission = LessonSolutionSubmission.objects.get()
+        self._upload(SimpleUploadedFile('second.py', b'print(2)'))
+
+        admin_user = User.objects.create_superuser('stale-admin', password='password')
+        self.client.force_login(admin_user)
+        admin_url = reverse('admin:Course_lessonsolution_change', args=(first_submission.solution_id,))
+        page = self.client.get(admin_url)
+        self.assertNotContains(page, 'Исправьте условие.')
+        response = self.client.post(
+            reverse('admin:Course_lessonsolution_apply_ai_feedback', args=(first_submission.solution_id,)),
+            {'submission_id': first_submission.pk},
+        )
+        self.assertRedirects(response, admin_url)
+        first_submission.solution.refresh_from_db()
+        self.assertEqual(first_submission.solution.status, LessonSolution.Status.PENDING)
+        self.assertEqual(first_submission.solution.teacher_comment, '')
+
+    @override_settings(PROXYAPI_API_KEY='test-key')
+    def test_ai_failure_does_not_block_upload_and_can_be_retried(self):
+        self.client.force_login(self.user)
+        with patch('Course.lesson_solution_ai.requests.post', side_effect=requests.Timeout):
+            with self.captureOnCommitCallbacks(execute=True):
+                upload_response = self._upload(SimpleUploadedFile('solution.py', b'print(1)'))
+
+        self.assertEqual(upload_response.status_code, 302)
+        submission = LessonSolutionSubmission.objects.get()
+        self.assertEqual(submission.ai_status, submission.AIStatus.FAILED)
+        admin_user = User.objects.create_superuser('retry-admin', password='password')
+        self.client.force_login(admin_user)
+        admin_page = self.client.get(reverse(
+            'admin:Course_lessonsolution_change', args=(submission.solution_id,),
+        ))
+        self.assertContains(admin_page, 'Повторить проверку ИИ')
+        with patch('Course.lesson_solution_ai.requests.post') as ai_post:
+            ai_post.return_value.json.return_value = {
+                'choices': [{'message': {'content': '{"summary":"OK","issues":[]}'}}],
+            }
+            retry_response = self.client.post(
+                reverse('admin:Course_lessonsolution_retry_ai_review', args=(submission.solution_id,)),
+                {'submission_id': submission.pk},
+            )
+
+        self.assertEqual(retry_response.status_code, 302)
+        submission.refresh_from_db()
+        self.assertEqual(submission.ai_status, submission.AIStatus.READY)
+
+    def test_other_teacher_cannot_apply_ai_feedback(self):
+        self.client.force_login(self.user)
+        self._upload(SimpleUploadedFile('solution.py', b'print(1)'))
+        submission = LessonSolutionSubmission.objects.get()
+        submission.ai_status = submission.AIStatus.READY
+        submission.ai_feedback = 'Нужно исправить решение.'
+        submission.ai_issue_count = 1
+        submission.save(update_fields=('ai_status', 'ai_feedback', 'ai_issue_count'))
+        other_teacher = User.objects.create_user('unrelated-teacher', is_staff=True)
+        other_teacher.user_permissions.add(Permission.objects.get(
+            content_type__app_label='Course',
+            codename='change_lessonsolution',
+        ))
+        self.client.force_login(other_teacher)
+
+        action_url = reverse(
+            'admin:Course_lessonsolution_apply_ai_feedback',
+            args=(submission.solution_id,),
+        )
+        self.assertEqual(self.client.get(action_url).status_code, 405)
+        self.assertEqual(
+            self.client.post(action_url, {'submission_id': submission.pk}).status_code,
+            404,
+        )
+        submission.solution.refresh_from_db()
+        self.assertEqual(submission.solution.status, LessonSolution.Status.PENDING)
+
+    @override_settings(PROXYAPI_API_KEY='test-key')
+    def test_stuck_pending_ai_review_can_be_retried(self):
+        self.client.force_login(self.user)
+        self._upload(SimpleUploadedFile('solution.py', b'print(1)'))
+        submission = LessonSolutionSubmission.objects.get()
+        LessonSolutionSubmission.objects.filter(pk=submission.pk).update(
+            submitted_at=timezone.now() - timedelta(minutes=3),
+        )
+        admin_user = User.objects.create_superuser('stuck-admin', password='password')
+        self.client.force_login(admin_user)
+        admin_url = reverse('admin:Course_lessonsolution_change', args=(submission.solution_id,))
+        self.assertContains(self.client.get(admin_url), 'Повторить проверку ИИ')
+        with patch('Course.lesson_solution_ai.requests.post') as ai_post:
+            ai_post.return_value.json.return_value = {
+                'choices': [{'message': {'content': '{"summary":"OK","issues":[]}'}}],
+            }
+            response = self.client.post(
+                reverse('admin:Course_lessonsolution_retry_ai_review', args=(submission.solution_id,)),
+                {'submission_id': submission.pk},
+            )
+        self.assertRedirects(response, admin_url)
+        submission.refresh_from_db()
+        self.assertEqual(submission.ai_status, submission.AIStatus.READY)
+
+    def test_old_ai_feedback_loses_file_names_without_overwriting_manual_edits(self):
+        self.client.force_login(self.user)
+        self._upload(SimpleUploadedFile('a.py', b'print(1)'))
+        submission = LessonSolutionSubmission.objects.get()
+        old_feedback = (
+            'По предварительной проверке есть замечания:\n'
+            '1. a.py: Исправьте условие.\n'
+            '2. a.py: Добавьте обработку пустого списка.'
+        )
+        submission.ai_feedback = old_feedback
+        submission.save(update_fields=('ai_feedback',))
+        solution = submission.solution
+        solution.teacher_comment = old_feedback.replace('\n', '\r\n')
+        solution.save(update_fields=('teacher_comment',))
+
+        another_solution = LessonSolution.objects.create(
+            student=self.student,
+            schedule=Schedule.objects.exclude(pk=self.schedule.pk).first(),
+            teacher_comment=old_feedback + '\nМой комментарий.',
+        )
+        another_submission = LessonSolutionSubmission.objects.create(
+            solution=another_solution,
+            attempt_number=1,
+            submitted_at=timezone.now(),
+            ai_feedback=old_feedback,
+        )
+        migration = importlib.import_module(
+            'Course.migrations.0027_clean_lesson_solution_ai_feedback',
+        )
+        migration.clean_existing_ai_feedback(apps, None)
+
+        submission.refresh_from_db()
+        solution.refresh_from_db()
+        another_submission.refresh_from_db()
+        another_solution.refresh_from_db()
+        expected = (
+            '1. Исправьте условие.\n'
+            '2. Добавьте обработку пустого списка.'
+        )
+        self.assertEqual(submission.ai_feedback, expected)
+        self.assertEqual(solution.teacher_comment, expected.replace('\n', '\r\n'))
+        self.assertEqual(another_submission.ai_feedback, expected)
+        self.assertEqual(
+            another_solution.teacher_comment,
+            old_feedback + '\nМой комментарий.',
+        )
 
     def test_solution_list_prioritizes_pending_reviews(self):
         self.client.force_login(self.user)

@@ -699,6 +699,14 @@ class LessonSolution(models.Model):
 class LessonSolutionSubmission(models.Model):
     """Неизменяемая запись о каждой отправке или повторной отправке работы."""
 
+    class AIStatus(models.TextChoices):
+        NOT_REQUESTED = 'not_requested', 'Не проверялась'
+        PENDING = 'pending', 'Проверяется'
+        READY = 'ready', 'Рекомендация готова'
+        PARTIAL = 'partial', 'Проверена часть файлов'
+        UNSUPPORTED = 'unsupported', 'Нет доступных для анализа файлов'
+        FAILED = 'failed', 'Ошибка проверки'
+
     solution = models.ForeignKey(
         LessonSolution,
         on_delete=models.CASCADE,
@@ -709,6 +717,36 @@ class LessonSolutionSubmission(models.Model):
     submitted_at = models.DateTimeField(
         db_index=True,
         verbose_name='Отправлено',
+    )
+    ai_status = models.CharField(
+        max_length=20,
+        choices=AIStatus.choices,
+        default=AIStatus.NOT_REQUESTED,
+        verbose_name='Проверка ИИ',
+    )
+    ai_feedback = models.TextField(blank=True, verbose_name='Рекомендация ИИ')
+    ai_issue_count = models.PositiveSmallIntegerField(
+        default=0,
+        verbose_name='Найдено проблем',
+    )
+    ai_source_summary = models.TextField(
+        blank=True,
+        verbose_name='Какие файлы проверены',
+    )
+    ai_error = models.CharField(
+        max_length=500,
+        blank=True,
+        verbose_name='Ошибка проверки ИИ',
+    )
+    ai_model = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name='Модель ИИ',
+    )
+    ai_reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Проверено ИИ',
     )
 
     class Meta:

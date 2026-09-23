@@ -27,6 +27,7 @@ from django.views.generic.edit import FormView
 
 from Course.doc import docx_worker, save_report
 from Course.forms import LessonSolutionUploadForm, StudentForm
+from Course.lesson_solution_ai import generate_lesson_solution_review
 from Course.models import LearnGroup, Schedule, Student, StudentQuestion, \
     ApplicationsForTraining, AdditionalLessons, LessonSolution, \
     LessonSolutionFile, LessonSolutionSubmission
@@ -342,10 +343,16 @@ class LessonSolutionUploadView(LoginRequiredMixin, View):
                 solution.submissions.aggregate(last=Max('attempt_number'))['last']
                 or 0
             )
-            LessonSolutionSubmission.objects.create(
+            submission = LessonSolutionSubmission.objects.create(
                 solution=solution,
                 attempt_number=last_attempt + 1,
                 submitted_at=timezone.now(),
+                ai_status=LessonSolutionSubmission.AIStatus.PENDING,
+            )
+            transaction.on_commit(
+                lambda submission_id=submission.pk: generate_lesson_solution_review(
+                    submission_id,
+                ),
             )
 
         if created:
