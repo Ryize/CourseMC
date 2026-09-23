@@ -1347,7 +1347,7 @@ class LessonSolutionAdmin(ModelAdmin):
             (
                 (
                     solution_file.original_name,
-                    f"{reverse('lesson_solution_file_download', args=(solution_file.pk,))}?view=1",
+                    reverse('py_interpreter_solution_file', args=(solution_file.pk,)),
                     reverse('lesson_solution_file_download', args=(solution_file.pk,)),
                 )
                 for solution_file in obj.files.all()

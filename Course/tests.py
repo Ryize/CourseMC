@@ -637,6 +637,91 @@ class LessonSolutionTests(TimetableTests):
         self.assertContains(response, 'Открыть')
         self.assertContains(response, 'Скачать')
         self.assertContains(response, 'История отправок решений')
+        self.assertContains(
+            response,
+            reverse('py_interpreter_solution_file', args=(solution.files.get().pk,)),
+        )
+
+    def test_teacher_opens_python_solution_in_interpreter(self):
+        self.client.force_login(self.user)
+        code = 'print("Привет")\n# </textarea><script>alert(1)</script>'
+        self._upload(SimpleUploadedFile('solution.py', code.encode('utf-8')))
+        solution_file = LessonSolution.objects.get(student=self.student).files.get()
+        url = reverse('py_interpreter_solution_file', args=(solution_file.pk,))
+        self.user.is_staff = True
+        self.user.save(update_fields=['is_staff'])
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['source_code'], code)
+        self.assertContains(response, 'data-solution-file-id=')
+        self.assertContains(response, 'solution.py')
+        self.assertContains(response, '&lt;/textarea&gt;&lt;script&gt;')
+        self.assertNotContains(response, '<script>alert(1)</script>')
+        self.assertIn('no-store', response['Cache-Control'])
+
+    def test_student_and_unrelated_teacher_cannot_open_solution_in_interpreter(self):
+        self.client.force_login(self.user)
+        self._upload(SimpleUploadedFile('solution.py', b'print(1)'))
+        solution_file = LessonSolution.objects.get(student=self.student).files.get()
+        url = reverse('py_interpreter_solution_file', args=(solution_file.pk,))
+
+        self.assertEqual(self.client.get(url).status_code, 403)
+
+        other_teacher = User.objects.create_user('other-teacher', password='password', is_staff=True)
+        self.client.force_login(other_teacher)
+        self.assertEqual(self.client.get(url).status_code, 403)
+
+        self.client.logout()
+        self.assertEqual(self.client.get(url).status_code, 302)
+
+        superuser = User.objects.create_superuser('solutions-admin', password='password')
+        self.client.force_login(superuser)
+        self.assertEqual(self.client.get(url).status_code, 200)
+
+    def test_notebook_code_is_loaded_without_metadata_or_markdown(self):
+        self.client.force_login(self.user)
+        notebook = b'{"cells": [{"cell_type": "markdown", "source": ["private notes"]}, {"cell_type": "code", "source": ["print(1)\\n", "print(2)"]}], "metadata": {"secret": "not in editor"}}'
+        self._upload(SimpleUploadedFile('work.ipynb', notebook))
+        solution_file = LessonSolution.objects.get(student=self.student).files.get()
+        superuser = User.objects.create_superuser('notebook-admin', password='password')
+        self.client.force_login(superuser)
+
+        response = self.client.get(reverse('py_interpreter_solution_file', args=(solution_file.pk,)))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['source_code'], 'print(1)\nprint(2)')
+        self.assertEqual(response.context['download_name'], 'work.py')
+        self.assertNotContains(response, 'private notes')
+
+    def test_non_code_file_offers_original_without_rendering_binary(self):
+        self.client.force_login(self.user)
+        self._upload(SimpleUploadedFile('work.pdf', b'%PDF-1.7\x00test'))
+        solution_file = LessonSolution.objects.get(student=self.student).files.get()
+        superuser = User.objects.create_superuser('pdf-admin', password='password')
+        self.client.force_login(superuser)
+
+        response = self.client.get(reverse('py_interpreter_solution_file', args=(solution_file.pk,)))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Этот формат нельзя открыть как Python-код')
+        self.assertContains(response, 'Скачать оригинал')
+        self.assertNotContains(response, '%PDF-1.7')
+
+    def test_long_source_is_not_silently_truncated_in_editor(self):
+        self.client.force_login(self.user)
+        self._upload(SimpleUploadedFile('long.py', b'#' * 20001))
+        solution_file = LessonSolution.objects.get(student=self.student).files.get()
+        superuser = User.objects.create_superuser('long-source-admin', password='password')
+        self.client.force_login(superuser)
+
+        response = self.client.get(reverse('py_interpreter_solution_file', args=(solution_file.pk,)))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['source_code'], '')
+        self.assertContains(response, 'Код превышает лимит редактора')
+        self.assertContains(response, 'Скачать оригинал')
 
     def test_solution_list_prioritizes_pending_reviews(self):
         self.client.force_login(self.user)

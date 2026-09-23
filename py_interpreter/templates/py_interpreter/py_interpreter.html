@@ -12,34 +12,49 @@
     <link rel="stylesheet"
           href="{% static 'Course/css/style.css' %}">
     <link rel="stylesheet"
-          href="{% static 'py_interpreter/interpreter.css' %}?v=6">
+          href="{% static 'py_interpreter/interpreter.css' %}?v=7">
     <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/src-min-noconflict/ace.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/src-min-noconflict/ext-language_tools.js" defer></script>
-    <script src="{% static 'py_interpreter/interpreter.js' %}?v=5" defer></script>
+    <script src="{% static 'py_interpreter/interpreter.js' %}?v=6" defer></script>
 </head>
 <body class="interpreter-page">
 {% include 'template/header.html' %}
 
 <main class="interpreter"
       data-worker-url="{% static 'py_interpreter/worker.mjs' %}?v=6"
-      data-ace-base-url="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/src-min-noconflict">
+      data-ace-base-url="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/src-min-noconflict"
+      {% if solution_file %}data-solution-file-id="{{ solution_file.pk }}"
+      data-download-name="{{ download_name }}"{% endif %}>
     <div class="interpreter__hero">
         <div>
             <span class="interpreter__eyebrow">Практика Python</span>
             <h1>Твой интерпретатор</h1>
-            <p>Пишите, запускайте и проверяйте Python-код прямо здесь. Код выполняется только в вашем браузере.</p>
+            <p>{% if solution_file %}Просматривайте и проверяйте решение ученика. Изменения здесь не меняют отправленный файл; код выполняется только в вашем браузере.{% else %}Пишите, запускайте и проверяйте Python-код прямо здесь. Код выполняется только в вашем браузере.{% endif %}</p>
         </div>
         <span class="interpreter__status"
               id="interpreter-status"
               role="status">Загрузка Python…</span>
     </div>
+    {% if solution_file %}
+    <div class="interpreter__source-note">
+        <div>
+            <strong>Решение ученика {{ solution_file.solution.student }}</strong>
+            <span>{{ source_filename }}</span>
+            {% if source_error %}<p role="alert">{{ source_error }}</p>{% endif %}
+        </div>
+        <div class="interpreter__source-links">
+            <a href="{{ source_preview_url }}" target="_blank" rel="noopener">Исходный файл</a>
+            <a href="{{ source_download_url }}">Скачать оригинал</a>
+        </div>
+    </div>
+    {% endif %}
     <section class="interpreter__workspace"
              aria-label="Python-интерпретатор">
         <section class="interpreter__panel interpreter__code-panel" aria-label="Редактор кода">
             <div class="interpreter__panel-heading">
                 <div>
                     <span class="interpreter__panel-kicker">Редактор</span>
-                    <h2>main.py</h2>
+                    <h2>{% if solution_file %}{{ source_filename }}{% else %}main.py{% endif %}</h2>
                 </div>
                 <span class="interpreter__language">Python 3</span>
             </div>
@@ -53,16 +68,16 @@
                 <textarea id="python-code"
                           spellcheck="false"
                           autocomplete="off"
-                          maxlength="20000">def main():
+                          maxlength="20000">{% if solution_file %}{{ source_code }}{% else %}def main():
     print("Hello, CourseMC!")
 
 
-main()</textarea>
+main(){% endif %}</textarea>
                 <div id="python-editor" role="textbox" aria-label="Редактор Python-кода" aria-multiline="true" hidden></div>
             </div>
             <div class="interpreter__editor-footer">
                 <span id="editor-position">Строка 1, столбец 1</span>
-                <span id="draft-status">Черновик сохраняется в браузере</span>
+                <span id="draft-status">{% if solution_file %}Правки сохраняются только в этой вкладке{% else %}Черновик сохраняется в браузере{% endif %}</span>
             </div>
         </section>
 

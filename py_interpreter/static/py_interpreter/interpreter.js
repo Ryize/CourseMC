@@ -17,7 +17,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const retryButton = document.getElementById('retry-python');
     const position = document.getElementById('editor-position');
     const draftStatus = document.getElementById('draft-status');
-    const draftKey = 'coursemc.pythonInterpreter.code.v1';
+    const solutionFileId = root.dataset.solutionFileId;
+    let draftStorage = null;
+    try {
+        draftStorage = solutionFileId ? window.sessionStorage : window.localStorage;
+    } catch (_) {
+        draftStatus.textContent = 'Черновик не сохраняется в этом браузере';
+    }
+    const draftKey = solutionFileId
+        ? `coursemc.pythonInterpreter.solution.${solutionFileId}`
+        : 'coursemc.pythonInterpreter.code.v1';
     const maxCodeLength = 20000;
     const outputLimit = 50000;
     const executionTimeout = 10000;
@@ -52,8 +61,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const saveDraft = () => {
         try {
-            localStorage.setItem(draftKey, getCode());
-            draftStatus.textContent = 'Черновик сохранён в браузере';
+            if (!draftStorage) throw new Error('Хранилище недоступно');
+            draftStorage.setItem(draftKey, getCode());
+            draftStatus.textContent = solutionFileId
+                ? 'Правки сохранены в этой вкладке'
+                : 'Черновик сохранён в браузере';
         } catch (_) {
             draftStatus.textContent = 'Не удалось сохранить черновик';
         }
@@ -65,7 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePosition();
     };
     try {
-        const savedCode = localStorage.getItem(draftKey);
+        if (!draftStorage) throw new Error('Хранилище недоступно');
+        const savedCode = draftStorage.getItem(draftKey);
         if (savedCode !== null) codeInput.value = savedCode;
     } catch (_) {
         draftStatus.textContent = 'Черновик не сохраняется в этом браузере';
@@ -287,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const blobUrl = URL.createObjectURL(new Blob([getCode()], {type: 'text/x-python;charset=utf-8'}));
         const link = document.createElement('a');
         link.href = blobUrl;
-        link.download = 'main.py';
+        link.download = root.dataset.downloadName || 'main.py';
         link.click();
         window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
     });
