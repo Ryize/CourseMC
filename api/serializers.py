@@ -159,13 +159,14 @@ class BotLessonSolutionSerializer(serializers.ModelSerializer):
     group = serializers.SerializerMethodField()
     lesson = serializers.SerializerMethodField()
     files = BotLessonSolutionFileSerializer(many=True, read_only=True)
+    ai_review = serializers.SerializerMethodField()
 
     class Meta:
         model = LessonSolution
         fields = (
             'id', 'submission_id', 'attempt_number', 'student', 'group',
             'lesson', 'status', 'status_display', 'teacher_comment',
-            'submitted_at', 'files',
+            'submitted_at', 'files', 'ai_review',
         )
 
     def get_student(self, obj):
@@ -188,6 +189,20 @@ class BotLessonSolutionSerializer(serializers.ModelSerializer):
             'number': obj.schedule.position,
             'title': obj.schedule.theme,
             'direction': obj.schedule.direction.title,
+        }
+
+    def get_ai_review(self, obj):
+        submission = self.context['latest_submissions'].get(obj.latest_submission_id)
+        if submission is None:
+            return None
+        return {
+            'status': submission.ai_status,
+            'status_display': submission.get_ai_status_display(),
+            'feedback': submission.ai_feedback or None,
+            'issue_count': submission.ai_issue_count,
+            'source_summary': submission.ai_source_summary or None,
+            'error': submission.ai_error or None,
+            'reviewed_at': submission.ai_reviewed_at,
         }
 
 

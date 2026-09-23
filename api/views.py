@@ -69,6 +69,19 @@ def bot_lesson_solution_queryset():
     )
 
 
+def bot_lesson_solution_serializer_context(request, solutions):
+    """Загружает ИИ-отзывы только для отправок из ответа, без N+1 запросов."""
+    submission_ids = [
+        solution.latest_submission_id
+        for solution in solutions
+        if solution.latest_submission_id is not None
+    ]
+    return {
+        'request': request,
+        'latest_submissions': LessonSolutionSubmission.objects.in_bulk(submission_ids),
+    }
+
+
 class ScheduleViewSet(APIView):
     """
     Вывод всех расписаний
@@ -235,7 +248,7 @@ class BotLessonSolutionListView(APIView):
         serializer = BotLessonSolutionSerializer(
             solutions,
             many=True,
-            context={'request': request},
+            context=bot_lesson_solution_serializer_context(request, solutions),
         )
         next_cursor = after
         if solutions:
@@ -245,6 +258,24 @@ class BotLessonSolutionListView(APIView):
             'next_cursor': next_cursor,
             'results': serializer.data,
         })
+
+
+class BotLessonSolutionDetailView(APIView):
+    """Обновление данных конкретного решения после получения очереди."""
+
+    authentication_classes = ()
+    permission_classes = (HasCourseMCBotToken,)
+
+    def get(self, request, solution_id):
+        solution = get_object_or_404(
+            bot_lesson_solution_queryset().filter(latest_submission_id__isnull=False),
+            pk=solution_id,
+        )
+        serializer = BotLessonSolutionSerializer(
+            solution,
+            context=bot_lesson_solution_serializer_context(request, [solution]),
+        )
+        return Response(serializer.data)
 
 
 class BotLessonSolutionFileView(APIView):
@@ -341,7 +372,8 @@ class BotLessonSolutionDocsView(APIView):
             'workflow': [
                 'Запросите очередь GET с сохранённым after.',
                 'Скачайте файлы по download_url с тем же заголовком.',
-                'Отправьте администраторам уведомления и файлы.',
+                'Покажите преподавателю файлы и ai_review; это черновик, не итоговая оценка.',
+                'Если ai_review.status=pending, обновите решение через detail позже.',
                 'Только после успешной отправки сохраните next_cursor.',
                 'После проверки отправьте PATCH со статусом и комментарием.',
             ],
@@ -350,8 +382,15 @@ class BotLessonSolutionDocsView(APIView):
                 'queue_for_teacher': (
                     f'{base_url}?after=0&teacher_username=teacher'
                 ),
+                'detail': f'{base_url}<solution_id>/',
                 'download': f'{base_url}files/<file_id>/',
                 'review': f'{base_url}<solution_id>/review/',
+            },
+            'ai_review': {
+                'status': 'ready',
+                'feedback': '1. Исправьте ошибку в обязательной части задания.',
+                'issue_count': 1,
+                'note': 'Рекомендация для преподавателя; ученику отправляйте только после проверки.',
             },
             'review_body': {
                 'reviewer_username': 'teacher',

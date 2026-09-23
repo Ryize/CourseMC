@@ -197,6 +197,8 @@ class BotLessonSolutionApiTests(TestCase):
         self.assertEqual(result['lesson']['title'], self.schedule.theme)
         self.assertEqual(result['status'], LessonSolution.Status.PENDING)
         self.assertEqual(result['files'][0]['original_name'], 'solution.py')
+        self.assertEqual(result['ai_review']['status'], 'not_requested')
+        self.assertIsNone(result['ai_review']['feedback'])
         self.assertNotIn(self.solution_file.file.name, response.content.decode())
 
         cursor_response = self.client.get(
@@ -223,6 +225,69 @@ class BotLessonSolutionApiTests(TestCase):
         result = response.json()['results'][0]
         self.assertEqual(result['submission_id'], second_submission.pk)
         self.assertEqual(result['attempt_number'], 2)
+        self.assertEqual(result['ai_review']['status'], 'not_requested')
+
+    def test_queue_returns_ai_feedback_for_latest_submission_only(self):
+        LessonSolutionSubmission.objects.filter(pk=self.submission.pk).update(
+            ai_status=LessonSolutionSubmission.AIStatus.READY,
+            ai_feedback='1. Не выведен результат.',
+            ai_issue_count=1,
+            ai_source_summary='Проверены: solution.py.',
+            ai_reviewed_at=timezone.now(),
+        )
+
+        response = self.client.get(reverse('bot_lesson_solution_list'), **self.headers)
+
+        self.assertEqual(response.status_code, 200)
+        ai_review = response.json()['results'][0]['ai_review']
+        self.assertEqual(ai_review['status'], 'ready')
+        self.assertEqual(ai_review['feedback'], '1. Не выведен результат.')
+        self.assertEqual(ai_review['issue_count'], 1)
+        self.assertEqual(ai_review['source_summary'], 'Проверены: solution.py.')
+        self.assertIsNotNone(ai_review['reviewed_at'])
+
+        second_submission = LessonSolutionSubmission.objects.create(
+            solution=self.solution,
+            attempt_number=2,
+            submitted_at=timezone.now(),
+            ai_status=LessonSolutionSubmission.AIStatus.PENDING,
+        )
+        response = self.client.get(
+            reverse('bot_lesson_solution_list'),
+            {'after': self.submission.pk},
+            **self.headers,
+        )
+        result = response.json()['results'][0]
+        self.assertEqual(result['submission_id'], second_submission.pk)
+        self.assertEqual(result['ai_review']['status'], 'pending')
+        self.assertIsNone(result['ai_review']['feedback'])
+
+    def test_detail_refreshes_ai_review_after_queue_cursor_advanced(self):
+        detail_url = reverse('bot_lesson_solution_detail', args=(self.solution.pk,))
+        self.assertEqual(self.client.get(detail_url).status_code, 403)
+
+        queue = self.client.get(reverse('bot_lesson_solution_list'), **self.headers)
+        self.assertEqual(queue.json()['results'][0]['ai_review']['status'], 'not_requested')
+        cursor = queue.json()['next_cursor']
+        LessonSolutionSubmission.objects.filter(pk=self.submission.pk).update(
+            ai_status=LessonSolutionSubmission.AIStatus.READY,
+            ai_feedback='В проверенных файлах явных ошибок не найдено.',
+            ai_issue_count=0,
+        )
+
+        self.assertEqual(self.client.get(
+            reverse('bot_lesson_solution_list'),
+            {'after': cursor},
+            **self.headers,
+        ).json()['results'], [])
+        response = self.client.get(detail_url, **self.headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['submission_id'], self.submission.pk)
+        self.assertEqual(response.json()['ai_review']['status'], 'ready')
+        self.assertEqual(
+            response.json()['ai_review']['feedback'],
+            'В проверенных файлах явных ошибок не найдено.',
+        )
 
     def test_bot_can_download_file_but_public_request_cannot(self):
         url = reverse(
@@ -300,3 +365,5 @@ class BotLessonSolutionApiTests(TestCase):
         response = self.client.get(url, **self.headers)
         self.assertEqual(response.status_code, 200)
         self.assertIn('queue', response.json()['endpoints'])
+        self.assertIn('detail', response.json()['endpoints'])
+        self.assertIn('ai_review', response.json())

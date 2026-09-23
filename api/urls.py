@@ -9,7 +9,8 @@ from .views import (LearnGroupViewSet, ScheduleGet, ScheduleViewSet,
                     ClassesTimetableWeekdayView,
                     GetQuestionView, CheckAnswerView,
                     BotStudentAuthenticationView, BotGroupStudentsView,
-                    BotLessonSolutionListView, BotLessonSolutionFileView,
+                    BotLessonSolutionListView, BotLessonSolutionDetailView,
+                    BotLessonSolutionFileView,
                     BotLessonSolutionReviewView, BotLessonSolutionDocsView)
 
 urlpatterns = [
@@ -27,6 +28,9 @@ urlpatterns = [
     path('bot/lesson-solutions/files/<int:file_id>/',
          BotLessonSolutionFileView.as_view(),
          name='bot_lesson_solution_file'),
+    path('bot/lesson-solutions/<int:solution_id>/',
+         BotLessonSolutionDetailView.as_view(),
+         name='bot_lesson_solution_detail'),
     path('bot/lesson-solutions/<int:solution_id>/review/',
          BotLessonSolutionReviewView.as_view(),
          name='bot_lesson_solution_review'),
