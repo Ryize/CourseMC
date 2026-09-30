@@ -59,6 +59,13 @@ ACCOUNT_LOGIN_METHODS = {"username", "email"}
 # намеренно не хранится в репозитории.
 COURSEMC_BOT_API_TOKEN = os.environ.get("COURSEMC_BOT_API_TOKEN", "")
 
+# Ключи медиасервера остаются только на сервере; браузеру выдаётся короткий
+# токен для одного конкретного занятия после проверки прав пользователя.
+LIVEKIT_URL = os.environ.get("LIVEKIT_URL", "")
+LIVEKIT_API_URL = os.environ.get("LIVEKIT_API_URL", "")
+LIVEKIT_API_KEY = os.environ.get("LIVEKIT_API_KEY", "")
+LIVEKIT_API_SECRET = os.environ.get("LIVEKIT_API_SECRET", "")
+
 # Ключ хранится только в окружении сервера. Код-ревью продолжит работать и без
 # него: заявка сохранится, а в админке появится причина, почему черновик ИИ не
 # сформирован.
@@ -140,6 +147,7 @@ INSTALLED_APPS = [
     'interview.apps.InterviewConfig',
     'codereview.apps.CodereviewConfig',
     'ai_assistant.apps.AiAssistantConfig',
+    'live_lessons.apps.LiveLessonsConfig',
 ]
 
 UNFOLD = {
@@ -251,6 +259,10 @@ MEDIA_URL = "/media/"
 PRIVATE_SOLUTION_MEDIA_ROOT = os.environ.get(
     "COURSEMC_PRIVATE_MEDIA_ROOT",
     BASE_DIR / "private_media" / "lesson_solutions",
+)
+PRIVATE_LIVE_LESSON_MEDIA_ROOT = os.environ.get(
+    "COURSEMC_PRIVATE_LIVE_LESSON_MEDIA_ROOT",
+    BASE_DIR / "private_media" / "live_lessons",
 )
 
 # Internationalization

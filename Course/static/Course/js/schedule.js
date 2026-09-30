@@ -130,7 +130,7 @@
         const item = toggle.closest(".schedule-item");
         const isExpanded = item?.classList.toggle("active") || false;
         toggle.setAttribute("aria-expanded", String(isExpanded));
-        window.setTimeout(() => window.ScrollTrigger?.refresh(), 500);
+        window.setTimeout(() => window.ScrollTrigger?.refresh(), 650);
     }, true);
 
     document.addEventListener("keydown", (event) => {

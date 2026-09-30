@@ -1,0 +1,106 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Лаборатория качества связи — CourseMC</title>
+    <link rel="stylesheet" href="{% static 'live_lessons/quality_lab.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.22.3/dist/livekit-client.umd.min.js" defer></script>
+    <script src="{% static 'live_lessons/quality_lab.js' %}" defer></script>
+</head>
+<body>
+<main class="lab-shell">
+    <header class="lab-header">
+        <a class="lab-logo" href="{% url 'home' %}">CourseMC</a>
+        <span class="lab-badge">Только локальный прототип</span>
+    </header>
+
+    <section class="lab-intro" aria-labelledby="lab-title">
+        <p class="lab-eyebrow">Онлайн-занятия · блок 1</p>
+        <h1 id="lab-title">Лаборатория качества связи</h1>
+        <p>Проверьте голос, камеру и читаемость демонстрации экрана вдвоём до разработки учебной комнаты. Здесь нет записи урока, чата или доступа к рабочим данным.</p>
+    </section>
+
+    <section class="lab-panel" aria-labelledby="connection-title">
+        <div class="lab-heading">
+            <div>
+                <p class="lab-eyebrow">Подключение</p>
+                <h2 id="connection-title">Тестовая комната</h2>
+            </div>
+            <span id="lab-state" class="lab-state" role="status" aria-live="polite">Не подключено</span>
+        </div>
+        <p class="lab-help">Запустите локальный LiveKit и создайте два токена по инструкции. В каждом браузере вставьте свой токен; он останется только в памяти страницы.</p>
+        <div class="lab-connection-fields">
+            <label>Адрес сервера
+                <input id="lab-url" type="url" value="ws://127.0.0.1:7880" autocomplete="off" spellcheck="false" inputmode="url">
+            </label>
+            <label>Токен участника
+                <input id="lab-token" type="password" autocomplete="off" spellcheck="false" placeholder="Вставьте тестовый токен">
+            </label>
+        </div>
+        <div class="lab-actions">
+            <button id="lab-connect" class="lab-button lab-button-primary" type="button">Подключиться</button>
+            <button id="lab-disconnect" class="lab-button" type="button" disabled>Выйти</button>
+            <button id="lab-audio-unlock" class="lab-button" type="button" hidden>Включить звук</button>
+        </div>
+        <p id="lab-message" class="lab-message" role="alert" hidden></p>
+    </section>
+
+    <div class="lab-grid">
+        <section class="lab-panel" aria-labelledby="media-title">
+            <div class="lab-heading">
+                <div>
+                    <p class="lab-eyebrow">Управление</p>
+                    <h2 id="media-title">Устройства и экран</h2>
+                </div>
+            </div>
+            <div class="lab-controls">
+                <button id="lab-mic" class="lab-button" type="button" disabled>Включить микрофон</button>
+                <button id="lab-camera" class="lab-button" type="button" disabled>Включить камеру</button>
+            </div>
+            <label class="lab-quality-label" for="lab-preset">Качество демонстрации</label>
+            <select id="lab-preset">
+                <option value="auto">Авто — выбор браузера</option>
+                <option value="text">Чёткий текст — до 1080p, 15 кадров/с</option>
+                <option value="motion">Плавное видео — до 720p, 30 кадров/с</option>
+                <option value="economy">Экономия — до 480p, 15 кадров/с</option>
+            </select>
+            <p class="lab-help">Режим выбирается перед началом демонстрации. Браузер каждый раз спрашивает, каким экраном или окном делиться; фактическое качество зависит от устройства и сети.</p>
+            <button id="lab-screen" class="lab-button lab-button-primary" type="button" disabled>Показать экран</button>
+        </section>
+
+        <section class="lab-panel" aria-labelledby="metrics-title">
+            <div class="lab-heading">
+                <div>
+                    <p class="lab-eyebrow">Измерения</p>
+                    <h2 id="metrics-title">Что получилось на деле</h2>
+                </div>
+                <button id="lab-report" class="lab-button lab-button-small" type="button" disabled>Скачать отчёт</button>
+            </div>
+            <dl class="lab-metrics">
+                <div><dt>Участники</dt><dd id="lab-participants">—</dd></div>
+                <div><dt>Качество соединения</dt><dd id="lab-quality">—</dd></div>
+                <div><dt>Захват экрана</dt><dd id="lab-capture">—</dd></div>
+                <div><dt>Отдача видео</dt><dd id="lab-bitrate">—</dd></div>
+                <div><dt>Потери входящих пакетов</dt><dd id="lab-packet-loss">—</dd></div>
+            </dl>
+            <p class="lab-help">Отчёт содержит только технические измерения текущего теста: без токена, содержимого экрана и записей голоса.</p>
+        </section>
+    </div>
+
+    <section class="lab-panel" aria-labelledby="participants-title">
+        <div class="lab-heading">
+            <div>
+                <p class="lab-eyebrow">Просмотр</p>
+                <h2 id="participants-title">Участники и демонстрации</h2>
+            </div>
+        </div>
+        <div id="lab-tracks" class="lab-tracks">
+            <p id="lab-empty" class="lab-empty">После подключения здесь появятся камеры и демонстрации.</p>
+        </div>
+        <div id="lab-audio" hidden></div>
+    </section>
+</main>
+</body>
+</html>

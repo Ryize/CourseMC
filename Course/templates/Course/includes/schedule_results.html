@@ -21,7 +21,26 @@
                     <ion-icon name="chevron-down-outline"></ion-icon>
                 </div>
                 <div class="dropdown">
+                  <div class="schedule-dropdown-content">
                     <div class="lesson-materials">{{ schedule.lesson_materials|safe }}</div>
+                    {% if schedule.chat_archives %}
+                    <section class="lesson-chat-archives" aria-label="История чата занятий">
+                        <strong>История чата занятий</strong>
+                        {% for archive in schedule.chat_archives %}
+                            <div class="lesson-chat-archive-card">
+                                <div class="lesson-chat-archive-heading">
+                                    <span>{{ archive.lesson.title }} · {{ archive.created_at|date:'d.m.Y H:i' }}</span>
+                                    <a href="{% url 'live_lesson_chat_archive_download' archive.pk %}">Скачать с файлами (.zip)</a>
+                                </div>
+                                <div class="lesson-chat-archive-actions">
+                                    <button type="button" data-archive-preview-url="{% url 'live_lesson_chat_archive_view' archive.pk %}" aria-expanded="false">Показать переписку</button>
+                                    <a href="{% url 'live_lesson_chat_archive_view' archive.pk %}">Открыть отдельно</a>
+                                </div>
+                                <div class="lesson-chat-archive-preview" hidden aria-live="polite"></div>
+                            </div>
+                        {% endfor %}
+                    </section>
+                    {% endif %}
                     <section class="lesson-solution">
                         {% if schedule.lesson_solution %}
                             <p class="lesson-solution-status {{ schedule.lesson_solution.status }}">
@@ -63,6 +82,7 @@
                             <button type="submit">Отправить решение</button>
                         </form>
                     </section>
+                  </div>
                 </div>
             </div>
         {% empty %}

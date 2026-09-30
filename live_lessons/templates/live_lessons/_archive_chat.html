@@ -1,0 +1,19 @@
+<div class="lesson-chat-thread" aria-label="Сохранённая переписка">
+    {% for item in chat_rows %}
+        <article class="lesson-chat-message">
+            <div class="lesson-chat-message-meta">
+                <strong>{% if item.author %}{{ item.author.get_full_name|default:item.author.username }}{% else %}{{ item.guest_name }}{% endif %}</strong>
+                <time datetime="{{ item.created_at|date:'c' }}">{{ item.created_at|date:'d.m.Y H:i' }}</time>
+            </div>
+            {% if item.body %}<p class="lesson-chat-message-body">{{ item.body }}</p>{% endif %}
+            {% if item.attachment %}
+                <a class="lesson-chat-message-file" href="{% url 'live_lesson_archive_attachment' archive.pk item.attachment.pk %}">
+                    <ion-icon name="attach-outline" aria-hidden="true"></ion-icon>
+                    <span>{{ item.attachment.original_name }}</span>
+                </a>
+            {% endif %}
+        </article>
+    {% empty %}
+        <p class="lesson-chat-empty">В сохранённой истории нет сообщений для просмотра.</p>
+    {% endfor %}
+</div>

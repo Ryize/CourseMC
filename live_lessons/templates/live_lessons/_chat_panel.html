@@ -1,0 +1,46 @@
+<section class="ll-panel ll-chat" id="ll-chat" data-messages-url="{% url 'live_lesson_chat_messages' lesson.public_id %}" data-send-url="{% url 'live_lesson_chat_send' lesson.public_id %}" data-live="{{ room_open|yesno:'true,false' }}" data-user-id="{{ chat_user_id }}" aria-labelledby="ll-chat-title">
+    <div class="ll-chat-heading">
+        <div>
+            <p class="ll-eyebrow">Обсуждение</p>
+            <h2 id="ll-chat-title">Чат занятия</h2>
+            <p class="ll-muted">Сообщения и вложения останутся доступны по ссылке после завершения занятия.</p>
+        </div>
+        <span class="ll-chat-count" id="ll-chat-count" aria-live="polite"></span>
+    </div>
+    <div class="ll-chat-feed" id="ll-chat-feed">
+        <button class="ll-button ll-chat-older" id="ll-chat-older" type="button" hidden>Показать ранние сообщения</button>
+        <ol class="ll-chat-messages" id="ll-chat-messages" aria-label="Сообщения занятия" aria-live="polite"></ol>
+        <div class="ll-chat-empty" id="ll-chat-empty">
+            <span class="ll-chat-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H7l-4 3V8.5A7.5 7.5 0 0 1 10.5 1H12a8 8 0 0 1 8 8v2.5Z"/><path d="M8 9h8M8 13h5"/></svg></span>
+            <strong>Пока тихо</strong>
+            <span>Напишите первое сообщение участникам.</span>
+        </div>
+    </div>
+    <p class="ll-chat-error" id="ll-chat-error" role="alert" hidden></p>
+    {% if room_open %}
+    <form class="ll-chat-form" id="ll-chat-form" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label class="ll-chat-visually-hidden" for="ll-chat-body">Сообщение</label>
+        <div class="ll-chat-composer">
+            <textarea id="ll-chat-body" name="body" maxlength="3000" rows="2" placeholder="Сообщение участникам…"></textarea>
+            <div class="ll-chat-selected-row" id="ll-chat-selected-row" hidden>
+                <span class="ll-chat-selected-icon" aria-hidden="true">↧</span>
+                <span class="ll-chat-selected-file" id="ll-chat-selected-file" aria-live="polite"></span>
+                <button class="ll-chat-clear-file" id="ll-chat-clear-file" type="button" aria-label="Убрать выбранный файл">×</button>
+            </div>
+            <div class="ll-chat-form-actions">
+                <label class="ll-chat-file-label" for="ll-chat-file" title="Прикрепить файл до 25 МБ">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20.2 11.7-8.5 8.5a5 5 0 0 1-7.1-7.1l9.9-9.9a3.5 3.5 0 0 1 5 5l-10 10a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg>
+                    <span>Файл</span>
+                    <input id="ll-chat-file" name="attachment" type="file" accept=".png,.jpg,.jpeg,.gif,.webp,.mp4,.webm,.pdf,.docx,.xlsx,.pptx,.txt,.md,.py" aria-label="Прикрепить файл">
+                </label>
+                <span class="ll-chat-file-hint">до 25 МБ</span>
+                <button class="ll-button ll-button-primary ll-chat-send" id="ll-chat-send" type="submit"><span>Отправить</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></button>
+            </div>
+        </div>
+        <p class="ll-chat-help">Вставьте файл через Ctrl/⌘+V. На компьютере: Enter — отправить, Shift+Enter — новая строка. {% if lesson.audience == 'open' %}Файлы доступны всем, у кого есть ссылка на урок.{% else %}Файлы видят только участники выбранных групп.{% endif %}</p>
+    </form>
+    {% else %}
+    <p class="ll-note">Занятие завершено — история чата доступна для просмотра.</p>
+    {% endif %}
+</section>

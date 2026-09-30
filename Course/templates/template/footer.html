@@ -13,6 +13,9 @@
                     Статьи</a></li>
                 <li><a href="{% url 'test_answer' %}">Твой
                     Собес</a></li>
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'live_lesson_list' %}">Онлайн-занятия</a></li>
+                {% endif %}
                 <li><a href="{% url 'review_list' %}">Твоё
                     Ревью</a></li>
                 <li><a

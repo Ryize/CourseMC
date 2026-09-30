@@ -1,0 +1,26 @@
+# Подключается явно вместе с compose.yaml: обычный запуск сайта не меняется.
+# Один медиасервер на той же машине; SQLite остаётся только у Django.
+services:
+  web:
+    environment:
+      LIVEKIT_API_URL: ${LIVEKIT_API_URL:-http://livekit:7880}
+
+  livekit:
+    image: livekit/livekit-server:v1.13.7
+    restart: unless-stopped
+    environment:
+      LIVEKIT_CONFIG: |
+        port: 7880
+        log_level: info
+        rtc:
+          tcp_port: 7881
+          udp_port: 7882
+          use_external_ip: true
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY:?Set LIVEKIT_API_KEY in .env}: ${LIVEKIT_API_SECRET:?Set LIVEKIT_API_SECRET in .env}"
+    expose:
+      - "7880"
+    ports:
+      - "7881:7881/tcp"
+      - "7882:7882/udp"
+    networks:
+      - backend

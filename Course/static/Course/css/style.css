@@ -2041,6 +2041,50 @@ body.black .scheduleSection .title.blog .dropdown-filter div:hover {
     color: #842029;
 }
 
+.scheduleSection .item .dropdown {
+    display: grid;
+    grid-template-rows: 0fr;
+    align-items: stretch;
+    gap: 0;
+    max-height: none;
+    overflow: hidden;
+    transition: grid-template-rows .6s ease-in-out,
+                padding .6s ease-in-out,
+                opacity .25s ease;
+}
+.scheduleSection .item.active .dropdown {
+    grid-template-rows: 1fr;
+    max-height: none;
+    overflow: hidden;
+    transition: grid-template-rows .6s ease-in-out,
+                padding .6s ease-in-out,
+                opacity .25s ease;
+}
+.scheduleSection .dropdown .schedule-dropdown-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 30px;
+    min-height: 0;
+    overflow: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+    .scheduleSection .item .dropdown,
+    .scheduleSection .item.active .dropdown { transition: none; }
+}
+.scheduleSection .dropdown .lesson-chat-archives { width: 100%; margin: 0; padding: 18px; border: 1px solid rgba(111, 123, 240, .25); border-radius: 14px; background: rgba(111, 123, 240, .07); }
+.lesson-chat-archives > strong { display: block; margin-bottom: 4px; }
+.scheduleSection .dropdown .lesson-chat-archive-card { display: block; width: 100%; padding: 15px; border: 1px solid rgba(111, 123, 240, .22); border-radius: 12px; background: #fff; }
+.scheduleSection .dropdown .lesson-chat-archive-heading { display: flex; flex-direction: row; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 18px; }
+.lesson-chat-archive-heading span { font-weight: 700; overflow-wrap: anywhere; }
+.scheduleSection .dropdown .lesson-chat-archive-actions { display: flex; flex-direction: row; flex-wrap: wrap; gap: 8px 18px; margin-top: 10px; }
+.lesson-chat-archive-actions button { padding: 0; border: 0; background: transparent; color: var(--color-accent); font: inherit; font-weight: 700; cursor: pointer; }
+.lesson-chat-archive-actions button:hover { text-decoration: underline; }
+.scheduleSection .dropdown .lesson-chat-archive-preview { display: block; margin-top: 14px; }
+.scheduleSection .dropdown .lesson-chat-archive-preview[hidden] { display: none; }
+body.black .scheduleSection .dropdown .lesson-chat-archives { border-color: rgba(111, 123, 240, .45); background: rgba(111, 123, 240, .12); }
+body.black .scheduleSection .dropdown .lesson-chat-archive-card { border-color: #414b5e; background: #232b39; }
+
 .lesson-solution {
     width: 100%;
     padding-top: 24px;

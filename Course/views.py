@@ -35,6 +35,7 @@ from Course.report import get_content_disposition, get_content_type
 from Course.services import lesson_solution_file_response
 from billing.models import Absences
 from reviews.models import Review
+from live_lessons.models import LiveLessonChatArchive
 
 STATUS_OK = 200
 STATUS_FORBIDDEN = 403
@@ -251,9 +252,15 @@ class TimetableView(LoginRequiredMixin, ListView):
         solutions_by_schedule = {
             solution.schedule_id: solution for solution in solutions
         }
+        chat_archives_by_schedule = {}
+        for archive in LiveLessonChatArchive.objects.filter(
+            group=student.groups, schedule__in=page_schedules,
+        ).select_related('lesson'):
+            chat_archives_by_schedule.setdefault(archive.schedule_id, []).append(archive)
         for schedule in page_schedules:
             schedule.lesson_number = self.lesson_numbers[schedule.pk]
             schedule.lesson_solution = solutions_by_schedule.get(schedule.pk)
+            schedule.chat_archives = chat_archives_by_schedule.get(schedule.pk, [])
         query_params = self.request.GET.copy()
         query_params.pop('page', None)
         context['pagination_query'] = query_params.urlencode()

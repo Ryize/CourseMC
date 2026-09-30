@@ -1,0 +1,27 @@
+{% extends 'live_lessons/base.html' %}
+{% load static %}
+{% block title %}{{ heading }}{% endblock %}
+{% block extra_head %}<script src="{% static 'live_lessons/lesson_form.js' %}?v=20260929-1" defer></script>{% endblock %}
+{% block content %}
+<a class="ll-back" href="{% url 'live_lesson_list' %}">← Все занятия</a>
+<div class="ll-page-head">
+    <div>
+        <p class="ll-eyebrow">Онлайн-занятия</p>
+        <h1>{{ heading }}</h1>
+        <p class="ll-lead">{{ help_text }}</p>
+    </div>
+</div>
+<form class="ll-panel ll-form" method="post">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="ll-form-errors">{{ form.non_field_errors }}</div>{% endif %}
+    {% for field in form %}
+        <div class="ll-field"{% if field.name == 'group' or field.name == 'additional_groups' %} data-groups-only{% endif %}>
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+            {% for error in field.errors %}<small class="ll-form-errors">{{ error }}</small>{% endfor %}
+        </div>
+    {% endfor %}
+    <button class="ll-button ll-button-primary" type="submit">{{ submit_label }}</button>
+</form>
+{% endblock %}

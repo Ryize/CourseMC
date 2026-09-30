@@ -1,0 +1,18 @@
+{% extends 'live_lessons/base.html' %}
+{% load static %}
+{% block title %}История чата · {{ archive.schedule.theme }}{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'live_lessons/archive.css' %}?v=20260930-2">{% endblock %}
+{% block content %}
+<a class="ll-back" href="{% if request.user.pk == archive.lesson.teacher.user_id %}{% url 'live_lesson_detail' archive.lesson.public_id %}{% else %}{% url 'schedule' %}{% endif %}">← К уроку</a>
+<section class="lesson-chat-detail">
+    <div class="lesson-chat-detail-head">
+        <div>
+            <p class="ll-eyebrow">История чата · {{ archive.group.title }}</p>
+            <h1>{{ archive.schedule.theme }}</h1>
+            <p class="ll-muted">{{ archive.lesson.title }} · сохранено {{ archive.created_at|date:'d.m.Y H:i' }}</p>
+        </div>
+        <a class="ll-button ll-button-primary" href="{% url 'live_lesson_chat_archive_download' archive.pk %}">Скачать архив с файлами (.zip)</a>
+    </div>
+    {% include 'live_lessons/_archive_chat.html' %}
+</section>
+{% endblock %}

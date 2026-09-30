@@ -60,6 +60,26 @@ server {
         add_header Cache-Control "public, max-age=604800";
     }
 
+    # LiveKit сигналинг на том же сервере. Переменная откладывает DNS-поиск:
+    # сайт продолжает запускаться, даже когда медиасервис ещё не включён.
+    location ^~ /livekit/ {
+        resolver 127.0.0.11 valid=10s ipv6=off;
+        set $livekit_backend livekit:7880;
+        rewrite ^/livekit/(.*)$ /$1 break;
+        proxy_pass http://$livekit_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_connect_timeout 15s;
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+        proxy_buffering off;
+    }
+
     location / {
         proxy_pass http://coursemc_app;
         proxy_http_version 1.1;
