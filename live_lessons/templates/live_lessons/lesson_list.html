@@ -1,5 +1,7 @@
 {% extends 'live_lessons/base.html' %}
 {% block title %}Онлайн-занятия{% endblock %}
+{% load static %}
+{% block extra_head %}<script src="{% static 'live_lessons/lesson_updates.js' %}?v=20260930-1" defer></script>{% endblock %}
 {% block content %}
 <div class="ll-page-head">
     <div>
@@ -10,39 +12,8 @@
     {% if can_create %}<a class="ll-button ll-button-primary" href="{% url 'live_lesson_create' %}">Создать занятие</a>{% endif %}
 </div>
 
-<section class="ll-section" aria-labelledby="ll-current-title">
-    <h2 id="ll-current-title">Предстоящие и текущие</h2>
-    <div class="ll-card-list">
-        {% for lesson in current_lessons %}
-            <a class="ll-lesson-card" href="{% url 'live_lesson_detail' lesson.public_id %}">
-                <div>
-                    <span class="ll-status ll-status-{{ lesson.status }}">{{ lesson.get_status_display }}</span>
-                    <h3>{{ lesson.title }}</h3>
-                    <p>{% if lesson.audience == 'open' %}Открытый урок{% else %}{{ lesson.group.title }}{% for group in lesson.additional_groups.all %} · {{ group.title }}{% endfor %}{% endif %} · {{ lesson.scheduled_at|date:'d.m.Y в H:i' }}</p>
-                </div>
-                <span class="ll-card-arrow" aria-hidden="true">→</span>
-            </a>
-        {% empty %}
-            <div class="ll-empty">Пока нет запланированных занятий.</div>
-        {% endfor %}
-    </div>
-</section>
-
-{% if past_lessons %}
-<section class="ll-section" aria-labelledby="ll-past-title">
-    <h2 id="ll-past-title">Прошедшие занятия</h2>
-    <div class="ll-card-list">
-        {% for lesson in past_lessons %}
-            <a class="ll-lesson-card" href="{% url 'live_lesson_detail' lesson.public_id %}">
-                <div>
-                    <span class="ll-status ll-status-{{ lesson.status }}">{{ lesson.get_status_display }}</span>
-                    <h3>{{ lesson.title }}</h3>
-                    <p>{% if lesson.audience == 'open' %}Открытый урок{% else %}{{ lesson.group.title }}{% for group in lesson.additional_groups.all %} · {{ group.title }}{% endfor %}{% endif %} · {{ lesson.scheduled_at|date:'d.m.Y в H:i' }}</p>
-                </div>
-                <span class="ll-card-arrow" aria-hidden="true">→</span>
-            </a>
-        {% endfor %}
-    </div>
-</section>
-{% endif %}
+<div id="ll-live-page" data-updates-kind="list" data-revision="{{ page_revision }}">
+    <p id="ll-updates-notice" class="ll-updates-notice" role="status" aria-live="polite" data-ll-notice hidden></p>
+    <div id="ll-lesson-list-content">{{ list_content|safe }}</div>
+</div>
 {% endblock %}

@@ -1,4 +1,5 @@
-import time
+import hashlib
+import json
 import re
 import shutil
 from datetime import timedelta
@@ -16,6 +17,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
@@ -25,6 +27,7 @@ from Course.models import LearnGroup, Student
 from Course.views import get_accessible_schedule_ids
 
 from .chat import MAX_ATTACHMENT_BYTES, MAX_MESSAGE_LENGTH, message_payload, validate_attachment
+from .classroom import admission_for_join, may_read_chat, publish_sources
 from .archives import archive_filename, save_bundle
 from .forms import DATETIME_FORMAT, LiveLessonChatArchiveForm, LiveLessonCreateForm, LiveLessonRescheduleForm
 from .guests import guest_for_lesson
@@ -65,7 +68,7 @@ def accessible_lessons(user):
 
 def lesson_for_request(request, public_id):
     lesson = get_object_or_404(
-        LiveLesson.objects.select_related('group', 'teacher__user').prefetch_related('additional_groups'),
+        LiveLesson.objects.select_related('group__teacher__user', 'teacher__user').prefetch_related('additional_groups'),
         public_id=public_id,
     )
     if lesson.audience == LiveLesson.Audience.OPEN:
@@ -78,7 +81,7 @@ def lesson_for_request(request, public_id):
 
 
 def room_available(lesson):
-    if lesson.status != LiveLesson.Status.LIVE:
+    if lesson.status != LiveLesson.Status.LIVE or timezone.now() >= lesson.auto_end_at:
         return False
     if lesson.audience == LiveLesson.Audience.OPEN:
         return True
@@ -101,12 +104,40 @@ def teacher_lesson_or_404(user, public_id, *, for_update=False):
     ), public_id=public_id)
 
 
+def wants_json(request):
+    return 'application/json' in request.headers.get('Accept', '')
+
+
+def lesson_is_teacher(request, lesson):
+    teacher_id = lesson.teacher.user_id if lesson.audience == LiveLesson.Audience.OPEN else lesson.group.teacher.user_id
+    return request.user.is_authenticated and teacher_id == request.user.pk
+
+
+def lesson_state_payload(request, lesson):
+    """Недорогая проверка изменений, без выдачи токена и запросов к LiveKit."""
+    available = room_available(lesson)
+    removed = available and LiveLessonRemoval.objects.filter(
+        lesson=lesson, identity=participant_identity(request, lesson),
+    ).exists()
+    state = {'status': lesson.status, 'can_join': available and not removed, 'removed': bool(removed)}
+    groups = ([lesson.group] if lesson.group_id else []) + list(lesson.additional_groups.all())
+    revision = [state, lesson.updated_at.isoformat(), lesson.scheduled_at.isoformat(),
+                lesson.title, lesson.duration_minutes, lesson.teacher.user_id,
+                [(group.pk, group.title, group.is_studies, group.teacher_id) for group in groups]]
+    if lesson_is_teacher(request, lesson):
+        # Форма сохранения появляется после первого сообщения; список архивов — после сохранения.
+        revision.extend((lesson.chat_messages.exists(),
+                         lesson.chat_archives.order_by('-pk').values_list('pk', flat=True).first()))
+    state['revision'] = hashlib.sha256(json.dumps(revision, ensure_ascii=False).encode()).hexdigest()
+    return state
+
+
 @login_required
 @require_GET
 @never_cache
 def lesson_list(request):
     lessons = accessible_lessons(request.user)
-    return render(request, 'live_lessons/lesson_list.html', {
+    context = {
         'current_lessons': lessons.filter(
             status__in=(LiveLesson.Status.SCHEDULED, LiveLesson.Status.LIVE),
         ).order_by('scheduled_at', 'pk'),
@@ -114,7 +145,15 @@ def lesson_list(request):
             status__in=(LiveLesson.Status.ENDED, LiveLesson.Status.CANCELLED),
         ).order_by('-scheduled_at', '-pk')[:30],
         'can_create': LearnGroup.objects.filter(teacher__user=request.user).exists(),
-    })
+    }
+    content = render_to_string('live_lessons/_lesson_list_content.html', context, request=request)
+    revision = hashlib.sha256(content.encode()).hexdigest()
+    if wants_json(request):
+        changed = request.GET.get('revision') != revision
+        return JsonResponse({'revision': revision, 'changed': changed,
+                             'html': content if changed else None})
+    context.update(list_content=content, page_revision=revision)
+    return render(request, 'live_lessons/lesson_list.html', context)
 
 
 @login_required
@@ -150,14 +189,14 @@ def lesson_detail(request, public_id):
     guest = guest_for_lesson(request, lesson) if (
         lesson.audience == LiveLesson.Audience.OPEN and not request.user.is_authenticated
     ) else None
-    is_teacher = (lesson.teacher.user_id == request.user.pk if lesson.audience == LiveLesson.Audience.OPEN
-                  else lesson.group.teacher.user_id == request.user.pk)
+    is_teacher = lesson_is_teacher(request, lesson)
     archive_form = None
     if is_teacher and lesson.audience == LiveLesson.Audience.GROUPS and lesson.status in (
         LiveLesson.Status.LIVE, LiveLesson.Status.ENDED,
     ):
         archive_form = LiveLessonChatArchiveForm(lesson=lesson, teacher_user=request.user)
-    return render(request, 'live_lessons/lesson_detail.html', {
+    state = lesson_state_payload(request, lesson)
+    context = {
         'lesson': lesson,
         'is_teacher': is_teacher,
         'archive_form': archive_form,
@@ -170,8 +209,20 @@ def lesson_detail(request, public_id):
             'live_lesson_detail', kwargs={'public_id': lesson.public_id},
         )),
         'reschedules': lesson.reschedules.select_related('changed_by').all(),
-        'show_chat': room_available(lesson) or lesson.status == LiveLesson.Status.ENDED,
-    })
+        'show_chat': room_available(lesson) or (lesson.status == LiveLesson.Status.ENDED and may_read_chat(request, lesson)),
+        'page_revision': state['revision'],
+    }
+    if wants_json(request):
+        response = JsonResponse({
+            'state': state,
+            'before_html': render_to_string('live_lessons/_lesson_before.html', context, request=request),
+            'after_html': render_to_string('live_lessons/_lesson_after.html', context, request=request),
+            'room_html': (render_to_string('live_lessons/_lesson_room.html', context, request=request)
+                          if context['room_open'] and request.GET.get('room') == '1' else None),
+        })
+        response['Referrer-Policy'] = 'no-referrer'
+        return response
+    return render(request, 'live_lessons/lesson_detail.html', context)
 
 
 @login_required
@@ -185,19 +236,16 @@ def lesson_save_chat_archive(request, public_id):
         raise Http404
     form = LiveLessonChatArchiveForm(request.POST, lesson=lesson, teacher_user=request.user)
     if not form.is_valid():
-        messages.error(request, 'Выберите урок программы участвовавшей группы.')
-        return redirect('live_lesson_detail', public_id=public_id)
+        return archive_result(request, public_id, 'Выберите урок программы участвовавшей группы.', error=True)
     chat_rows = list(LiveLessonMessage.objects.filter(lesson=lesson)
                      .select_related('author', 'attachment').order_by('pk'))
     if not chat_rows:
-        messages.error(request, 'В чате пока нет сообщений для сохранения.')
-        return redirect('live_lesson_detail', public_id=public_id)
+        return archive_result(request, public_id, 'В чате пока нет сообщений для сохранения.', error=True)
     group, schedule = form.target_objects()
     if LiveLessonChatArchive.objects.filter(
         lesson=lesson, group=group, schedule=schedule, last_message_id=chat_rows[-1].pk,
     ).exists():
-        messages.info(request, 'Эта версия истории уже сохранена в выбранном уроке.')
-        return redirect('live_lesson_detail', public_id=public_id)
+        return archive_result(request, public_id, 'Эта версия истории уже сохранена в выбранном уроке.')
     with transaction.atomic():
         archive = LiveLessonChatArchive.objects.create(
             lesson=lesson, group=group, schedule=schedule, created_by=request.user,
@@ -231,10 +279,18 @@ def lesson_save_chat_archive(request, public_id):
         try:
             save_bundle(archive, ('\n'.join(lines) + '\n').encode('utf-8'), chat_rows)
         except OSError:
-            messages.error(request, 'Не удалось прикрепить один из файлов чата. Проверьте, что исходный файл доступен.')
             transaction.set_rollback(True)
-            return redirect('live_lesson_detail', public_id=public_id)
-    messages.success(request, f'История чата сохранена для группы «{group.title}» в уроке «{schedule.theme}».')
+            return archive_result(request, public_id,
+                                  'Не удалось прикрепить один из файлов чата. Проверьте, что исходный файл доступен.',
+                                  error=True)
+    return archive_result(request, public_id,
+                          f'История чата сохранена для группы «{group.title}» в уроке «{schedule.theme}».')
+
+
+def archive_result(request, public_id, message, *, error=False):
+    if wants_json(request):
+        return JsonResponse({'ok': not error, 'error' if error else 'message': message}, status=400 if error else 200)
+    (messages.error if error else messages.success)(request, message)
     return redirect('live_lesson_detail', public_id=public_id)
 
 
@@ -400,8 +456,11 @@ def lesson_change_status(request, public_id, action):
     with transaction.atomic():
         lesson = teacher_lesson_or_404(request.user, public_id, for_update=True)
         previous, next_status = transitions[action]
-        if lesson.status != previous or (action == 'start' and lesson.audience == LiveLesson.Audience.GROUPS
-                                         and not room_available_for_groups(lesson)):
+        if lesson.status != previous or (action == 'start' and (
+            timezone.now() >= lesson.auto_end_at or (
+                lesson.audience == LiveLesson.Audience.GROUPS and not room_available_for_groups(lesson)
+            )
+        )):
             raise Http404
         lesson.status = next_status
         fields = ['status', 'updated_at']
@@ -410,8 +469,11 @@ def lesson_change_status(request, public_id, action):
             fields.append('started_at')
         elif action == 'end':
             lesson.ended_at = timezone.now()
-            fields.append('ended_at')
+            lesson.room_cleanup_pending = True
+            fields.extend(['ended_at', 'room_cleanup_pending'])
         lesson.save(update_fields=fields)
+    if wants_json(request):
+        return JsonResponse({'ok': True})
     messages.success(request, {
         'start': 'Занятие начато.', 'end': 'Занятие завершено.',
         'cancel': 'Занятие отменено.',
@@ -448,7 +510,15 @@ def lesson_join_token(request, public_id):
     if not (valid_url and api_key and api_secret and (settings.DEBUG or len(api_secret) >= 32)):
         return JsonResponse({'error': 'Медиасервер ещё не настроен.'}, status=503)
 
-    now = int(time.time())
+    admission = admission_for_join(request, lesson)
+    if admission == 'denied':
+        return JsonResponse({'error': 'Преподаватель отклонил запрос на вход.', 'admission': admission}, status=403)
+    if admission == 'locked':
+        return JsonResponse({'error': 'Преподаватель закрыл вход новым участникам.', 'admission': admission}, status=409)
+    if admission == 'waiting':
+        return JsonResponse({'waiting': True, 'admission': admission}, status=202)
+
+    now = int(timezone.now().timestamp())
     if request.user.is_authenticated:
         participant_name = request.user.get_full_name().strip() or request.user.username
         participant_id = identity
@@ -461,13 +531,14 @@ def lesson_join_token(request, public_id):
         'sub': participant_id,
         'name': participant_name,
         'nbf': now,
-        'exp': now + 5 * 60,
+        'exp': min(now + 5 * 60, int(lesson.auto_end_at.timestamp())),
         'video': {
             'roomJoin': True,
             'room': lesson.room_name,
             'canPublish': True,
             'canSubscribe': True,
             'canPublishData': True,
+            'canPublishSources': publish_sources(lesson, teacher=lesson_is_teacher(request, lesson)),
         },
     }, api_secret, algorithm='HS256')
     response = JsonResponse({'server_url': server_url, 'participant_token': token})
@@ -480,18 +551,11 @@ def lesson_join_token(request, public_id):
 @require_GET
 @never_cache
 def lesson_state(request, public_id):
-    """Позволяет открытой комнате заметить завершение урока или отзыв доступа."""
+    """Состояние для страницы ожидания, комнаты и управления занятием."""
     lesson = lesson_for_request(request, public_id)
     if lesson is None:
         return redirect_to_login(request.get_full_path())
-    removed = LiveLessonRemoval.objects.filter(
-        lesson=lesson, identity=participant_identity(request, lesson),
-    ).exists() if room_available(lesson) else False
-    response = JsonResponse({
-        'status': lesson.status,
-        'can_join': room_available(lesson) and not removed,
-        'removed': removed,
-    })
+    response = JsonResponse(lesson_state_payload(request, lesson))
     response['Referrer-Policy'] = 'no-referrer'
     return response
 
@@ -528,6 +592,7 @@ def lesson_moderate_participant(request, public_id):
             LiveLessonRemoval.objects.get_or_create(
                 lesson=lesson, identity=identity, defaults={'removed_by': request.user},
             )
+            lesson.participants.filter(identity=identity).update(admission='denied', hand_raised_at=None)
     except LiveKitAPIError as error:
         status = 409 if error.status_code == 404 else 503
         return JsonResponse({'error': ('Участник уже вышел из комнаты.' if status == 409 else str(error))},
@@ -553,6 +618,8 @@ def lesson_chat_messages(request, public_id):
         return redirect_to_login(request.get_full_path())
     if lesson.status not in (LiveLesson.Status.LIVE, LiveLesson.Status.ENDED):
         return JsonResponse({'error': 'Чат пока недоступен.'}, status=409)
+    if not may_read_chat(request, lesson):
+        return JsonResponse({'error': 'Сначала получите доступ к комнате.'}, status=403)
     if lesson.status == LiveLesson.Status.LIVE:
         try:
             if not participant_in_room(lesson, participant_identity(request, lesson)):
@@ -588,6 +655,8 @@ def lesson_chat_send(request, public_id):
     identity = participant_identity(request, lesson)
     if LiveLessonRemoval.objects.filter(lesson=lesson, identity=identity).exists():
         return JsonResponse({'error': 'Преподаватель удалил вас из этого занятия.'}, status=403)
+    if not may_read_chat(request, lesson):
+        return JsonResponse({'error': 'Сначала получите доступ к комнате.'}, status=403)
     try:
         if not participant_in_room(lesson, identity):
             return JsonResponse({'error': 'Сначала войдите в комнату.'}, status=409)
@@ -644,6 +713,8 @@ def lesson_chat_attachment(request, public_id, attachment_id):
     lesson = lesson_for_request(request, public_id)
     if lesson is None:
         return redirect_to_login(request.get_full_path())
+    if lesson.status not in (LiveLesson.Status.LIVE, LiveLesson.Status.ENDED) or not may_read_chat(request, lesson):
+        raise Http404
     if lesson.status == LiveLesson.Status.LIVE:
         try:
             if not participant_in_room(lesson, participant_identity(request, lesson)):

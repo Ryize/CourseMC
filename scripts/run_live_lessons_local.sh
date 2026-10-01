@@ -46,10 +46,44 @@ fi
 
 echo "CourseMC: http://127.0.0.1:8000/live-lessons/"
 echo "LiveKit: ws://127.0.0.1:7880 (только этот компьютер)"
-echo "Остановка сайта: Ctrl+C; остановка LiveKit: docker stop $container_name"
+echo "Остановка сайта и планировщика: Ctrl+C; остановка LiveKit: docker stop $container_name"
 
 export DJANGO_DEBUG=1
 export LIVEKIT_URL=ws://127.0.0.1:7880
 export LIVEKIT_API_KEY=devkey
 export LIVEKIT_API_SECRET=secret
-exec .venv/bin/python manage.py runserver 127.0.0.1:8000
+
+# Применяем новые миграции к существующей базе только после безопасной SQLite-копии.
+if ! .venv/bin/python manage.py migrate --check --noinput >/dev/null; then
+  mkdir -p data/backups/local
+  .venv/bin/python manage.py shell -c '
+import sqlite3
+import uuid
+from datetime import datetime
+from pathlib import Path
+from django.conf import settings
+source = Path(settings.DATABASES["default"]["NAME"])
+target = Path("data/backups/local") / (datetime.now().strftime("db.%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:8] + ".sqlite3")
+with sqlite3.connect(f"file:{source}?mode=ro", uri=True) as database, sqlite3.connect(target) as backup:
+    database.backup(backup)
+    assert backup.execute("PRAGMA quick_check").fetchone()[0] == "ok"
+print("Резервная копия:", target)
+'
+  .venv/bin/python manage.py migrate --noinput
+fi
+
+scheduler_pid=""
+server_pid=""
+stop_local_processes() {
+  [[ -z "$scheduler_pid" ]] || kill "$scheduler_pid" 2>/dev/null || true
+  # runserver использует дочерний процесс перезагрузки — закрываем и его.
+  [[ -z "$server_pid" ]] || pkill -TERM -P "$server_pid" 2>/dev/null || true
+  [[ -z "$server_pid" ]] || kill "$server_pid" 2>/dev/null || true
+}
+trap stop_local_processes EXIT
+trap 'exit 130' INT TERM
+.venv/bin/python manage.py live_lesson_scheduler &
+scheduler_pid=$!
+.venv/bin/python manage.py runserver 127.0.0.1:8000 &
+server_pid=$!
+wait "$server_pid"

@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Онлайн-занятия{% endblock %} — CourseMC</title>
     <link rel="stylesheet" href="{% static 'Course/css/style.css' %}?v=20260812-3">
-    <link rel="stylesheet" href="{% static 'live_lessons/lessons.css' %}?v=20260930-1">
+    <link rel="stylesheet" href="{% static 'live_lessons/lessons.css' %}?v=20261001-2">
+    <script src="{% static 'live_lessons/lesson_notifications.js' %}?v=20261001-1" defer></script>
     <link rel="shortcut icon" href="{% static 'Course/assets/favicon.ico' %}" type="image/x-icon">
     {% block extra_head %}{% endblock %}
 </head>
@@ -15,7 +16,7 @@
 <main class="ll-shell {% block main_class %}{% endblock %}">
     {% if messages %}
         <div class="ll-messages" aria-live="polite">
-            {% for message in messages %}<p class="ll-message">{{ message }}</p>{% endfor %}
+            {% for message in messages %}<p class="ll-message" data-ll-notice data-notice-kind="{{ message.tags }}">{{ message }}</p>{% endfor %}
         </div>
     {% endif %}
     {% block content %}{% endblock %}

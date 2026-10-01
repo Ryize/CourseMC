@@ -2,6 +2,7 @@ name: coursemc
 
 services:
   web:
+    image: coursemc-web
     build:
       context: .
       dockerfile: Dockerfile

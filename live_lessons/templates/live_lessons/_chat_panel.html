@@ -3,7 +3,7 @@
         <div>
             <p class="ll-eyebrow">Обсуждение</p>
             <h2 id="ll-chat-title">Чат занятия</h2>
-            <p class="ll-muted">Сообщения и вложения останутся доступны по ссылке после завершения занятия.</p>
+            <p class="ll-muted">Сообщения и вложения сохранятся после завершения занятия.</p>
         </div>
         <span class="ll-chat-count" id="ll-chat-count" aria-live="polite"></span>
     </div>
@@ -16,7 +16,7 @@
             <span>Напишите первое сообщение участникам.</span>
         </div>
     </div>
-    <p class="ll-chat-error" id="ll-chat-error" role="alert" hidden></p>
+    <p class="ll-chat-error" id="ll-chat-error" role="alert" data-ll-notice data-notice-kind="error" hidden></p>
     {% if room_open %}
     <form class="ll-chat-form" id="ll-chat-form" enctype="multipart/form-data">
         {% csrf_token %}
@@ -38,7 +38,7 @@
                 <button class="ll-button ll-button-primary ll-chat-send" id="ll-chat-send" type="submit"><span>Отправить</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></button>
             </div>
         </div>
-        <p class="ll-chat-help">Вставьте файл через Ctrl/⌘+V. На компьютере: Enter — отправить, Shift+Enter — новая строка. {% if lesson.audience == 'open' %}Файлы доступны всем, у кого есть ссылка на урок.{% else %}Файлы видят только участники выбранных групп.{% endif %}</p>
+        <p class="ll-chat-help">Вставьте файл через Ctrl/⌘+V. На компьютере: Enter — отправить, Shift+Enter — новая строка. {% if lesson.audience == 'open' %}{% if lesson.waiting_room_enabled or lesson.entry_locked %}Файлы доступны допущенным участникам.{% else %}Файлы доступны после входа в комнату.{% endif %}{% else %}Файлы видят только участники выбранных групп.{% endif %}</p>
     </form>
     {% else %}
     <p class="ll-note">Занятие завершено — история чата доступна для просмотра.</p>

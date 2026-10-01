@@ -1,0 +1,9 @@
+<a class="ll-back" href="{% url 'live_lesson_list' %}">← Все занятия</a>
+{% if not room_open %}<div class="ll-page-head ll-detail-head">
+    <div>
+        <p class="ll-eyebrow">{% if lesson.audience == 'open' %}Открытый урок · вход по ссылке{% else %}{{ lesson.group.title }}{% for group in lesson.additional_groups.all %} · {{ group.title }}{% endfor %}{% endif %}</p>
+        <h1>{{ lesson.title }}</h1>
+        <span class="ll-status ll-status-{{ lesson.status }}">{{ lesson.get_status_display }}</span>
+    </div>
+    <button class="ll-button ll-copy-link" type="button" data-lesson-copy data-lesson-url="{{ lesson_url }}" data-auto-copy="{{ is_teacher|yesno:'true,false' }}" aria-label="Скопировать ссылку на занятие"><span>Скопировать ссылку</span></button>
+</div>{% endif %}

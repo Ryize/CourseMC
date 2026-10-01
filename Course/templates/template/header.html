@@ -36,13 +36,13 @@
 
         <div class="drop drop1">
             <ul>
+                {% if user.is_authenticated %}
+                    <li style="--var: 100%;"><a href="{% url 'live_lesson_list' %}">Онлайн-занятия</a></li>
+                {% endif %}
                 <li style="--var: 55%;"><a href="{% url 'blog_home' %}">Твои
                     Статьи</a></li>
                 <li style="--var: 100%;"><a href="{% url 'test_answer' %}">Твой
                     Собес</a></li>
-                {% if user.is_authenticated %}
-                    <li style="--var: 100%;"><a href="{% url 'live_lesson_list' %}">Онлайн-занятия</a></li>
-                {% endif %}
                 <li style="--var: 100%;"><a href="{% url 'review_list' %}">Твоё
                     Ревью</a></li>
                 <li style="--var: 75%;"><a

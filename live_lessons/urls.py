@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import classroom_views, views
 
 
 urlpatterns = [
@@ -18,6 +18,9 @@ urlpatterns = [
          views.lesson_chat_archive_attachment, name='live_lesson_archive_attachment'),
     path('<uuid:public_id>/join-token/', views.lesson_join_token, name='live_lesson_join_token'),
     path('<uuid:public_id>/state/', views.lesson_state, name='live_lesson_state'),
+    path('<uuid:public_id>/classroom/', classroom_views.classroom_state, name='live_lesson_classroom'),
+    path('<uuid:public_id>/classroom/action/', classroom_views.classroom_action, name='live_lesson_classroom_action'),
+    path('<uuid:public_id>/classroom/manage/', classroom_views.classroom_manage, name='live_lesson_classroom_manage'),
     path('<uuid:public_id>/moderate/', views.lesson_moderate_participant, name='live_lesson_moderate'),
     path('<uuid:public_id>/chat/messages/', views.lesson_chat_messages, name='live_lesson_chat_messages'),
     path('<uuid:public_id>/chat/send/', views.lesson_chat_send, name='live_lesson_chat_send'),

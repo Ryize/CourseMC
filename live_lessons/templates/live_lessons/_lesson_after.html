@@ -1,0 +1,70 @@
+{% if lesson.status == 'live' and not room_open %}
+<section class="ll-panel"><p class="ll-muted">Вход в комнату временно закрыт: занятия этой группы приостановлены.</p></section>
+{% endif %}
+
+{% if not room_open %}<div class="ll-detail-grid ll-detail-grid-single">
+    <section class="ll-panel" aria-labelledby="ll-time-title">
+        <h2 id="ll-time-title">Когда</h2>
+        <p class="ll-large">{{ lesson.scheduled_at|date:'d.m.Y в H:i' }}</p>
+        <p class="ll-muted">Продолжительность: {{ lesson.duration_minutes }} мин · Преподаватель: {{ lesson.teacher.user.get_full_name|default:lesson.teacher.user.username }}</p>
+        {% if lesson.audience == 'open' %}<p class="ll-note">Вход по ссылке без авторизации. Не пересылайте ссылку тем, кого не хотите приглашать.</p>{% endif %}
+        {% if lesson.origin == 'extra' %}<p class="ll-note">Вне регулярного графика группы</p>{% endif %}
+        {% if reschedules %}<p class="ll-note">Время занятия переносилось. История изменений ниже.</p>{% endif %}
+    </section>
+
+</div>{% endif %}
+
+{% if show_chat %}{% if not room_open %}{% include 'live_lessons/_chat_panel.html' %}{% endif %}{% endif %}
+
+{% if is_teacher %}
+<section class="ll-panel" aria-labelledby="ll-controls-title">
+    <h2 id="ll-controls-title">Управление занятием</h2>
+    <div class="ll-actions">
+        {% if lesson.status == 'scheduled' %}
+            <a class="ll-button" href="{% url 'live_lesson_reschedule' lesson.public_id %}">Перенести</a>
+            <form data-lesson-action method="post" action="{% url 'live_lesson_change_status' lesson.public_id 'start' %}">{% csrf_token %}<button class="ll-button ll-button-primary" type="submit">Начать занятие</button></form>
+            <form data-lesson-action method="post" action="{% url 'live_lesson_change_status' lesson.public_id 'cancel' %}">{% csrf_token %}<button class="ll-button ll-button-danger" type="submit">Отменить</button></form>
+        {% elif lesson.status == 'live' %}
+            <form data-lesson-action method="post" action="{% url 'live_lesson_change_status' lesson.public_id 'end' %}">{% csrf_token %}<button class="ll-button ll-button-danger" type="submit">Завершить занятие</button></form>
+        {% else %}<p class="ll-muted">Занятие уже закрыто.</p>{% endif %}
+    </div>
+    {% if archive_form %}
+    <div class="ll-archive-section">
+        <h3>Материалы для группы</h3>
+        <p class="ll-muted">Сохраните переписку и отправленные файлы в ZIP-архив выбранного урока программы. Преподаватель и ученики группы смогут просмотреть чат на сайте или скачать архив.</p>
+        {% if archive_form.targets and has_chat_messages %}
+        <form data-lesson-action class="ll-archive-form" method="post" action="{% url 'live_lesson_save_chat_archive' lesson.public_id %}">
+            {% csrf_token %}
+            <label for="{{ archive_form.target.id_for_label }}">Урок и группа</label>
+            {{ archive_form.target }}
+            <button class="ll-button ll-button-primary" type="submit">Сохранить историю чата</button>
+        </form>
+        {% elif not archive_form.targets %}
+        <p class="ll-note">У участников этих групп пока нет подходящих уроков программы.</p>
+        {% else %}
+        <p class="ll-note">В чате пока нет сообщений.</p>
+        {% endif %}
+        {% if chat_archives %}
+        <ul class="ll-archive-list">
+            {% for archive in chat_archives %}
+                <li><span>{{ archive.group.title }} · {{ archive.schedule.theme }} · {{ archive.created_at|date:'d.m.Y H:i' }}</span>
+                    <a href="{% url 'live_lesson_chat_archive_view' archive.pk %}">Посмотреть чат</a>
+                    <a href="{% url 'live_lesson_chat_archive_download' archive.pk %}">Скачать ZIP с файлами</a></li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    {% endif %}
+</section>
+{% endif %}
+
+{% if reschedules %}
+<section class="ll-panel" aria-labelledby="ll-history-title">
+    <h2 id="ll-history-title">История переносов</h2>
+    <ul class="ll-history">
+        {% for item in reschedules %}
+            <li>{{ item.old_scheduled_at|date:'d.m.Y H:i' }} → {{ item.new_scheduled_at|date:'d.m.Y H:i' }}{% if item.reason %} · {{ item.reason }}{% endif %}</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}

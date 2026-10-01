@@ -41,7 +41,9 @@ class LiveLessonAdmin(admin.ModelAdmin):
     list_display = ('title', 'audience', 'group', 'teacher', 'scheduled_at', 'status', 'origin')
     list_filter = ('status', 'audience', 'origin', 'group')
     search_fields = ('title', 'group__title', 'additional_groups__title', 'teacher__user__username')
-    readonly_fields = ('public_id', 'started_at', 'ended_at', 'created_at', 'updated_at')
+    readonly_fields = ('public_id', 'timetable_date', 'room_cleanup_pending',
+                       'policy_sync_until', 'mute_all_pending',
+                       'started_at', 'ended_at', 'created_at', 'updated_at')
     filter_horizontal = ('additional_groups',)
     inlines = (LiveLessonRescheduleInline,)
 
@@ -49,7 +51,8 @@ class LiveLessonAdmin(admin.ModelAdmin):
         fields = super().get_readonly_fields(request, obj)
         if obj:
             return (*fields, 'group', 'additional_groups', 'audience',
-                    'teacher', 'scheduled_at', 'status', 'origin')
+                    'teacher', 'scheduled_at', 'status', 'origin', 'waiting_room_enabled',
+                    'entry_locked', 'students_can_unmute', 'students_can_share_screen')
         return fields
 
     def has_delete_permission(self, request, obj=None):

@@ -1,0 +1,28 @@
+<div class="ll-device-overlay" id="ll-device-check" role="dialog" aria-modal="true" aria-labelledby="ll-device-title" hidden>
+    <div class="ll-device-panel">
+        <div class="ll-room-settings-head"><strong id="ll-device-title">Проверка перед уроком</strong><button id="ll-device-close" type="button" aria-label="Закрыть проверку устройств">×</button></div>
+        <div class="ll-device-scroll">
+            <p class="ll-device-intro">Всё происходит только у вас. Камера и микрофон не передаются в комнату; после проверки они выключатся.</p>
+            <div class="ll-device-content">
+                <div class="ll-device-camera-preview">
+                    <video id="ll-device-video" autoplay muted playsinline hidden></video>
+                    <span id="ll-device-placeholder">Камера выключена</span>
+                </div>
+                <div class="ll-device-controls">
+                    <label>Камера<select id="ll-device-camera-select"><option value="">По умолчанию</option></select></label>
+                    <button class="ll-room-top-button" id="ll-device-camera-test" type="button" aria-pressed="false">Проверить камеру</button>
+                    <label>Микрофон<select id="ll-device-mic-select"><option value="">По умолчанию</option></select></label>
+                    <button class="ll-room-top-button" id="ll-device-mic-test" type="button" aria-pressed="false">Проверить микрофон</button>
+                    <div class="ll-device-meter" role="meter" id="ll-device-meter" aria-label="Уровень микрофона" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="ll-device-level"></span></div>
+                    <span class="ll-device-meter-hint" id="ll-device-mic-hint">Нажмите «Проверить микрофон» и скажите несколько слов.</span>
+                    <label>Динамики<select id="ll-device-speaker-select"><option value="">По умолчанию</option></select></label>
+                    <button class="ll-room-top-button" id="ll-device-speaker-test" type="button">Проверить динамики</button>
+                    <span class="ll-device-meter-hint" id="ll-device-output-help"></span>
+                </div>
+            </div>
+            <p class="ll-device-status" id="ll-device-status" role="status" aria-live="polite"></p>
+        </div>
+        <div class="ll-device-actions"><button class="ll-room-join-button" id="ll-device-done" type="button">Готово</button></div>
+        <audio id="ll-device-test-audio" hidden></audio>
+    </div>
+</div>

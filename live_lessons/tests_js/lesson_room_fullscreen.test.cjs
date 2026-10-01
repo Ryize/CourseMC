@@ -7,19 +7,23 @@ const vm = require('node:vm');
 const source = fs.readFileSync(path.join(__dirname, '../static/live_lessons/lesson_room.js'), 'utf8');
 
 function roomFixture({ teacher = false, supportsNoiseSuppression = true,
-    supportsVoiceEnhancement = true, savedPreferences = null } = {}) {
+    supportsVoiceEnhancement = true, savedPreferences = null, initialRoom = true,
+    savedDevices = null, supportsOutput = false } = {}) {
     const elements = new Map();
     const documentListeners = new Map();
+    const windowListeners = new Map();
     const requests = [];
     const timers = new Map();
     let nextTimerId = 0;
     const storage = new Map();
     if (savedPreferences) storage.set('coursemc:live-room-screen:v1', JSON.stringify(savedPreferences));
+    if (savedDevices) storage.set('coursemc:live-room-devices:v1', JSON.stringify(savedDevices));
     let latestRoom = null;
     const doc = {
         fullscreenElement: null,
         getElementById: (id) => elements.get(id),
         addEventListener(type, callback) { documentListeners.set(type, callback); },
+        removeEventListener(type) { documentListeners.delete(type); },
         exitFullscreen() {
             this.fullscreenElement = null;
             documentListeners.get('fullscreenchange')();
@@ -60,6 +64,11 @@ function roomFixture({ teacher = false, supportsNoiseSuppression = true,
                 return Promise.resolve();
             },
         };
+        let ownText = '';
+        Object.defineProperty(element, 'textContent', {
+            get() { return ownText + this.children.map((child) => child.textContent).join(''); },
+            set(value) { ownText = String(value); this.children = []; },
+        });
         element.classList = {
             contains(name) { return element.className.split(/\s+/).includes(name); },
             toggle(name, force) {
@@ -69,6 +78,8 @@ function roomFixture({ teacher = false, supportsNoiseSuppression = true,
             },
             add(name) { element.className += ` ${name}`; },
         };
+        element.style = { setProperty(name, value) { this[name] = value; } };
+        if (tagName === 'audio' && supportsOutput) element.setSinkId = async () => {};
         return element;
     }
     doc.createElement = makeElement;
@@ -84,14 +95,17 @@ function roomFixture({ teacher = false, supportsNoiseSuppression = true,
         'll-room-sidebar', 'll-room-sidebar-title', 'll-room-sidebar-close',
         'll-room-members-toggle', 'll-room-chat-toggle', 'll-room-members-panel',
         'll-room-chat-panel', 'll-room-fullscreen', 'll-room-reactions-toggle', 'll-room-reactions-menu',
+        'll-room-audio-output', 'll-device-open',
     ]) elements.set(id, makeElement());
     elements.get('ll-room-reactions-menu').hidden = true;
+    elements.get('ll-room-settings').hidden = true;
+    elements.get('ll-room-sidebar').hidden = true;
     for (const reaction of ['hand', 'like', 'check', 'cross', 'fire']) {
         const button = makeElement('button');
         button.dataset.reaction = reaction;
         elements.get('ll-room-reactions-menu').appendChild(button);
     }
-    elements.get('ll-room').dataset = { tokenUrl: '/token/', stateUrl: '/state/',
+    elements.get('ll-room').dataset = { tokenUrl: '/token/', stateUrl: '/state/', teacher: String(teacher),
         ...(teacher ? { moderateUrl: '/moderate/' } : {}) };
     elements.get('ll-room-quality').value = '1080';
     elements.get('ll-room-fps').value = '30';
@@ -99,7 +113,7 @@ function roomFixture({ teacher = false, supportsNoiseSuppression = true,
     elements.get('ll-room-speaker-volume').value = '100';
     elements.get('ll-room-noise-suppression').checked = true;
     elements.get('ll-room-voice-enhancement').checked = true;
-    const track = { kind: 'video', attach: () => makeElement('video') };
+    const track = { kind: 'video', attach: () => makeElement('video'), detach: () => [] };
     const publication = { track, trackSid: 'v1', source: 'camera' };
     class MockRoom {
         constructor(options) {
@@ -120,6 +134,7 @@ function roomFixture({ teacher = false, supportsNoiseSuppression = true,
         on(type, callback) { this.events.set(type, callback); }
         emit(type, ...args) { this.events.get(type)?.(...args); }
         async connect() {}
+        async disconnect() { this.state = 'disconnected'; this.emit('Disconnected'); }
         getActiveDevice() { return ''; }
     }
     MockRoom.getLocalDevices = async () => [];
@@ -129,6 +144,7 @@ function roomFixture({ teacher = false, supportsNoiseSuppression = true,
             'ParticipantConnected', 'ParticipantDisconnected', 'TrackPublished', 'TrackUnpublished',
             'TrackMuted', 'TrackUnmuted', 'ActiveSpeakersChanged', 'MediaDevicesChanged',
             'AudioPlaybackStatusChanged', 'DataReceived', 'Reconnecting', 'Reconnected', 'Disconnected',
+            'ConnectionQualityChanged', 'ParticipantPermissionsChanged',
         ].map((name) => [name, name])), ConnectionState: { Connected: 'connected' },
         Track: { Kind: { Audio: 'audio', Video: 'video' },
             Source: { Camera: 'camera', ScreenShare: 'screen', Microphone: 'microphone' } },
@@ -141,17 +157,22 @@ function roomFixture({ teacher = false, supportsNoiseSuppression = true,
             set(key, value) { this.values.set(key, value); }
         },
         window: {
-            LivekitClient: sdk, addEventListener() {}, dispatchEvent() {}, confirm: () => true,
+            LivekitClient: sdk,
+            addEventListener(type, callback) { windowListeners.set(type, callback); },
+            removeEventListener(type) { windowListeners.delete(type); },
+            dispatchEvent(event) { windowListeners.get(event.type)?.(event); }, confirm: () => true,
             navigator: { mediaDevices: { getSupportedConstraints: () =>
                 ({ ...(supportsNoiseSuppression ? { noiseSuppression: true } : {}),
                     ...(supportsVoiceEnhancement ? { autoGainControl: true, echoCancellation: true } : {}) }) } },
             localStorage: { getItem: (key) => storage.get(key) || null,
                 setItem(key, value) { storage.set(key, value); } },
             setInterval: () => 1,
+            clearInterval() {},
             setTimeout(callback) { const id = ++nextTimerId; timers.set(id, callback); return id; },
             clearTimeout(id) { timers.delete(id); },
         },
-        Event: class {}, CustomEvent: class {},
+        Event: class { constructor(type) { this.type = type; } },
+        CustomEvent: class { constructor(type, { detail }) { this.type = type; this.detail = detail; } },
         Option: class { constructor(label, value) { this.label = label; this.value = value; } },
         fetch: async (url, options) => {
             requests.push({ url, options });
@@ -163,12 +184,61 @@ function roomFixture({ teacher = false, supportsNoiseSuppression = true,
             };
         },
     };
-    for (const id of ['ll-room-audio-input', 'll-room-video-input']) {
+    for (const id of ['ll-room-audio-input', 'll-room-video-input', 'll-room-audio-output']) {
         elements.get(id).add = () => {};
     }
+    const roomRoot = elements.get('ll-room');
+    if (!initialRoom) elements.delete('ll-room');
     vm.runInNewContext(source, context);
-    return { elements, doc, requests, storage, timers, getRoom: () => latestRoom };
+    return { elements, doc, makeElement, documentListeners, requests, storage, timers, windowListeners, roomRoot, context, getRoom: () => latestRoom };
 }
+
+test('room inserted after lesson start initializes once and remains inactive until explicit join', async () => {
+    const f = roomFixture({ initialRoom: false });
+    assert.equal(f.elements.get('ll-room-join').listeners.has('click'), false);
+    f.elements.set('ll-room', f.roomRoot);
+    f.windowListeners.get('ll-page-updated')();
+    assert.equal(f.elements.get('ll-room-join').listeners.has('click'), true);
+    assert.equal(f.getRoom(), null);
+    const join = f.elements.get('ll-room-join').listeners.get('click');
+    f.windowListeners.get('ll-page-updated')();
+    assert.equal(f.elements.get('ll-room-join').listeners.get('click'), join);
+    join();
+    await new Promise(setImmediate);
+    assert.equal(f.elements.get('ll-room-chat-toggle').disabled, false);
+});
+
+test('waiting queue push is accepted only from server and only by teacher', async () => {
+    for (const teacher of [true, false]) {
+        const f = roomFixture({ teacher });
+        let refreshes = 0;
+        f.context.window.addEventListener('ll-classroom-refresh', () => { refreshes++; });
+        f.elements.get('ll-room-join').listeners.get('click')();
+        await new Promise(setImmediate);
+        const room = f.getRoom();
+        room.emit('DataReceived', new TextEncoder().encode('refresh'), { identity: 'student' }, undefined, 'lesson-waiting-updated');
+        assert.equal(refreshes, 0);
+        room.emit('DataReceived', new TextEncoder().encode('refresh'), undefined, undefined, 'lesson-waiting-updated');
+        assert.equal(refreshes, teacher ? 1 : 0);
+    }
+});
+
+test('lesson state event disconnects active room and cleans up listeners before history is shown', async () => {
+    const f = roomFixture();
+    f.elements.get('ll-room-join').listeners.get('click')();
+    await new Promise(setImmediate);
+    const pending = [];
+    f.windowListeners.get('ll-lesson-state')({ detail: {
+        state: { status: 'ended', can_join: false }, waitUntil: (promise) => pending.push(promise),
+    } });
+    await Promise.all(pending);
+    assert.equal(f.getRoom().state, 'disconnected');
+    assert.equal(f.elements.get('ll-room-join').disabled, true);
+    f.elements.delete('ll-room');
+    f.windowListeners.get('ll-page-updated')();
+    assert.equal(f.windowListeners.has('ll-lesson-state'), false);
+    assert.equal(f.windowListeners.has('beforeunload'), false);
+});
 
 function avatarFor(elements, identity) {
     const figure = elements.get('ll-room-tracks').children.find((child) =>
@@ -187,7 +257,202 @@ test('chat unlocks only after joining the room', async () => {
     assert.equal(elements.get('ll-room-chat-toggle').disabled, false);
 });
 
-test('all five local reactions are broadcast and briefly appear beside the avatar', async () => {
+function pressSpace(f, overrides = {}) {
+    const event = { key: ' ', code: 'Space', target: {},
+        preventDefault() { this.defaultPrevented = true; }, ...overrides };
+    f.documentListeners.get('keydown')(event);
+    return event;
+}
+
+test('personal pin keeps the same participant tile and order through camera mute and republish', async () => {
+    const f = roomFixture();
+    f.elements.get('ll-room-join').listeners.get('click')();
+    await new Promise(setImmediate);
+    const room = f.getRoom();
+    const student = { identity: 'student', name: 'Ученик', trackPublications: new Map() };
+    room.remoteParticipants.set(student.identity, student);
+    room.emit('ParticipantConnected', student);
+    const tracks = f.elements.get('ll-room-tracks');
+    const tile = tracks.children.find((figure) => figure.dataset.identity === 'student');
+    const order = tile.style.order;
+    const requestsBefore = f.requests.length;
+    tile.pinButton.listeners.get('click')();
+    assert.equal(tile.pinButton.getAttribute('aria-pressed'), 'true');
+    assert.equal(tracks.classList.contains('ll-room-tracks-pinned'), true);
+    assert.equal(room.sentData.length, 0);
+    assert.equal(f.requests.length, requestsBefore);
+    const camera = { kind: 'video', attach: () => f.makeElement('video'), detach() {} };
+    let publication = { track: camera, trackSid: 'camera-1', source: 'camera' };
+    room.emit('TrackSubscribed', camera, publication, student);
+    assert.equal(tracks.children.find((figure) => figure.dataset.identity === 'student'), tile);
+    publication.isMuted = true;
+    room.emit('TrackMuted', publication, student);
+    assert.equal(tile.classList.contains('ll-room-tile-has-video'), false);
+    assert.equal(tile.classList.contains('ll-room-tile-pinned'), true);
+    room.emit('TrackUnsubscribed', camera, publication, student);
+    publication = { ...publication, trackSid: 'camera-2', isMuted: false };
+    room.emit('TrackSubscribed', camera, publication, student);
+    assert.equal(tile.classList.contains('ll-room-tile-has-video'), true);
+    assert.equal(tile.style.order, order);
+    assert.equal(tracks.children.filter((figure) => figure.dataset.identity === 'student').length, 1);
+    tile.pinButton.listeners.get('click')();
+    assert.equal(tracks.classList.contains('ll-room-tracks-pinned'), false);
+});
+
+test('screen pin is separate from participant pin and disappears safely when sharing stops', async () => {
+    const f = roomFixture();
+    f.elements.get('ll-room-join').listeners.get('click')();
+    await new Promise(setImmediate);
+    const room = f.getRoom(), tracks = f.elements.get('ll-room-tracks');
+    const cameraTile = tracks.children[0];
+    cameraTile.pinButton.listeners.get('click')();
+    const screen = { kind: 'video', attach: () => f.makeElement('video'), detach() {} };
+    const publication = { track: screen, trackSid: 'screen-1', source: 'screen' };
+    room.emit('LocalTrackPublished', publication);
+    assert.equal(cameraTile.classList.contains('ll-room-tile-pinned'), true);
+    const screenTile = tracks.children.find((figure) => figure.dataset.source === 'screen');
+    screenTile.pinButton.listeners.get('click')();
+    assert.equal(cameraTile.classList.contains('ll-room-tile-pinned'), false);
+    assert.equal(screenTile.classList.contains('ll-room-tile-pinned'), true);
+    room.emit('LocalTrackUnpublished', publication);
+    assert.equal(tracks.classList.contains('ll-room-tracks-pinned'), false);
+    assert.equal(cameraTile.parentElement, tracks);
+});
+
+test('participant departure clears its personal pin without disturbing others', async () => {
+    const f = roomFixture();
+    f.elements.get('ll-room-join').listeners.get('click')();
+    await new Promise(setImmediate);
+    const room = f.getRoom(), tracks = f.elements.get('ll-room-tracks');
+    const student = { identity: 'student', name: 'Ученик', trackPublications: new Map() };
+    room.remoteParticipants.set(student.identity, student);
+    room.emit('ParticipantConnected', student);
+    tracks.children.find((figure) => figure.dataset.identity === 'student').pinButton.listeners.get('click')();
+    const ownTile = tracks.children.find((figure) => figure.dataset.identity === 'teacher');
+    room.remoteParticipants.delete(student.identity);
+    room.emit('ParticipantDisconnected', student);
+    assert.equal(tracks.classList.contains('ll-room-tracks-pinned'), false);
+    assert.equal(tracks.children.length, 1);
+    assert.equal(tracks.children[0], ownTile);
+});
+
+test('joining closes preflight and uses chosen devices without turning microphone or camera on', async () => {
+    const f = roomFixture({ savedDevices: { audioinput: 'mic-2', videoinput: 'cam-2', audiooutput: 'speaker-2' }, supportsOutput: true });
+    let closes = 0;
+    f.context.window.addEventListener('ll-prejoin-close', () => { closes++; });
+    f.elements.get('ll-room-join').listeners.get('click')();
+    await new Promise(setImmediate);
+    const room = f.getRoom();
+    assert.equal(closes, 1);
+    assert.equal(room.options.audioCaptureDefaults.deviceId, 'mic-2');
+    assert.equal(room.options.videoCaptureDefaults.deviceId, 'cam-2');
+    assert.equal(room.options.audioOutput.deviceId, 'speaker-2');
+    assert.equal(f.elements.get('ll-room-mic').getAttribute('aria-pressed'), 'false');
+    assert.equal(f.elements.get('ll-room-camera').getAttribute('aria-pressed'), 'false');
+});
+
+test('system default device can be restored and failed device switch does not persist', async () => {
+    const f = roomFixture({ savedDevices: { audioinput: 'mic-2' } });
+    f.elements.get('ll-room-join').listeners.get('click')();
+    await new Promise(setImmediate);
+    const room = f.getRoom(), input = f.elements.get('ll-room-audio-input');
+    const switches = [];
+    room.switchActiveDevice = async (kind, id) => { switches.push([kind, id]); return true; };
+    input.value = '';
+    input.listeners.get('change')();
+    await new Promise(setImmediate);
+    assert.deepEqual(switches, [['audioinput', 'default']]);
+    assert.equal(JSON.parse(f.storage.get('coursemc:live-room-devices:v1')).audioinput, '');
+    room.switchActiveDevice = async () => false;
+    input.value = 'missing'; input.listeners.get('change')();
+    await new Promise(setImmediate);
+    assert.equal(JSON.parse(f.storage.get('coursemc:live-room-devices:v1')).audioinput, '');
+    assert.equal(input.value, '');
+    assert.equal(f.elements.get('ll-room-error').hidden, false);
+});
+
+test('Space toggles microphone once, ignores held key and never joins automatically', async () => {
+    const f = roomFixture();
+    assert.equal(pressSpace(f).defaultPrevented, undefined);
+    assert.equal(f.getRoom(), null);
+    f.elements.get('ll-room-join').listeners.get('click')();
+    await new Promise(setImmediate);
+    const room = f.getRoom();
+    const changes = [];
+    room.localParticipant.setMicrophoneEnabled = async (enabled) => {
+        room.localParticipant.isMicrophoneEnabled = enabled;
+        changes.push(enabled);
+    };
+    assert.equal(pressSpace(f).defaultPrevented, true);
+    pressSpace(f, { repeat: true });
+    pressSpace(f); // ignored while the first async toggle is in flight
+    await new Promise(setImmediate);
+    assert.deepEqual(changes, [true]);
+    assert.equal(f.elements.get('ll-room-mic').getAttribute('aria-pressed'), 'true');
+    pressSpace(f);
+    await new Promise(setImmediate);
+    assert.deepEqual(changes, [true, false]);
+    assert.equal(f.elements.get('ll-room-mic').getAttribute('aria-pressed'), 'false');
+});
+
+test('Space preserves chat, form controls, settings, composition and modified shortcuts', async () => {
+    const f = roomFixture();
+    f.elements.get('ll-room-join').listeners.get('click')();
+    await new Promise(setImmediate);
+    let toggles = 0;
+    f.getRoom().localParticipant.setMicrophoneEnabled = async () => { toggles += 1; };
+    f.elements.get('ll-room-chat-toggle').listeners.get('click')();
+    assert.equal(pressSpace(f).defaultPrevented, undefined);
+    f.elements.get('ll-room-sidebar-close').listeners.get('click')();
+    for (const overrides of [
+        { target: { isContentEditable: true } },
+        { target: { closest: () => ({ tagName: 'TEXTAREA' }) } },
+        { ctrlKey: true }, { metaKey: true }, { altKey: true }, { shiftKey: true },
+        { isComposing: true }, { defaultPrevented: true },
+    ]) pressSpace(f, overrides);
+    f.elements.get('ll-room-settings-toggle').listeners.get('click')();
+    assert.equal(pressSpace(f).defaultPrevented, undefined);
+    await new Promise(setImmediate);
+    assert.equal(toggles, 0);
+});
+
+function micBadge(figure) {
+    const caption = figure.children.find((child) => child.tagName === 'figcaption');
+    return caption.children.find((child) => child.className === 'll-room-mic-muted');
+}
+
+test('muted badges follow microphone state on avatars, cameras, screens and participant list', async () => {
+    const f = roomFixture();
+    f.elements.get('ll-room-join').listeners.get('click')();
+    await new Promise(setImmediate);
+    const room = f.getRoom();
+    const student = { identity: 'student', name: 'Ученик', isMicrophoneEnabled: false,
+        trackPublications: new Map() };
+    room.remoteParticipants.set(student.identity, student);
+    room.emit('ParticipantConnected');
+    assert.equal(micBadge(avatarFor(f.elements, 'student').figure).getAttribute('aria-label'), 'Микрофон выключен');
+    const listBadge = () => f.elements.get('ll-room-members').children[1].children[0].children
+        .find((child) => child.className === 'll-room-mic-muted');
+    assert.ok(listBadge());
+    student.isMicrophoneEnabled = true;
+    room.emit('TrackUnmuted', { source: 'microphone' }, student);
+    assert.equal(micBadge(avatarFor(f.elements, 'student').figure), undefined);
+    assert.equal(listBadge(), undefined);
+    for (const source of ['camera', 'screen']) {
+        const track = { kind: 'video', attach: () => f.doc.createElement('video'), detach: () => [] };
+        room.emit('TrackSubscribed', track, { source, trackSid: source, track }, student);
+    }
+    student.isMicrophoneEnabled = false;
+    room.emit('TrackMuted', { source: 'microphone' }, student);
+    const tiles = f.elements.get('ll-room-tracks').children.filter((tile) => tile.dataset.identity === 'student');
+    assert.equal(tiles.length, 2);
+    assert.ok(tiles.every(micBadge));
+    student.isMicrophoneEnabled = true;
+    room.emit('TrackUnmuted', { source: 'microphone' }, student);
+    assert.ok(tiles.every((tile) => !micBadge(tile)));
+});
+
+test('four local reactions are broadcast and briefly appear beside the avatar', async () => {
     const { elements, getRoom, timers } = roomFixture();
     const toggle = elements.get('ll-room-reactions-toggle');
     const menu = elements.get('ll-room-reactions-menu');
@@ -196,7 +461,7 @@ test('all five local reactions are broadcast and briefly appear beside the avata
     await new Promise(setImmediate);
     const room = getRoom();
     assert.equal(toggle.disabled, false);
-    const expected = [['hand', '✋'], ['like', '👍'], ['check', '✅'], ['cross', '❌'], ['fire', '🔥']];
+    const expected = [['like', '👍'], ['check', '✅'], ['cross', '❌'], ['fire', '🔥']];
     for (const [key, symbol] of expected) {
         toggle.listeners.get('click')();
         assert.equal(menu.hidden, false);
@@ -211,10 +476,120 @@ test('all five local reactions are broadcast and briefly appear beside the avata
         assert.equal(badge.hidden, false);
         assert.equal(badge.textContent, symbol);
     }
-    assert.equal(room.sentData.length, 5);
+    assert.equal(room.sentData.length, 4);
     assert.equal(timers.size, 1);
     for (const callback of timers.values()) callback();
     assert.equal(avatarFor(elements, room.localParticipant.identity).badge.hidden, true);
+});
+
+test('raised hand is persistent, returns after a temporary reaction and lowers only on classroom state', async () => {
+    const f = roomFixture();
+    let handClicks = 0;
+    f.windowListeners.set('ll-hand-toggle', () => { handClicks += 1; });
+    f.elements.get('ll-room-join').listeners.get('click')();
+    await new Promise(setImmediate);
+    const room = f.getRoom();
+    const hand = f.elements.get('ll-room-reactions-menu').children[0];
+    hand.listeners.get('click')();
+    assert.equal(handClicks, 1);
+    assert.equal(room.sentData.length, 0);
+    const state = { teacher: false, settings: { microphone: true, screen: true },
+        own: { identity: room.localParticipant.identity, admission: 'admitted', entry_allowed: true, hand_raised: true },
+        hands: [{ identity: room.localParticipant.identity }] };
+    f.windowListeners.get('ll-classroom-state')({ detail: { state } });
+    assert.equal(avatarFor(f.elements, room.localParticipant.identity).badge.textContent, '✋');
+    assert.equal(hand.getAttribute('aria-pressed'), 'true');
+    f.elements.get('ll-room-reactions-menu').children[4].listeners.get('click')();
+    await new Promise(setImmediate);
+    assert.equal(avatarFor(f.elements, room.localParticipant.identity).badge.textContent, '🔥');
+    for (const callback of f.timers.values()) callback();
+    assert.equal(avatarFor(f.elements, room.localParticipant.identity).badge.textContent, '✋');
+    state.hands = [];
+    state.own.hand_raised = false;
+    f.windowListeners.get('ll-classroom-state')({ detail: { state } });
+    assert.equal(avatarFor(f.elements, room.localParticipant.identity).badge.hidden, true);
+    assert.equal(hand.getAttribute('aria-label'), 'Поднять руку');
+});
+
+test('teacher restrictions disable microphone and screen, including Space, without affecting camera', async () => {
+    const f = roomFixture();
+    f.elements.get('ll-room-join').listeners.get('click')();
+    await new Promise(setImmediate);
+    const room = f.getRoom();
+    const changes = [];
+    room.localParticipant.isMicrophoneEnabled = true;
+    room.localParticipant.isScreenShareEnabled = true;
+    room.localParticipant.setMicrophoneEnabled = async (value) => { changes.push(['mic', value]); room.localParticipant.isMicrophoneEnabled = value; };
+    room.localParticipant.setScreenShareEnabled = async (value) => { changes.push(['screen', value]); room.localParticipant.isScreenShareEnabled = value; };
+    f.windowListeners.get('ll-classroom-state')({ detail: { state: {
+        teacher: false, settings: { microphone: false, screen: false },
+        own: { admission: 'admitted', entry_allowed: true }, hands: [],
+    } } });
+    await new Promise(setImmediate);
+    assert.equal(f.elements.get('ll-room-mic').disabled, true);
+    assert.equal(f.elements.get('ll-room-screen').disabled, true);
+    assert.equal(f.elements.get('ll-room-camera').disabled, false);
+    f.documentListeners.get('keydown')({ key: ' ', code: 'Space', target: null, preventDefault() {} });
+    assert.deepEqual(changes, [['mic', false], ['screen', false]]);
+});
+
+test('only local connection quality and reconnect events feed diagnosis', async () => {
+    const f = roomFixture();
+    const updates = [];
+    f.windowListeners.set('ll-connection', ({ detail }) => updates.push(detail));
+    f.elements.get('ll-room-join').listeners.get('click')();
+    await new Promise(setImmediate);
+    const room = f.getRoom();
+    room.emit('ConnectionQualityChanged', 'poor', room.localParticipant);
+    assert.equal(updates.at(-1).quality, 'poor');
+    const count = updates.length;
+    room.emit('ConnectionQualityChanged', 'lost', { isLocal: false });
+    assert.equal(updates.length, count);
+    room.emit('Reconnecting');
+    assert.equal(updates.at(-1).state, 'reconnecting');
+    room.emit('Reconnected');
+    assert.equal(updates.at(-1).state, 'connected');
+});
+
+test('waiting response never connects media; admission enters automatically with devices still off', async () => {
+    const f = roomFixture();
+    const normalFetch = f.context.fetch;
+    f.context.fetch = async () => ({ ok: true, status: 202, headers: { get: () => 'application/json' },
+        json: async () => ({ waiting: true, admission: 'waiting' }) });
+    f.elements.get('ll-room-join').listeners.get('click')();
+    await new Promise(setImmediate);
+    assert.equal(f.getRoom(), null);
+    assert.equal(f.elements.get('ll-room-join').disabled, true);
+    assert.match(f.elements.get('ll-room-join').textContent, /Ждём/);
+    assert.equal(f.elements.get('ll-room-chat-toggle').disabled, true);
+    f.context.fetch = normalFetch;
+    f.windowListeners.get('ll-classroom-state')({ detail: { state: {
+        teacher: false, settings: { microphone: true, screen: true },
+        own: { admission: 'admitted', entry_allowed: true }, hands: [],
+    } } });
+    await new Promise(setImmediate);
+    assert.ok(f.getRoom());
+    assert.equal(f.elements.get('ll-room-chat-toggle').disabled, false);
+    assert.equal(!!f.getRoom().localParticipant.isMicrophoneEnabled, false);
+    assert.equal(!!f.getRoom().localParticipant.isCameraEnabled, false);
+});
+
+test('denial or locked entry never auto-connects and cancellation leaves the join button available', async () => {
+    const f = roomFixture();
+    const render = (admission, entry_allowed = true) => f.windowListeners.get('ll-classroom-state')({ detail: { state: {
+        teacher: false, settings: { microphone: true, screen: true }, own: { admission, entry_allowed }, hands: [],
+    } } });
+    render('waiting');
+    f.windowListeners.get('ll-wait-cancelled')();
+    assert.equal(f.elements.get('ll-room-join').disabled, false);
+    render('left');
+    render('denied');
+    f.elements.get('ll-room-join').listeners.get('click')();
+    await new Promise(setImmediate);
+    assert.equal(f.getRoom(), null);
+    render(null, false);
+    assert.equal(f.elements.get('ll-room-join').disabled, true);
+    assert.equal(f.getRoom(), null);
 });
 
 test('remote reaction follows the participant from avatar tile to camera and then disappears', async () => {
@@ -231,7 +606,7 @@ test('remote reaction follows the participant from avatar tile to camera and the
     assert.equal(avatarFor(elements, student.identity).badge.textContent, '🔥');
     assert.equal(avatarFor(elements, room.localParticipant.identity).badge.hidden, true);
 
-    const camera = { kind: 'video', attach: () => ({}), detach() {} };
+    const camera = { kind: 'video', attach: () => ({ remove() {} }), detach() {} };
     const publication = { track: camera, trackSid: 'remote-v1', source: 'camera', isMuted: false };
     student.trackPublications.set('camera', publication);
     room.emit('TrackSubscribed', camera, publication, student);

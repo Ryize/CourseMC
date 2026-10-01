@@ -5,6 +5,26 @@ services:
     environment:
       LIVEKIT_API_URL: ${LIVEKIT_API_URL:-http://livekit:7880}
 
+  lesson-scheduler:
+    image: coursemc-web
+    restart: unless-stopped
+    env_file:
+      - ${COURSEMC_ENV_FILE:-.env}
+    environment:
+      LIVEKIT_API_URL: ${LIVEKIT_API_URL:-http://livekit:7880}
+    volumes:
+      - ./data/database:/data
+    entrypoint: ["python", "manage.py", "live_lesson_scheduler"]
+    command: []
+    depends_on:
+      web:
+        condition: service_healthy
+      livekit:
+        condition: service_started
+    stop_grace_period: 20s
+    networks:
+      - backend
+
   livekit:
     image: livekit/livekit-server:v1.13.7
     restart: unless-stopped

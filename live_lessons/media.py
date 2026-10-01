@@ -32,7 +32,8 @@ def room_service(lesson, method, payload):
     token = jwt.encode({
         'iss': settings.LIVEKIT_API_KEY, 'sub': 'coursemc-room-admin',
         'nbf': now, 'exp': now + 60,
-        'video': {'roomAdmin': True, 'room': lesson.room_name},
+        'video': ({'roomCreate': True} if method == 'DeleteRoom'
+                  else {'roomAdmin': True, 'room': lesson.room_name}),
     }, settings.LIVEKIT_API_SECRET, algorithm='HS256')
     try:
         response = requests.post(endpoint, json=payload, timeout=5, headers={

@@ -43,8 +43,10 @@ function chatFixture({ live = false } = {}) {
             createElement: makeElement,
             createDocumentFragment: makeElement,
             addEventListener() {},
+            removeEventListener() {},
         },
         window: { addEventListener(type, callback) { windowListeners.set(type, callback); },
+            removeEventListener(type) { windowListeners.delete(type); }, clearInterval() {},
             setInterval() {}, LivekitClient: { ConnectionState: { Connected: 'connected' } } },
         location: { href: 'http://localhost/' },
         URL, FormData: MockFormData, TextEncoder,
@@ -76,6 +78,24 @@ test('live chat stays inactive until the media room is joined', async () => {
     assert.equal(requests.length, 1); // История загружается только после входа.
     windowListeners.get('ll-livekit-room')({ detail: { room: null } });
     assert.equal(elements.get('ll-chat-send').disabled, true);
+});
+
+test('ending lesson detaches live chat handlers and initializes read-only history without joining', async () => {
+    const { elements, requests, windowListeners } = chatFixture({ live: true });
+    const root = elements.get('ll-chat');
+    elements.delete('ll-chat');
+    windowListeners.get('ll-page-updated')();
+    assert.equal(windowListeners.has('ll-livekit-room'), false);
+    root.dataset.live = 'false';
+    elements.set('ll-chat', root);
+    elements.delete('ll-chat-form');
+    windowListeners.get('ll-page-updated')();
+    await new Promise(setImmediate);
+    assert.equal(requests.length, 1);
+    assert.match(String(requests[0].url), /messages/);
+    windowListeners.get('ll-page-updated')();
+    await new Promise(setImmediate);
+    assert.equal(requests.length, 1);
 });
 
 function pasteEvent(clipboardData) {

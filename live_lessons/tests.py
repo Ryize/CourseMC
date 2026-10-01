@@ -95,10 +95,172 @@ class LiveLessonFixture:
         self.lesson = LiveLesson.objects.create(
             group=self.group, teacher=self.teacher, title='Практика Python',
             scheduled_at=timezone.now() + timedelta(days=1),
+            waiting_room_enabled=False,  # Существующий урок до появления ожидания.
         )
 
     def detail_url(self, lesson=None):
         return reverse('live_lesson_detail', args=[(lesson or self.lesson).public_id])
+
+
+class LiveLessonLiveUpdatesTests(LiveLessonFixture, TestCase):
+    def state(self):
+        return self.client.get(reverse('live_lesson_state', args=[self.lesson.public_id])).json()
+
+    def fragments(self, *, room=False):
+        return self.client.get(self.detail_url(), {'room': '1'} if room else {},
+                               HTTP_ACCEPT='application/json')
+
+    def test_waiting_page_can_load_the_room_after_teacher_starts_without_navigation(self):
+        self.client.force_login(self.student_user)
+        waiting = self.client.get(self.detail_url())
+        self.assertContains(waiting, 'data-updates-kind="detail"')
+        self.assertContains(waiting, 'live_lessons/lesson_updates.js')
+        self.assertNotContains(waiting, 'id="ll-room-join"')
+        previous = self.state()
+        self.assertEqual(previous['revision'], self.state()['revision'])
+        self.client.force_login(self.teacher_user)
+        response = self.client.post(reverse('live_lesson_change_status', args=[self.lesson.public_id, 'start']),
+                                    HTTP_ACCEPT='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['ok'])
+        self.client.force_login(self.student_user)
+        current = self.state()
+        self.assertTrue(current['can_join'])
+        self.assertNotEqual(previous['revision'], current['revision'])
+        response = self.fragments(room=True)
+        self.assertIn('no-store', response['Cache-Control'])
+        data = response.json()
+        self.assertIn('id="ll-room-join"', data['room_html'])
+        self.assertNotIn('Начать занятие', data['after_html'])
+        self.assertNotIn('participant_token', response.content.decode())
+        # Обновление управления не требует повторно присылать и создавать медиа-комнату.
+        self.assertIsNone(self.fragments().json()['room_html'])
+
+    def test_end_and_cancel_update_page_fragments_and_teacher_controls(self):
+        self.client.force_login(self.teacher_user)
+        start_url = reverse('live_lesson_change_status', args=[self.lesson.public_id, 'start'])
+        end_url = reverse('live_lesson_change_status', args=[self.lesson.public_id, 'end'])
+        self.client.post(start_url, HTTP_ACCEPT='application/json')
+        self.assertIn('Завершить занятие', self.fragments().json()['after_html'])
+        self.assertEqual(self.client.post(end_url, HTTP_ACCEPT='application/json').status_code, 200)
+        data = self.fragments(room=True).json()
+        self.assertEqual(data['state']['status'], 'ended')
+        self.assertFalse(data['state']['can_join'])
+        self.assertIsNone(data['room_html'])
+        self.assertIn('Занятие уже закрыто.', data['after_html'])
+        self.assertIn('id="ll-chat"', data['after_html'])
+        self.assertNotIn('id="ll-chat-form"', data['after_html'])
+        self.assertEqual(self.client.post(start_url, HTTP_ACCEPT='application/json').status_code, 404)
+        self.lesson.status = LiveLesson.Status.SCHEDULED
+        self.lesson.save(update_fields=('status', 'updated_at'))
+        cancel_url = reverse('live_lesson_change_status', args=[self.lesson.public_id, 'cancel'])
+        self.assertEqual(self.client.post(cancel_url, HTTP_ACCEPT='application/json').status_code, 200)
+        self.assertEqual(self.fragments().json()['state']['status'], 'cancelled')
+
+    def test_reschedule_and_pausing_group_change_the_revision(self):
+        self.client.force_login(self.teacher_user)
+        previous = self.state()['revision']
+        new_time = timezone.localtime(timezone.now() + timedelta(days=2)).strftime('%Y-%m-%dT%H:%M')
+        self.client.post(reverse('live_lesson_reschedule', args=[self.lesson.public_id]), {
+            'scheduled_at': new_time, 'reason': 'Перенос урока',
+        })
+        self.assertNotEqual(previous, self.state()['revision'])
+        self.assertIn('Перенос урока', self.fragments().json()['after_html'])
+        self.lesson.status = LiveLesson.Status.LIVE
+        self.lesson.save(update_fields=('status',))
+        previous = self.state()['revision']
+        LearnGroup.objects.filter(pk=self.group.pk).update(is_studies=False)
+        self.assertNotEqual(previous, self.state()['revision'])
+        self.assertFalse(self.state()['can_join'])
+
+    def test_first_message_and_saved_archive_update_teacher_controls_only(self):
+        self.lesson.status = LiveLesson.Status.LIVE
+        self.lesson.save(update_fields=('status',))
+        self.client.force_login(self.teacher_user)
+        previous = self.state()['revision']
+        LiveLessonMessage.objects.create(lesson=self.lesson, author=self.teacher_user, body='Привет')
+        after_first = self.state()['revision']
+        self.assertNotEqual(previous, after_first)
+        LiveLessonMessage.objects.create(lesson=self.lesson, author=self.teacher_user, body='Команда')
+        self.assertEqual(after_first, self.state()['revision'])
+        self.client.force_login(self.student_user)
+        previous = self.state()['revision']
+        LiveLessonMessage.objects.create(lesson=self.lesson, author=self.teacher_user, body='Ещё')
+        self.assertEqual(previous, self.state()['revision'])
+
+    def test_list_refreshes_new_lessons_and_statuses_and_omits_unchanged_html(self):
+        self.client.force_login(self.student_user)
+        url = reverse('live_lesson_list')
+        self.assertContains(self.client.get(url), 'data-updates-kind="list"')
+        first = self.client.get(url, HTTP_ACCEPT='application/json').json()
+        self.assertTrue(first['changed'])
+        self.assertIn('Практика Python', first['html'])
+        self.assertNotIn('Другая группа', first['html'])
+        response = self.client.get(url, {'revision': first['revision']}, HTTP_ACCEPT='application/json')
+        self.assertIn('no-store', response['Cache-Control'])
+        self.assertFalse(response.json()['changed'])
+        self.assertIsNone(response.json()['html'])
+        self.lesson.status = LiveLesson.Status.LIVE
+        self.lesson.save(update_fields=('status',))
+        second = self.client.get(url, {'revision': first['revision']}, HTTP_ACCEPT='application/json').json()
+        self.assertTrue(second['changed'])
+        self.assertIn('Идёт занятие', second['html'])
+        LiveLesson.objects.create(group=self.group, teacher=self.teacher, title='Новый урок',
+                                  scheduled_at=timezone.now() + timedelta(days=2))
+        self.assertIn('Новый урок', self.client.get(url, {'revision': second['revision']},
+                                                  HTTP_ACCEPT='application/json').json()['html'])
+
+    def test_json_updates_and_actions_obey_existing_access_and_csrf_rules(self):
+        self.client.force_login(self.other_user)
+        self.assertEqual(self.fragments(room=True).status_code, 404)
+        self.client.force_login(self.student_user)
+        action = reverse('live_lesson_change_status', args=[self.lesson.public_id, 'start'])
+        self.assertEqual(self.client.post(action, HTTP_ACCEPT='application/json').status_code, 404)
+        strict = Client(enforce_csrf_checks=True)
+        strict.force_login(self.teacher_user)
+        self.assertEqual(strict.post(action, HTTP_ACCEPT='application/json').status_code, 403)
+        self.client.logout()
+        self.assertEqual(self.fragments(room=True).status_code, 302)
+
+    def test_saving_chat_archive_returns_json_and_updates_controls_without_restarting_room(self):
+        self.lesson.status = LiveLesson.Status.LIVE
+        self.lesson.save(update_fields=('status',))
+        direction = DirectionStudy.objects.create(title='Обновления чата')
+        schedule = Schedule.objects.create(direction=direction, theme='Циклы', position=1)
+        self.student.direction.add(direction)
+        LiveLessonMessage.objects.create(lesson=self.lesson, author=self.teacher_user, body='Пример цикла')
+        self.client.force_login(self.teacher_user)
+        previous = self.state()['revision']
+        url = reverse('live_lesson_save_chat_archive', args=[self.lesson.public_id])
+        with TemporaryDirectory() as private_dir, self.settings(PRIVATE_LIVE_LESSON_MEDIA_ROOT=private_dir):
+            response = self.client.post(url, {'target': f'{self.group.pk}:{schedule.pk}'},
+                                        HTTP_ACCEPT='application/json')
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.json()['ok'])
+            self.assertIn('История чата сохранена', response.json()['message'])
+            self.assertNotEqual(previous, self.state()['revision'])
+            data = self.fragments().json()
+            self.assertTrue(data['state']['can_join'])
+            self.assertIsNone(data['room_html'])
+            self.assertIn('Посмотреть чат', data['after_html'])
+            self.assertIn('data-lesson-action class="ll-archive-form"', data['after_html'])
+            response = self.client.post(url, {'target': 'wrong'}, HTTP_ACCEPT='application/json')
+            self.assertEqual(response.status_code, 400)
+            self.assertIn('Выберите урок', response.json()['error'])
+
+    def test_open_lesson_guest_waits_and_sees_started_room_without_login(self):
+        self.lesson.audience = LiveLesson.Audience.OPEN
+        self.lesson.group = None
+        self.lesson.save(update_fields=('audience', 'group'))
+        guest = Client()
+        self.assertEqual(guest.get(self.detail_url()).status_code, 200)
+        self.lesson.status = LiveLesson.Status.LIVE
+        self.lesson.save(update_fields=('status',))
+        response = guest.get(self.detail_url(), {'room': '1'}, HTTP_ACCEPT='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['state']['can_join'])
+        self.assertIn('id="ll-room-join"', response.json()['room_html'])
+        self.assertNotIn('Завершить занятие', response.json()['after_html'])
 
 
 class LiveLessonChatArchiveTests(LiveLessonFixture, TestCase):
@@ -305,6 +467,12 @@ class LiveLessonAccessTests(LiveLessonFixture, TestCase):
         self.assertNotContains(response, 'Управление звонком')
         self.assertNotContains(response, 'll-link-field')
         self.assertContains(response, 'live_lessons/lesson_room.js')
+        self.assertContains(response, 'live_lessons/lesson_devices.js')
+        self.assertContains(response, 'id="ll-device-open"')
+        self.assertContains(response, 'id="ll-device-check" role="dialog"')
+        self.assertContains(response, 'id="ll-device-video" autoplay muted playsinline hidden')
+        self.assertContains(response, 'id="ll-device-meter"')
+        self.assertContains(response, 'id="ll-room-audio-output"')
         self.assertContains(response, reverse('live_lesson_join_token', args=[self.lesson.public_id]))
         self.assertContains(response, 'id="ll-room-fps"')
         self.assertContains(response, '<h1 id="ll-room-title">')
@@ -346,7 +514,10 @@ class LiveLessonAccessTests(LiveLessonFixture, TestCase):
         self.client.force_login(self.student_user)
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {'status': 'scheduled', 'can_join': False, 'removed': False})
+        state = response.json()
+        self.assertEqual({key: state[key] for key in ('status', 'can_join', 'removed')},
+                         {'status': 'scheduled', 'can_join': False, 'removed': False})
+        self.assertEqual(len(state['revision']), 64)
         self.assertIn('no-store', response['Cache-Control'])
         self.lesson.status = LiveLesson.Status.LIVE
         self.lesson.save(update_fields=('status',))
@@ -377,6 +548,7 @@ class LiveLessonAccessTests(LiveLessonFixture, TestCase):
         self.assertEqual(response.status_code, 302)
         created = LiveLesson.objects.get(title='Новая встреча')
         self.assertEqual(created.teacher, self.teacher)
+        self.assertTrue(created.waiting_room_enabled)
         self.assertEqual(created.origin, LiveLesson.Origin.EXTRA)
 
     def test_reschedule_records_original_and_new_time(self):
@@ -789,6 +961,7 @@ class LiveLessonAudienceTests(LiveLessonFixture, TestCase):
         lesson = LiveLesson.objects.get(title='Открытая лекция')
         self.assertIsNone(lesson.group)
         self.assertEqual(lesson.audience, LiveLesson.Audience.OPEN)
+        self.assertTrue(lesson.waiting_room_enabled)
         detail_url = self.detail_url(lesson)
         token_url = reverse('live_lesson_join_token', args=[lesson.public_id])
         state_url = reverse('live_lesson_state', args=[lesson.public_id])
@@ -811,6 +984,16 @@ class LiveLessonAudienceTests(LiveLessonFixture, TestCase):
         self.assertContains(live_page, 'data-auto-copy="false"')
         self.assertTrue(guest_client.get(state_url).json()['can_join'])
         first_token = guest_client.post(token_url)
+        self.assertEqual(first_token.status_code, 202)
+        manage_url = reverse('live_lesson_classroom_manage', args=[lesson.public_id])
+        classroom_url = reverse('live_lesson_classroom', args=[lesson.public_id])
+
+        def admit(client):
+            identity = client.get(classroom_url).json()['own']['identity']
+            self.assertEqual(self.client.post(manage_url, {'action': 'admit', 'identity': identity}).status_code, 200)
+
+        admit(guest_client)
+        first_token = guest_client.post(token_url)
         self.assertEqual(first_token.status_code, 200)
         self.assertIn('no-store', first_token['Cache-Control'])
         claims = jwt.decode(
@@ -829,8 +1012,11 @@ class LiveLessonAudienceTests(LiveLessonFixture, TestCase):
         )
         self.assertEqual((claims['sub'], claims['name']), (repeated['sub'], repeated['name']))
         self.assertIn(claims['name'], guest_client.get(detail_url).content.decode())
+        another_guest = Client()
+        self.assertEqual(another_guest.post(token_url).status_code, 202)
+        admit(another_guest)
         other_guest = jwt.decode(
-            Client().post(token_url).json()['participant_token'],
+            another_guest.post(token_url).json()['participant_token'],
             'strong-secret-for-testing-live-lesson-token',
             algorithms=['HS256'], issuer='lesson-test-key',
         )
@@ -838,6 +1024,8 @@ class LiveLessonAudienceTests(LiveLessonFixture, TestCase):
         logged_in_outsider = Client()
         logged_in_outsider.force_login(self.other_user)
         self.assertEqual(logged_in_outsider.get(detail_url).status_code, 200)
+        self.assertEqual(logged_in_outsider.post(token_url).status_code, 202)
+        admit(logged_in_outsider)
         self.assertEqual(logged_in_outsider.post(token_url).status_code, 200)
 
         sent = guest_client.post(send_url, {'body': 'Привет от гостя'})
@@ -851,7 +1039,8 @@ class LiveLessonAudienceTests(LiveLessonFixture, TestCase):
             )})
             self.assertEqual(uploaded.status_code, 201)
             download_url = uploaded.json()['message']['attachment']['url']
-            downloaded = Client().get(download_url)
+            self.assertEqual(Client().get(download_url).status_code, 404)
+            downloaded = guest_client.get(download_url)
             self.assertEqual(downloaded.status_code, 200)
             self.assertEqual(b''.join(downloaded.streaming_content), b'lesson notes')
 
@@ -875,6 +1064,7 @@ class LiveLessonAudienceTests(LiveLessonFixture, TestCase):
         lesson = LiveLesson.objects.create(
             teacher=self.teacher, title='Открытый урок', audience=LiveLesson.Audience.OPEN,
             scheduled_at=timezone.now(), status=LiveLesson.Status.LIVE,
+            waiting_room_enabled=False,  # Отдельно проверяем CSRF, допуск покрыт classroom-тестами.
         )
         client = Client(enforce_csrf_checks=True)
         client.get(self.detail_url(lesson))
@@ -898,6 +1088,7 @@ class LiveLessonAudienceTests(LiveLessonFixture, TestCase):
         lesson = LiveLesson.objects.create(
             teacher=self.teacher, title='Открытый урок', audience=LiveLesson.Audience.OPEN,
             scheduled_at=timezone.now(), status=LiveLesson.Status.LIVE,
+            waiting_room_enabled=False,
         )
         client = Client()
         client.get(self.detail_url(lesson))
