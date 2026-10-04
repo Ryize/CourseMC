@@ -11,8 +11,8 @@ class PythonInterpreterViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'py_interpreter/worker.mjs?v=6')
-        self.assertContains(response, 'py_interpreter/interpreter.css?v=7')
-        self.assertContains(response, 'py_interpreter/interpreter.js?v=6')
+        self.assertContains(response, 'py_interpreter/interpreter.css?v=10')
+        self.assertContains(response, 'py_interpreter/interpreter.js?v=7')
         self.assertContains(response, 'Код выполняется только в вашем браузере')
         self.assertContains(response, 'ace-builds@1.44.0')
         self.assertContains(response, 'id="python-stdin"')

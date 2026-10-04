@@ -5,36 +5,67 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Твой интерпретатор</title>
+    <title>{% if shared_lesson %}Общий код · {{ shared_lesson.title }}{% else %}Твой интерпретатор{% endif %}</title>
     <link rel="shortcut icon"
           href="{% static 'Course/assets/favicon.ico' %}"
           type="image/x-icon">
     <link rel="stylesheet"
           href="{% static 'Course/css/style.css' %}">
     <link rel="stylesheet"
-          href="{% static 'py_interpreter/interpreter.css' %}?v=7">
+          href="{% static 'py_interpreter/interpreter.css' %}?v=10">
     <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/src-min-noconflict/ace.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/src-min-noconflict/ext-language_tools.js" defer></script>
-    <script src="{% static 'py_interpreter/interpreter.js' %}?v=6" defer></script>
+    <script src="{% static 'py_interpreter/interpreter.js' %}?v=7" defer></script>
+    {% if shared_lesson %}
+    <script src="{% static 'py_interpreter/vendor/yjs.js' %}" defer></script>
+    <script src="{% static 'py_interpreter/collaboration.js' %}?v=2" defer></script>
+    {% endif %}
 </head>
-<body class="interpreter-page">
-{% include 'template/header.html' %}
+<body class="interpreter-page{% if embedded %} interpreter-embedded{% endif %}">
+{% if not embedded %}{% include 'template/header.html' %}{% endif %}
 
 <main class="interpreter"
       data-worker-url="{% static 'py_interpreter/worker.mjs' %}?v=6"
       data-ace-base-url="https://cdn.jsdelivr.net/npm/ace-builds@1.44.0/src-min-noconflict"
+      {% if shared_lesson %}data-shared-id="{{ shared_lesson.public_id }}" data-sync-url="{% url 'shared_code_sync' shared_lesson.public_id %}" data-manage-url="{% url 'shared_code_manage' shared_lesson.public_id %}" data-publish-url="{% url 'shared_code_publish' shared_lesson.public_id %}" data-download-name="lesson.py"{% endif %}
       {% if solution_file %}data-solution-file-id="{{ solution_file.pk }}"
       data-download-name="{{ download_name }}"{% endif %}>
     <div class="interpreter__hero">
         <div>
-            <span class="interpreter__eyebrow">Практика Python</span>
+            <span class="interpreter__eyebrow">{% if shared_lesson %}Общий код · {{ shared_lesson.title }}{% else %}Практика Python{% endif %}</span>
             <h1>Твой интерпретатор</h1>
-            <p>{% if solution_file %}Просматривайте и проверяйте решение ученика. Изменения здесь не меняют отправленный файл; код выполняется только в вашем браузере.{% else %}Пишите, запускайте и проверяйте Python-код прямо здесь. Код выполняется только в вашем браузере.{% endif %}</p>
+            <p>{% if shared_lesson %}Пишите вместе. Код общий; результат запуска и ввод видны только вам. Код выполняется только в вашем браузере.{% elif solution_file %}Просматривайте и проверяйте решение ученика. Изменения здесь не меняют отправленный файл; код выполняется только в вашем браузере.{% else %}Пишите, запускайте и проверяйте Python-код прямо здесь. Код выполняется только в вашем браузере.{% endif %}</p>
         </div>
         <span class="interpreter__status"
               id="interpreter-status"
               role="status">Загрузка Python…</span>
     </div>
+    {% if shared_lesson %}
+    <section class="shared-code" aria-label="Совместное редактирование">
+        {% csrf_token %}
+        <div class="shared-code__bar"><span id="shared-code-status" role="status">Подключение к общему коду…</span><div id="shared-code-people" class="shared-code__people" aria-label="Участники редактора"></div></div>
+        <p id="shared-code-error" class="shared-code__error" role="alert" hidden></p>
+        <button id="shared-code-recovery" class="interpreter__tool" type="button" hidden>Скачать несохранённые правки</button>
+        {% if shared_teacher %}
+        <details class="shared-code__manage"><summary>Доступ к редактированию</summary><div id="shared-code-members"></div><p>Ученики могут смотреть и запускать код. Разрешите правки тем, кто сейчас работает с вами.</p></details>
+        <form id="shared-code-save" class="shared-code__save"><input id="shared-code-title" aria-label="Название версии" maxlength="100" value="Код занятия" required><button type="submit" class="interpreter__tool">Сохранить версию созвона</button></form>
+        {% if code_publish_form %}
+        <details class="shared-code__publish"><summary>Прикрепить .py к уроку программы</summary>
+            <p>Сохранённая копия текущего кода появится в расписании выбранной группы.</p>
+            {% if code_publish_form.targets %}
+            <form id="shared-code-publish" class="shared-code__save">
+                <label class="interpreter__visually-hidden" for="{{ code_publish_form.code_target.id_for_label }}">Урок программы и группа</label>
+                {{ code_publish_form.code_target }}
+                <button type="submit" class="interpreter__tool">Прикрепить .py к уроку</button>
+            </form>
+            <p id="shared-code-published" role="status" hidden></p>
+            {% else %}<p>У учеников ваших групп пока нет подходящих уроков программы.</p>{% endif %}
+        </details>
+        {% endif %}
+        {% endif %}
+        <details class="shared-code__versions"><summary>Версии созвона</summary><ul id="shared-code-versions"><li>Сохранённых версий пока нет.</li></ul></details>
+    </section>
+    {% endif %}
     {% if solution_file %}
     <div class="interpreter__source-note">
         <div>
@@ -54,7 +85,7 @@
             <div class="interpreter__panel-heading">
                 <div>
                     <span class="interpreter__panel-kicker">Редактор</span>
-                    <h2>{% if solution_file %}{{ source_filename }}{% else %}main.py{% endif %}</h2>
+                    <h2>{% if shared_lesson %}lesson.py{% elif solution_file %}{{ source_filename }}{% else %}main.py{% endif %}</h2>
                 </div>
                 <span class="interpreter__language">Python 3</span>
             </div>
@@ -68,7 +99,7 @@
                 <textarea id="python-code"
                           spellcheck="false"
                           autocomplete="off"
-                          maxlength="20000">{% if solution_file %}{{ source_code }}{% else %}def main():
+                          maxlength="20000">{% if solution_file or shared_lesson %}{{ source_code }}{% else %}def main():
     print("Hello, CourseMC!")
 
 
@@ -77,7 +108,7 @@ main(){% endif %}</textarea>
             </div>
             <div class="interpreter__editor-footer">
                 <span id="editor-position">Строка 1, столбец 1</span>
-                <span id="draft-status">{% if solution_file %}Правки сохраняются только в этой вкладке{% else %}Черновик сохраняется в браузере{% endif %}</span>
+                <span id="draft-status">{% if shared_lesson %}Общий документ занятия{% elif solution_file %}Правки сохраняются только в этой вкладке{% else %}Черновик сохраняется в браузере{% endif %}</span>
             </div>
         </section>
 
@@ -125,6 +156,6 @@ main(){% endif %}</textarea>
     </noscript>
 </main>
 
-{% include 'template/footer.html' %}
+{% if not embedded %}{% include 'template/footer.html' %}{% endif %}
 </body>
 </html>

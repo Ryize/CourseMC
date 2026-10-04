@@ -1,0 +1,69 @@
+# Optional TURN/TLS fallback on the SAME public TCP/443 as the website.
+# Requires Compose >= 2.24.4, valid certificates and deploy/render_turn.py.
+# Always combine with compose.yaml AND compose.media.yaml.
+services:
+  nginx:
+    ports: !override
+      - "80:80"
+    volumes:
+      # Replaces the base conf.d mount; the original runtime/nginx is kept for rollback.
+      - ./runtime/turn/nginx:/etc/nginx/conf.d:ro
+    networks:
+      backend:
+      turn-edge:
+        ipv4_address: 172.30.249.4
+
+  livekit:
+    environment:
+      LIVEKIT_CONFIG: |
+        port: 7880
+        log_level: info
+        rtc:
+          tcp_port: 7881
+          udp_port: 7882
+          use_external_ip: true
+        turn:
+          enabled: true
+          domain: ${LIVEKIT_TURN_DOMAIN:?Set LIVEKIT_TURN_DOMAIN in .env}
+          tls_port: 443
+          external_tls: true
+          proxy_protocol: true
+          proxy_protocol_trusted_cidrs:
+            - 172.30.249.2/32
+          relay_range_start: 40000
+          relay_range_end: 40199
+          per_user_relay_allocation_limit: 12
+          ttl_seconds: 300
+    ports:
+      - "40000-40199:40000-40199/udp"
+    networks:
+      backend:
+      turn-edge:
+        ipv4_address: 172.30.249.3
+
+  media-edge:
+    image: nginx:1.28-alpine
+    restart: unless-stopped
+    depends_on:
+      nginx:
+        condition: service_started
+      livekit:
+        condition: service_started
+    ports:
+      - "443:443/tcp"
+    volumes:
+      - ./runtime/turn/edge.conf:/etc/nginx/nginx.conf:ro
+      - ./data/certbot/conf:/etc/letsencrypt:ro
+    command: >-
+      /bin/sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload;
+      done & nginx -g 'daemon off;'"
+    networks:
+      turn-edge:
+        ipv4_address: 172.30.249.2
+
+networks:
+  turn-edge:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.249.0/29

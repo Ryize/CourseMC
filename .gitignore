@@ -26,6 +26,7 @@ private_media/
 staticfiles/
 data/
 runtime/
+node_modules/
 *.log
 
 # IDE and operating system files

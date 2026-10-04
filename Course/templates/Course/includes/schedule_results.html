@@ -23,6 +23,19 @@
                 <div class="dropdown">
                   <div class="schedule-dropdown-content">
                     <div class="lesson-materials">{{ schedule.lesson_materials|safe }}</div>
+                    {% if schedule.code_files %}
+                    <section class="lesson-chat-archives" aria-label="Код к уроку">
+                        <strong>Код к уроку</strong>
+                        {% for code_file in schedule.code_files %}
+                        <div class="lesson-chat-archive-card">
+                            <div class="lesson-chat-archive-heading">
+                                <span>{{ code_file.snapshot.title }} · {{ code_file.created_at|date:'d.m.Y H:i' }}</span>
+                                <a href="{% url 'shared_code_attachment' code_file.pk %}">Скачать .py</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </section>
+                    {% endif %}
                     {% if schedule.chat_archives %}
                     <section class="lesson-chat-archives" aria-label="История чата занятий">
                         <strong>История чата занятий</strong>

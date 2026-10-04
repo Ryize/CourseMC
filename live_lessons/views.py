@@ -196,9 +196,24 @@ def lesson_detail(request, public_id):
     ):
         archive_form = LiveLessonChatArchiveForm(lesson=lesson, teacher_user=request.user)
     state = lesson_state_payload(request, lesson)
+    from py_interpreter.forms import SharedCodePublishForm
+    from py_interpreter.models import SharedCodeAttachment, SharedCodeSnapshot
+    code_allowed = is_teacher or lesson.participants.filter(
+        identity=participant_identity(request, lesson), admission='admitted',
+    ).exists()
+    code_allowed = code_allowed and not lesson.removed_participants.filter(
+        identity=participant_identity(request, lesson),
+    ).exists()
     context = {
         'lesson': lesson,
         'is_teacher': is_teacher,
+        'has_shared_code': code_allowed and hasattr(lesson, 'shared_code'),
+        'code_snapshots': SharedCodeSnapshot.objects.filter(document__lesson=lesson)[:20] if code_allowed else (),
+        'code_publish_form': SharedCodePublishForm(lesson=lesson, teacher_user=request.user,
+                                                  auto_id='id_ll_code_%s')
+                             if is_teacher and lesson.audience == LiveLesson.Audience.GROUPS else None,
+        'code_attachments': SharedCodeAttachment.objects.filter(snapshot__document__lesson=lesson)
+                            .select_related('snapshot', 'group', 'schedule') if is_teacher else (),
         'archive_form': archive_form,
         'has_chat_messages': lesson.chat_messages.exists() if archive_form else False,
         'chat_archives': lesson.chat_archives.select_related('group', 'schedule').all() if is_teacher else (),

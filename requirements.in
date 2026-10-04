@@ -17,3 +17,4 @@ python-docx==1.2.0
 htmldocx==0.0.6
 
 radon==6.0.1
+pycrdt==0.14.8

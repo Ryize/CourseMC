@@ -16,6 +16,34 @@
 
 {% if show_chat %}{% if not room_open %}{% include 'live_lessons/_chat_panel.html' %}{% endif %}{% endif %}
 
+{% if has_shared_code %}
+<section class="ll-panel" aria-label="Код занятия">
+    <h2>Код занятия</h2>
+    <a class="ll-button" href="{% url 'shared_code_editor' lesson.public_id %}" target="_blank" rel="noopener">Открыть в «Твоём Интерпретаторе»</a>
+    {% if code_snapshots %}<ul class="ll-archive-list">{% for version in code_snapshots %}<li><span>{{ version.title }} · {{ version.created_at|date:'d.m.Y H:i' }}</span><a href="{% url 'shared_code_snapshot' lesson.public_id version.pk %}">Скачать .py</a></li>{% endfor %}</ul>{% endif %}
+    {% if is_teacher %}
+    {% if code_publish_form %}
+    <div class="ll-archive-section">
+        <h3>Прикрепить код к уроку программы</h3>
+        <p class="ll-muted">Выбранная версия появится в расписании только у учеников выбранной группы. Дальнейшие правки в созвоне не изменят файл.</p>
+        {% if code_publish_form.targets and code_snapshots %}
+        <form data-lesson-action class="ll-archive-form" method="post" action="{% url 'shared_code_publish' lesson.public_id %}">
+            {% csrf_token %}
+            <label for="{{ code_publish_form.snapshot.id_for_label }}">Версия созвона</label>
+            {{ code_publish_form.snapshot }}
+            <label for="{{ code_publish_form.code_target.id_for_label }}">Урок программы и группа</label>
+            {{ code_publish_form.code_target }}
+            <button class="ll-button ll-button-primary" type="submit">Прикрепить .py к уроку</button>
+        </form>
+        {% elif not code_publish_form.targets %}<p class="ll-note">У учеников ваших групп пока нет подходящих уроков программы.</p>
+        {% else %}<p class="ll-note">Сначала сохраните версию созвона в редакторе или прикрепите текущий код прямо из него.</p>{% endif %}
+    </div>
+    {% endif %}
+    {% if code_attachments %}<ul class="ll-archive-list">{% for code_file in code_attachments %}<li><span>{{ code_file.snapshot.title }} · {{ code_file.group.title }} · {{ code_file.schedule.theme }}</span><a href="{% url 'shared_code_attachment' code_file.pk %}">Скачать прикреплённый .py</a></li>{% endfor %}</ul>{% endif %}
+    {% endif %}
+</section>
+{% endif %}
+
 {% if is_teacher %}
 <section class="ll-panel" aria-labelledby="ll-controls-title">
     <h2 id="ll-controls-title">Управление занятием</h2>

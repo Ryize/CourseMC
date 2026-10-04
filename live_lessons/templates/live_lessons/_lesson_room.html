@@ -29,6 +29,10 @@
         <div class="ll-room-workspace" id="ll-room-workspace">
             <div class="ll-room-main">
                 <div class="ll-room-stage">
+                    <section class="ll-room-code" id="ll-room-code" aria-label="Общий редактор кода" hidden>
+                        <div class="ll-room-code-head"><strong>Твой Интерпретатор · общий код</strong><div><a href="{% url 'shared_code_editor' lesson.public_id %}" target="_blank" rel="noopener">В отдельной вкладке ↗</a><button id="ll-room-code-close" type="button" aria-label="Закрыть редактор"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
+                        <iframe id="ll-room-code-frame" data-src="{% url 'shared_code_editor' lesson.public_id %}?embedded=1" title="Совместный Python-редактор" allow="clipboard-write"></iframe>
+                    </section>
                     <div class="ll-room-tracks" id="ll-room-tracks"></div>
                     <div class="ll-room-empty" id="ll-room-empty" hidden>
                         <span class="ll-room-avatar" aria-hidden="true">C</span>
@@ -82,6 +86,9 @@
                         </button>
                     </div>
                     <div class="ll-room-side-controls">
+                        <button class="ll-room-control" id="ll-room-code-toggle" type="button" aria-controls="ll-room-code" aria-expanded="false" title="Общий редактор доступен после входа в комнату" disabled>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 6-6 6 6 6m8-12 6 6-6 6m-3-16-2 20"/></svg><span class="ll-room-control-label">Код</span>
+                        </button>
                         <button class="ll-room-control" id="ll-room-members-toggle" type="button" aria-controls="ll-room-sidebar" aria-expanded="false" aria-label="Показать участников">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 11a3 3 0 1 0 0-6m1 10a5 5 0 0 1 3 5"/></svg><span class="ll-room-control-label" id="ll-room-count">Участники</span>
                         </button>

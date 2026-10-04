@@ -1,0 +1,7 @@
+{
+  "name": "coursemc-shared-code-vendor",
+  "private": true,
+  "scripts": {"build": "esbuild yjs-entry.js --bundle --minify --format=iife --global-name=CourseCodeY --outfile=../static/py_interpreter/vendor/yjs.js --legal-comments=eof"},
+  "dependencies": {"yjs": "13.6.33"},
+  "devDependencies": {"esbuild": "0.28.2"}
+}

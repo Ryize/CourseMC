@@ -8,7 +8,7 @@ const source = fs.readFileSync(path.join(__dirname, '../static/live_lessons/less
 
 function roomFixture({ teacher = false, supportsNoiseSuppression = true,
     supportsVoiceEnhancement = true, savedPreferences = null, initialRoom = true,
-    savedDevices = null, supportsOutput = false } = {}) {
+    savedDevices = null, supportsOutput = false, fullscreen = 'native', connectError = null } = {}) {
     const elements = new Map();
     const documentListeners = new Map();
     const windowListeners = new Map();
@@ -59,6 +59,7 @@ function roomFixture({ teacher = false, supportsNoiseSuppression = true,
                 return this.label;
             },
             requestFullscreen() {
+                if (fullscreen === 'reject') return Promise.reject(new TypeError('Fullscreen unavailable'));
                 doc.fullscreenElement = this;
                 documentListeners.get('fullscreenchange')();
                 return Promise.resolve();
@@ -79,10 +80,25 @@ function roomFixture({ teacher = false, supportsNoiseSuppression = true,
             add(name) { element.className += ` ${name}`; },
         };
         element.style = { setProperty(name, value) { this[name] = value; } };
+        element.focus = () => { doc.activeElement = element; };
+        if (fullscreen === 'missing' || fullscreen === 'webkit') delete element.requestFullscreen;
+        if (fullscreen === 'webkit') element.webkitRequestFullscreen = function () {
+            doc.webkitFullscreenElement = this;
+            documentListeners.get('webkitfullscreenchange')();
+        };
         if (tagName === 'audio' && supportsOutput) element.setSinkId = async () => {};
         return element;
     }
     doc.createElement = makeElement;
+    doc.body = makeElement('body');
+    if (fullscreen === 'disabled') doc.fullscreenEnabled = false;
+    if (fullscreen === 'webkit') {
+        delete doc.exitFullscreen;
+        doc.webkitExitFullscreen = function () {
+            this.webkitFullscreenElement = null;
+            documentListeners.get('webkitfullscreenchange')();
+        };
+    }
     for (const id of [
         'll-room', 'll-room-state', 'll-room-error', 'll-room-join', 'll-room-leave',
         'll-room-unlock', 'll-room-lobby', 'll-room-mic', 'll-room-camera',
@@ -97,7 +113,10 @@ function roomFixture({ teacher = false, supportsNoiseSuppression = true,
         'll-room-chat-panel', 'll-room-fullscreen', 'll-room-reactions-toggle', 'll-room-reactions-menu',
         'll-room-audio-output', 'll-device-open',
     ]) elements.set(id, makeElement());
+    doc.body.appendChild(elements.get('ll-room'));
+    elements.get('ll-room').appendChild(elements.get('ll-room-tracks'));
     elements.get('ll-room-reactions-menu').hidden = true;
+    elements.get('ll-room-error').hidden = true;
     elements.get('ll-room-settings').hidden = true;
     elements.get('ll-room-sidebar').hidden = true;
     for (const reaction of ['hand', 'like', 'check', 'cross', 'fire']) {
@@ -133,7 +152,10 @@ function roomFixture({ teacher = false, supportsNoiseSuppression = true,
         }
         on(type, callback) { this.events.set(type, callback); }
         emit(type, ...args) { this.events.get(type)?.(...args); }
-        async connect() {}
+        async connect(url, token, options) {
+            this.connectOptions = options;
+            if (connectError) throw connectError;
+        }
         async disconnect() { this.state = 'disconnected'; this.emit('Disconnected'); }
         getActiveDevice() { return ''; }
     }
@@ -835,6 +857,154 @@ test('video tile button enters and exits fullscreen, including browser Escape', 
     await button.listeners.get('click')();
     await doc.exitFullscreen(); // Эквивалент выхода через Esc в браузере.
     assert.equal(button.textContent, 'На весь экран');
+});
+
+for (const fullscreen of ['missing', 'disabled', 'reject']) {
+    test(`mobile room expands within the viewport when native fullscreen is ${fullscreen}`, async () => {
+        const f = roomFixture({ fullscreen });
+        const root = f.elements.get('ll-room');
+        const button = f.elements.get('ll-room-fullscreen');
+        await button.listeners.get('click')();
+        assert.equal(root.classList.contains('ll-room-window-expanded'), true);
+        assert.equal(f.doc.body.classList.contains('ll-room-scroll-locked'), true);
+        assert.equal(button.querySelector('span').textContent, 'Свернуть');
+        assert.equal(button.getAttribute('aria-pressed'), 'true');
+        assert.equal(f.elements.get('ll-room-error').hidden, true);
+
+        await button.listeners.get('click')();
+        assert.equal(root.classList.contains('ll-room-window-expanded'), false);
+        assert.equal(f.doc.body.classList.contains('ll-room-scroll-locked'), false);
+        assert.equal(button.querySelector('span').textContent, 'Развернуть');
+        assert.equal(f.doc.activeElement, button);
+    });
+
+    test(`mobile screen viewing opens and closes when native fullscreen is ${fullscreen}`, async () => {
+        const f = roomFixture({ fullscreen });
+        f.elements.get('ll-room-join').listeners.get('click')();
+        await new Promise(setImmediate);
+        const participant = { identity: 'student', name: 'Ученик', trackPublications: new Map() };
+        f.getRoom().remoteParticipants.set(participant.identity, participant);
+        const track = { kind: 'video', attach: () => f.makeElement('video'), detach: () => [] };
+        f.getRoom().emit('TrackSubscribed', track, { trackSid: 'screen-1', source: 'screen' }, participant);
+        const figure = f.elements.get('ll-room-tracks').children.find((tile) => tile.dataset.source === 'screen');
+        const button = figure.expandButton;
+        await button.listeners.get('click')();
+        assert.equal(figure.classList.contains('ll-room-tile-window-expanded'), true);
+        assert.equal(button.textContent, 'Свернуть');
+        assert.equal(f.elements.get('ll-room-error').hidden, true);
+        await button.listeners.get('click')();
+        assert.equal(figure.classList.contains('ll-room-tile-window-expanded'), false);
+        assert.equal(button.getAttribute('aria-pressed'), 'false');
+        assert.equal(f.doc.body.classList.contains('ll-room-scroll-locked'), false);
+    });
+}
+
+test('prefixed WebKit fullscreen enters and exits without the standard API', async () => {
+    const f = roomFixture({ fullscreen: 'webkit' });
+    const root = f.elements.get('ll-room');
+    const button = f.elements.get('ll-room-fullscreen');
+    await button.listeners.get('click')();
+    assert.equal(f.doc.webkitFullscreenElement, root);
+    assert.equal(root.classList.contains('ll-room-expanded'), true);
+    assert.equal(root.classList.contains('ll-room-window-expanded'), false);
+    await button.listeners.get('click')();
+    assert.equal(f.doc.webkitFullscreenElement, null);
+    assert.equal(root.classList.contains('ll-room-expanded'), false);
+});
+
+test('leaving an expanded mobile call restores the page without turning devices on', async () => {
+    const f = roomFixture({ fullscreen: 'missing' });
+    f.elements.get('ll-room-join').listeners.get('click')();
+    await new Promise(setImmediate);
+    await f.elements.get('ll-room-fullscreen').listeners.get('click')();
+    f.elements.get('ll-room-leave').listeners.get('click')();
+    await new Promise(setImmediate);
+    assert.equal(f.doc.body.classList.contains('ll-room-scroll-locked'), false);
+    assert.equal(f.roomRoot.classList.contains('ll-room-window-expanded'), false);
+    assert.equal(f.elements.get('ll-room-join').disabled, false);
+    assert.equal(f.elements.get('ll-room-mic').getAttribute('aria-pressed'), 'false');
+});
+
+test('Escape restores the normal mobile layout and scrolling', async () => {
+    const f = roomFixture({ fullscreen: 'missing' });
+    const button = f.elements.get('ll-room-fullscreen');
+    await button.listeners.get('click')();
+    f.documentListeners.get('keydown')({ key: 'Escape' });
+    assert.equal(f.elements.get('ll-room').classList.contains('ll-room-window-expanded'), false);
+    assert.equal(f.doc.body.classList.contains('ll-room-scroll-locked'), false);
+    assert.equal(button.querySelector('span').textContent, 'Развернуть');
+});
+
+test('stopping an expanded screen removes the mobile overlay and restores scrolling', async () => {
+    const f = roomFixture({ fullscreen: 'missing' });
+    f.elements.get('ll-room-join').listeners.get('click')();
+    await new Promise(setImmediate);
+    const participant = { identity: 'student', name: 'Ученик', trackPublications: new Map() };
+    const track = { kind: 'video', attach: () => f.makeElement('video'), detach: () => [] };
+    const publication = { trackSid: 'screen-1', source: 'screen' };
+    f.getRoom().remoteParticipants.set(participant.identity, participant);
+    f.getRoom().emit('TrackSubscribed', track, publication, participant);
+    const figure = f.elements.get('ll-room-tracks').children.find((tile) => tile.dataset.source === 'screen');
+    await figure.expandButton.listeners.get('click')();
+    f.getRoom().emit('TrackUnsubscribed', track, publication, participant);
+    assert.equal(figure.parentElement, null);
+    assert.equal(f.elements.get('ll-room').classList.contains('ll-room-window-expanded'), false);
+    assert.equal(f.doc.body.classList.contains('ll-room-scroll-locked'), false);
+});
+
+test('lesson end and page replacement both clean up mobile expansion', async () => {
+    for (const removePage of [false, true]) {
+        const f = roomFixture({ fullscreen: 'missing' });
+        await f.elements.get('ll-room-fullscreen').listeners.get('click')();
+        if (removePage) {
+            f.elements.delete('ll-room');
+            f.windowListeners.get('ll-page-updated')();
+        } else {
+            const pending = [];
+            f.windowListeners.get('ll-lesson-state')({ detail: {
+                state: { status: 'ended', can_join: false }, waitUntil: (promise) => pending.push(promise),
+            } });
+            await Promise.all(pending);
+        }
+        assert.equal(f.doc.body.classList.contains('ll-room-scroll-locked'), false);
+        assert.equal(f.roomRoot.classList.contains('ll-room-window-expanded'), false);
+    }
+});
+
+test('late native fullscreen completion cannot reopen a removed screen', async () => {
+    const f = roomFixture();
+    f.elements.get('ll-room-join').listeners.get('click')();
+    await new Promise(setImmediate);
+    const figure = f.elements.get('ll-room-tracks').children[0];
+    let complete;
+    figure.requestFullscreen = () => new Promise((resolve) => { complete = resolve; });
+    const opening = figure.expandButton.listeners.get('click')();
+    f.getRoom().emit('ParticipantDisconnected', f.getRoom().localParticipant);
+    f.doc.fullscreenElement = figure;
+    complete();
+    await opening;
+    assert.equal(f.doc.fullscreenElement, null);
+    assert.equal(f.doc.body.classList.contains('ll-room-scroll-locked'), false);
+});
+
+test('slow-network connect keeps server ICE candidates and gives ICE more time', async () => {
+    const f = roomFixture();
+    f.elements.get('ll-room-join').listeners.get('click')();
+    await new Promise(setImmediate);
+    assert.equal(f.getRoom().connectOptions.peerConnectionTimeout, 30000);
+    assert.equal(f.getRoom().connectOptions.websocketTimeout, 20000);
+    assert.equal(f.getRoom().connectOptions.maxRetries, 2);
+    assert.equal(f.getRoom().connectOptions.rtcConfig, undefined);
+});
+
+test('VPN transport failure is explained in Russian and allows another join', async () => {
+    const f = roomFixture({ connectError: new Error('could not establish pc connection') });
+    f.elements.get('ll-room-join').listeners.get('click')();
+    await new Promise(setImmediate);
+    assert.match(f.elements.get('ll-room-error').textContent, /VPN/);
+    assert.doesNotMatch(f.elements.get('ll-room-error').textContent, /could not establish/);
+    assert.equal(f.elements.get('ll-room-join').disabled, false);
+    assert.equal(f.getRoom().state, 'disconnected');
 });
 
 test('canceling the screen picker is silent and leaves screen sharing available', async () => {

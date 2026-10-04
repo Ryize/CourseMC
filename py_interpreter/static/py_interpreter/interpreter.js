@@ -18,9 +18,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const position = document.getElementById('editor-position');
     const draftStatus = document.getElementById('draft-status');
     const solutionFileId = root.dataset.solutionFileId;
+    const shared = !!root.dataset.sharedId;
+    let sharedEditable = !shared;
     let draftStorage = null;
     try {
-        draftStorage = solutionFileId ? window.sessionStorage : window.localStorage;
+        draftStorage = shared ? null : solutionFileId ? window.sessionStorage : window.localStorage;
     } catch (_) {
         draftStatus.textContent = 'Черновик не сохраняется в этом браузере';
     }
@@ -60,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         position.textContent = `Строка ${row}, столбец ${column} · ${code.length.toLocaleString('ru-RU')} / ${maxCodeLength.toLocaleString('ru-RU')} символов`;
     };
     const saveDraft = () => {
+        if (shared) return;
         try {
             if (!draftStorage) throw new Error('Хранилище недоступно');
             draftStorage.setItem(draftKey, getCode());
@@ -71,6 +74,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     const scheduleSave = () => {
+        if (shared) {
+            updatePosition();
+            root.dispatchEvent(new Event('interpreter-code-change'));
+            return;
+        }
         draftStatus.textContent = 'Сохранение…';
         window.clearTimeout(saveTimer);
         saveTimer = window.setTimeout(saveDraft, 350);
@@ -81,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedCode = draftStorage.getItem(draftKey);
         if (savedCode !== null) codeInput.value = savedCode;
     } catch (_) {
-        draftStatus.textContent = 'Черновик не сохраняется в этом браузере';
+        if (!shared) draftStatus.textContent = 'Черновик не сохраняется в этом браузере';
     }
 
     const syncEditorTheme = () => {
@@ -94,8 +102,9 @@ document.addEventListener('DOMContentLoaded', () => {
         running = value;
         runButton.disabled = value || !worker;
         stopButton.disabled = !value;
-        codeInput.readOnly = value;
-        editor?.setReadOnly(value);
+        codeInput.readOnly = value || !sharedEditable;
+        editor?.setReadOnly(value || !sharedEditable);
+        document.getElementById('clear-code').disabled = value || !sharedEditable;
         if (!value) {
             pendingInput = null;
             inputForm.hidden = true;
@@ -305,6 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
     });
     document.getElementById('clear-code').addEventListener('click', () => {
+        if (!sharedEditable || running) return;
         if (getCode().trim() && !window.confirm('Очистить весь код в редакторе?')) return;
         setCode('');
         editor ? editor.focus() : codeInput.focus();
@@ -340,12 +350,21 @@ document.addEventListener('DOMContentLoaded', () => {
             runCode();
         } else if (event.key === 'Tab') {
             event.preventDefault();
+            if (codeInput.readOnly) return;
             codeInput.setRangeText('    ', codeInput.selectionStart, codeInput.selectionEnd, 'end');
             scheduleSave();
         }
     });
     window.addEventListener('beforeunload', saveDraft);
     updatePosition();
+    if (shared) {
+        setRunning(false);
+        root.dispatchEvent(new CustomEvent('interpreter-ready', {detail: {
+            root, editor, codeInput, getCode, updatePosition,
+            setEditable(value) { sharedEditable = !!value; setRunning(running); },
+            setCode(value) { if (editor) editor.setValue(value, -1); else codeInput.value = value; updatePosition(); },
+        }}));
+    }
     if (window.Worker) createWorker();
     else failRuntime('Этот браузер не поддерживает запуск Python. Обновите браузер и попробуйте снова.');
 });

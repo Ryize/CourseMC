@@ -56,6 +56,9 @@
         const participantOrder = new Map();
         let nextParticipantOrder = 0;
         let pinnedTile = null;
+        let windowFullscreen = null;
+        let fullscreenBusy = false;
+        let fullscreenRevision = 0;
         const reactionOptions = Object.freeze({
             hand: ['✋', 'Поднял руку'], like: ['👍', 'Лайк'], check: ['✅', 'Галочка'],
             cross: ['❌', 'Крестик'], fire: ['🔥', 'Огонь'],
@@ -108,6 +111,9 @@
         }
 
         function errorText(error) {
+            if (/could not establish (?:pc|peer\s?connection)|ice (?:connection )?failed|peer\s?connection.*(?:failed|timed out)/i.test(error?.message || '')) {
+                return 'Не удалось установить аудио- и видеосоединение. VPN или сеть могут блокировать звонок. Попробуйте другую сеть или добавьте сайт в исключения VPN, затем войдите ещё раз.';
+            }
             if (['NotAllowedError', 'PermissionDeniedError', 'SecurityError'].includes(error?.name)) {
                 return 'Браузер не разрешил доступ к устройству или экрану. Проверьте разрешения сайта.';
             }
@@ -200,6 +206,86 @@
             }
         }
 
+        function nativeFullscreenElement() {
+            return document.fullscreenElement || document.webkitFullscreenElement || null;
+        }
+
+        function updateFullscreenControls() {
+            const expandedElement = windowFullscreen || nativeFullscreenElement();
+            const expanded = expandedElement === root;
+            root.classList.toggle('ll-room-expanded', expanded || !!windowFullscreen);
+            root.classList.toggle('ll-room-window-expanded', !!windowFullscreen);
+            if (currentRoot === root) document.body.classList.toggle('ll-room-scroll-locked', !!windowFullscreen);
+            ui.fullscreen.querySelector('span').textContent = expanded ? 'Свернуть' : 'Развернуть';
+            ui.fullscreen.title = expanded ? 'Вернуться к обычному виду' : 'На весь экран';
+            ui.fullscreen.setAttribute('aria-pressed', String(expanded));
+            ui.fullscreen.setAttribute('aria-label', expanded ? 'Выйти из полноэкранного режима' : 'Развернуть комнату на весь экран');
+            for (const figure of ui.tracks.children) {
+                const expand = figure.expandButton, caption = figure.tileCaption;
+                if (!expand || !caption) continue;
+                const tileExpanded = expandedElement === figure;
+                figure.classList.toggle('ll-room-tile-expanded', tileExpanded);
+                figure.classList.toggle('ll-room-tile-window-expanded', windowFullscreen === figure);
+                expand.textContent = tileExpanded ? 'Свернуть' : 'На весь экран';
+                expand.title = tileExpanded ? 'Вернуться к обычному виду' : 'На весь экран';
+                expand.setAttribute('aria-pressed', String(tileExpanded));
+                expand.setAttribute('aria-label', tileExpanded ?
+                    `Вернуться к обычному виду: ${caption.textContent}` :
+                    `Показать на весь экран: ${caption.textContent}`);
+            }
+        }
+
+        function clearWindowFullscreen() {
+            if (windowFullscreen && windowFullscreen !== root) {
+                windowFullscreen.classList.toggle('ll-room-tile-window-expanded', false);
+                windowFullscreen.classList.toggle('ll-room-tile-expanded', false);
+            }
+            windowFullscreen = null;
+            updateFullscreenControls();
+        }
+
+        async function closeFullscreenFor(element = root) {
+            fullscreenRevision += 1;
+            if (windowFullscreen && element.contains(windowFullscreen)) clearWindowFullscreen();
+            const native = nativeFullscreenElement();
+            const exit = document.exitFullscreen || document.webkitExitFullscreen;
+            if (native && element.contains(native) && typeof exit === 'function') {
+                try { await exit.call(document); }
+                catch (_) { /* Выход через системную кнопку браузера остаётся доступен. */ }
+            }
+            updateFullscreenControls();
+        }
+
+        async function toggleFullscreen(element) {
+            if (fullscreenBusy || closed || root.isConnected === false) return;
+            fullscreenBusy = true;
+            const revision = ++fullscreenRevision;
+            try {
+                if ((windowFullscreen || nativeFullscreenElement()) === element) {
+                    await closeFullscreenFor(element);
+                    (element === root ? ui.fullscreen : element.expandButton)?.focus?.({ preventScroll: true });
+                    return;
+                }
+                clearWindowFullscreen();
+                const request = document.fullscreenEnabled !== false && typeof element.requestFullscreen === 'function' ?
+                    element.requestFullscreen : document.webkitFullscreenEnabled !== false &&
+                    typeof element.webkitRequestFullscreen === 'function' ? element.webkitRequestFullscreen : null;
+                if (request) {
+                    try {
+                        await request.call(element);
+                        if (revision !== fullscreenRevision || closed || root.isConnected === false || !root.contains(element)) {
+                            await closeFullscreenFor(element);
+                        }
+                        updateFullscreenControls();
+                        return;
+                    } catch (_) { /* На iPhone и во встроенных браузерах разворачиваем внутри окна. */ }
+                }
+                if (revision !== fullscreenRevision || closed || root.isConnected === false || !root.contains(element)) return;
+                windowFullscreen = element;
+                updateFullscreenControls();
+            } finally { fullscreenBusy = false; }
+        }
+
         function addTileControls(figure, caption, participant, isScreen) {
             figure.dataset.source = isScreen ? 'screen' : 'participant';
             if (!participantOrder.has(participant.identity)) participantOrder.set(participant.identity, nextParticipantOrder++);
@@ -216,12 +302,7 @@
             expand.textContent = 'На весь экран'; expand.title = 'На весь экран';
             expand.setAttribute('aria-pressed', 'false');
             expand.setAttribute('aria-label', `Показать на весь экран: ${caption.textContent}`);
-            expand.addEventListener('click', async () => {
-                try {
-                    if (document.fullscreenElement === figure) await document.exitFullscreen();
-                    else if (figure.requestFullscreen) await figure.requestFullscreen();
-                } catch (error) { showError(errorText(error)); }
-            });
+            expand.addEventListener('click', () => toggleFullscreen(figure));
             figure.pinButton = pin; figure.tileCaption = caption; figure.expandButton = expand;
             figure.append(pin, expand);
             return { pin, expand };
@@ -309,6 +390,7 @@
         function removeAvatarTile(identity) {
             const tile = avatarTiles.get(identity);
             if (!tile) return;
+            void closeFullscreenFor(tile.figure);
             tile.figure.remove();
             avatarTiles.delete(identity);
             if (reactionTargets.get(identity) === tile.badge) reactionTargets.delete(identity);
@@ -400,7 +482,10 @@
             if (video) {
                 video.track.detach(video.element);
                 video.element.remove();
-                if (video.isScreen) video.figure.remove();
+                if (video.isScreen) {
+                    void closeFullscreenFor(video.figure);
+                    video.figure.remove();
+                }
                 else video.figure.classList.toggle('ll-room-tile-has-video', false);
                 videoElements.delete(key);
             }
@@ -419,6 +504,7 @@
             for (const [key, video] of videoElements) {
                 if (!key.startsWith(prefix)) continue;
                 video.track.detach(video.element);
+                void closeFullscreenFor(video.figure);
                 video.figure.remove();
                 videoElements.delete(key);
                 if (!video.isScreen) reactionTargets.delete(video.participantIdentity);
@@ -438,6 +524,7 @@
         }
 
         function clearTracks() {
+            void closeFullscreenFor();
             for (const { track, element, figure } of videoElements.values()) {
                 track.detach(element);
                 figure.remove();
@@ -892,9 +979,7 @@
                 closed = true;
                 window.dispatchEvent(new Event('ll-prejoin-close'));
                 await leave();
-                if (document.fullscreenElement && root.contains(document.fullscreenElement)) {
-                    await document.exitFullscreen().catch(() => {});
-                }
+                await closeFullscreenFor();
                 setState(state.removed ? 'Вы удалены' : 'Занятие закрыто', 'idle');
                 showError(state.removed ? 'Преподаватель удалил вас из этого занятия.' :
                     state.status === 'ended' ? 'Преподаватель завершил занятие.' :
@@ -969,7 +1054,11 @@
                 });
                 room = activeRoom;
                 registerEvents(activeRoom);
-                await activeRoom.connect(url.href, data.participant_token);
+                // Медленные VPN-сети требуют больше времени на ICE, без отключения
+                // штатного выбора UDP/TCP/TURN-кандидатов, присланных медиасервером.
+                await activeRoom.connect(url.href, data.participant_token, {
+                    peerConnectionTimeout: 30000, websocketTimeout: 20000, maxRetries: 2,
+                });
                 if (room !== activeRoom || closed || root.isConnected === false) {
                     await activeRoom.disconnect();
                     return;
@@ -1106,30 +1195,12 @@
         ui.membersToggle.addEventListener('click', () => { closeSettings(); closeReactions(); toggleSidebar('members'); });
         ui.chatToggle.addEventListener('click', () => { closeSettings(); closeReactions(); toggleSidebar('chat'); });
         ui.sidebarClose.addEventListener('click', () => { toggleSidebar(ui.sidebar.dataset.tab || 'members'); });
-        ui.fullscreen.addEventListener('click', async () => {
-            try {
-                if (document.fullscreenElement === root) await document.exitFullscreen();
-                else await root.requestFullscreen();
-            } catch (error) { showError(errorText(error)); }
-        });
-        listen(document, 'fullscreenchange', () => {
-            const expanded = document.fullscreenElement === root;
-            ui.fullscreen.querySelector('span').textContent = expanded ? 'Свернуть' : 'Развернуть';
-            ui.fullscreen.setAttribute('aria-label', expanded ? 'Выйти из полноэкранного режима' : 'Развернуть комнату на весь экран');
-            for (const figure of ui.tracks.children) {
-                const expand = figure.expandButton, caption = figure.tileCaption;
-                if (!expand || !caption) continue;
-                const tileExpanded = document.fullscreenElement === figure;
-                expand.textContent = tileExpanded ? 'Свернуть' : 'На весь экран';
-                expand.title = tileExpanded ? 'Вернуться к обычному виду' : 'На весь экран';
-                expand.setAttribute('aria-pressed', String(tileExpanded));
-                expand.setAttribute('aria-label', tileExpanded ?
-                    `Вернуться к обычному виду: ${caption.textContent}` :
-                    `Показать на весь экран: ${caption.textContent}`);
-            }
-        });
+        ui.fullscreen.addEventListener('click', () => toggleFullscreen(root));
+        listen(document, 'fullscreenchange', updateFullscreenControls);
+        listen(document, 'webkitfullscreenchange', updateFullscreenControls);
         listen(document, 'keydown', (event) => {
             if (event.key === 'Escape') {
+                if (windowFullscreen) void closeFullscreenFor();
                 closeSettings();
                 closeReactions();
                 if (!ui.sidebar.hidden) toggleSidebar(ui.sidebar.dataset.tab || 'members');
@@ -1184,6 +1255,7 @@
         listen(window, 'll-wait-cancelled', () => { awaitingAdmission = false; updateButtons(); });
         dispose = () => {
             closed = true;
+            void closeFullscreenFor();
             window.dispatchEvent(new Event('ll-prejoin-close'));
             for (const [target, type, callback] of listeners) target.removeEventListener(type, callback);
             if (stateTimer) window.clearInterval(stateTimer);
@@ -1191,6 +1263,7 @@
         };
         if (!sdk) showError('Клиент видеосвязи не загрузился. Проверьте интернет и обновите страницу.');
         restorePreferences();
+        updateFullscreenControls();
         updateButtons();
     }
     window.addEventListener('ll-page-updated', initialize);
