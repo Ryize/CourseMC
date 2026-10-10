@@ -11,6 +11,7 @@ from .models import (
     InterviewQuestionCategory,
     LiveCodingTask,
     MockInterview,
+    MockInterviewAllowance,
     MockInterviewAnswer,
     MockInterviewSettings,
 )
@@ -61,6 +62,12 @@ def mock_interview_availability(user, now=None, lock_settings=False):
             .get(pk=settings_object.pk)
         )
     limit = settings_object.weekly_attempt_limit
+    if limit > 0:
+        allowances = MockInterviewAllowance.objects.filter(user=user)
+        if lock_settings:
+            allowances = allowances.select_for_update()
+        extra_attempts = allowances.values_list('extra_attempts', flat=True).first()
+        limit += extra_attempts or 0
     attempts = (
         MockInterview.objects
         .filter(user=user, started_at__gte=now - MOCK_INTERVIEW_LIMIT_WINDOW)

@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.db.models import IntegerField, Value
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 from unfold.admin import ModelAdmin, TabularInline
@@ -9,6 +11,7 @@ from interview.models import (
     InterviewQuestionCategory,
     LiveCodingTask,
     MockInterview,
+    MockInterviewAllowance,
     MockInterviewAnswer,
     MockInterviewFile,
     MockInterviewSettings,
@@ -113,6 +116,81 @@ class MockInterviewSettingsAdmin(ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(MockInterviewAllowance)
+class MockInterviewAllowanceAdmin(ModelAdmin):
+    fields = ('user', 'extra_attempts', 'effective_limit', 'updated_at')
+    readonly_fields = ('effective_limit', 'updated_at')
+    list_display = ('user', 'extra_attempts', 'effective_limit', 'updated_at')
+    search_fields = ('user__username', 'user__first_name', 'user__last_name')
+    list_select_related = ('user', 'user__course_profile__groups__teacher')
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request).annotate(
+            weekly_base_limit=Value(
+                MockInterviewSettings.load().weekly_attempt_limit,
+                output_field=IntegerField(),
+            ),
+        )
+        if request.user.is_superuser:
+            return queryset
+        return queryset.filter(
+            user__course_profile__groups__teacher__user=request.user,
+        )
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return (*self.readonly_fields, 'user')
+        return self.readonly_fields
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'user':
+            users = get_user_model().objects.filter(
+                course_profile__isnull=False,
+                is_staff=False,
+            )
+            if not request.user.is_superuser:
+                users = users.filter(
+                    course_profile__groups__teacher__user=request.user,
+                )
+            kwargs['queryset'] = users.order_by('username', 'pk')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    @staticmethod
+    def _can_access_student(request, obj):
+        return (
+            obj is None
+            or request.user.is_superuser
+            or get_user_model().objects.filter(
+                pk=obj.user_id,
+                course_profile__groups__teacher__user=request.user,
+            ).exists()
+        )
+
+    def has_view_permission(self, request, obj=None):
+        return (
+            super().has_view_permission(request, obj)
+            and self._can_access_student(request, obj)
+        )
+
+    def has_change_permission(self, request, obj=None):
+        return (
+            super().has_change_permission(request, obj)
+            and self._can_access_student(request, obj)
+        )
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser and super().has_delete_permission(request, obj)
+
+    @admin.display(description='Итоговый лимит за 7 дней')
+    def effective_limit(self, obj):
+        limit = getattr(obj, 'weekly_base_limit', None)
+        if limit is None:
+            limit = MockInterviewSettings.load().weekly_attempt_limit
+        if limit == 0:
+            return 'Собеседования отключены общими настройками'
+        return limit + (obj.extra_attempts if obj else 0)
 
 
 class MockInterviewAnswerInline(TabularInline):

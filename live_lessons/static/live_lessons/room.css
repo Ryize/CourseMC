@@ -98,7 +98,7 @@ body.ll-room-scroll-locked { overflow: hidden; }
 body.black .ll-room .ll-room-empty, .ll-room .ll-room-empty { align-content: center; gap: 10px; margin: 0; color: #aeb4c0; }
 .ll-room-empty strong { color: #eef0f6; font-size: 20px; }
 .ll-room-empty > span:last-child { font-size: 14px; }
-.ll-room-avatar, .ll-room-lobby-icon { display: grid; place-items: center; width: 148px; height: 148px; margin-bottom: 12px; border-radius: 50%; background: linear-gradient(145deg, #6879e8, #ec816c); color: #fff; font-size: 82px; font-weight: 800; letter-spacing: -.08em; box-shadow: 0 14px 50px rgba(29, 35, 63, .28); }
+.ll-room-avatar, .ll-room-lobby-icon { display: grid; place-items: center; width: 148px; height: 148px; margin-bottom: 12px; padding: 0; border-radius: 50%; background: linear-gradient(145deg, #6879e8, #ec816c); color: #fff; font-size: 82px; font-weight: 800; line-height: 1; letter-spacing: 0; text-align: center; box-shadow: 0 14px 50px rgba(29, 35, 63, .28); }
 .ll-room-lobby { z-index: 2; background: radial-gradient(circle at 50% 42%, rgba(60, 64, 78, .3), rgba(26, 28, 35, .94)); }
 .ll-room-lobby-content { display: grid; justify-items: center; max-width: 480px; }
 .ll-room-lobby-icon { width: 110px; height: 110px; margin: 0 0 18px; font-size: 58px; }

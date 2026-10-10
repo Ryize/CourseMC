@@ -7,15 +7,16 @@ from unittest.mock import patch
 import zipfile
 
 from django.contrib import admin
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, Permission, User
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import IntegrityError, transaction
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
 from interview.answer import get_questions, mark_questions_as_shown
-from interview.admin import MockInterviewAdmin
+from interview.admin import MockInterviewAdmin, MockInterviewAllowanceAdmin
 from interview.ai_analysis import _repository_files, analyze_mock_interview
 from interview.mock_interview import (
     create_mock_interview,
@@ -28,6 +29,7 @@ from interview.models import (
     InterviewQuestionProgress,
     LiveCodingTask,
     MockInterview,
+    MockInterviewAllowance,
     MockInterviewAnswer,
     MockInterviewFile,
     MockInterviewSettings,
@@ -433,6 +435,106 @@ class MockInterviewFlowTests(TestCase):
             'type="submit">Начать собеседование</button>',
             html=False,
         )
+
+    def test_personal_extra_attempts_unlock_only_selected_student(self):
+        for _ in range(3):
+            MockInterview.objects.create(
+                user=self.user, status=MockInterview.Status.ABANDONED,
+            )
+        self.assertFalse(mock_interview_availability(self.user).can_start)
+        self.assertFalse(MockInterviewAllowance.objects.exists())
+
+        MockInterviewAllowance.objects.create(user=self.user, extra_attempts=2)
+        availability = mock_interview_availability(self.user)
+        self.assertEqual((availability.limit, availability.used, availability.remaining), (5, 3, 2))
+        interview = self.create_interview()
+        self.assertEqual(interview.user, self.user)
+        self.assertEqual(mock_interview_availability(self.user).remaining, 1)
+        other = User.objects.create_user('ordinary-mock-student')
+        self.assertEqual(mock_interview_availability(other).limit, 3)
+
+    def test_personal_limit_is_enforced_when_all_attempts_are_used(self):
+        MockInterviewAllowance.objects.create(user=self.user, extra_attempts=2)
+        for _ in range(5):
+            MockInterview.objects.create(user=self.user)
+        availability = mock_interview_availability(self.user)
+        self.assertEqual(availability.limit, 5)
+        self.assertFalse(availability.can_start)
+        with self.assertRaisesMessage(ValidationError, 'не более 5'):
+            self.create_interview()
+
+    def test_removing_personal_extra_attempts_restores_general_limit(self):
+        allowance = MockInterviewAllowance.objects.create(user=self.user, extra_attempts=2)
+        for _ in range(4):
+            MockInterview.objects.create(user=self.user)
+        allowance.extra_attempts = 0
+        allowance.save(update_fields=('extra_attempts', 'updated_at'))
+        availability = mock_interview_availability(self.user)
+        self.assertEqual((availability.limit, availability.used, availability.remaining), (3, 4, 0))
+        self.assertFalse(availability.can_start)
+        self.assertEqual(MockInterview.objects.filter(user=self.user).count(), 4)
+
+    def test_global_shutdown_also_blocks_students_with_extra_attempts(self):
+        MockInterviewAllowance.objects.create(user=self.user, extra_attempts=10)
+        settings_object = MockInterviewSettings.load()
+        settings_object.weekly_attempt_limit = 0
+        settings_object.save(update_fields=('weekly_attempt_limit', 'updated_at'))
+        availability = mock_interview_availability(self.user)
+        self.assertEqual(availability.limit, 0)
+        self.assertIsNone(availability.next_available_at)
+        with self.assertRaisesMessage(ValidationError, 'временно отключены'):
+            self.create_interview()
+
+    def test_changed_general_limit_keeps_personal_increment(self):
+        MockInterviewAllowance.objects.create(user=self.user, extra_attempts=2)
+        settings_object = MockInterviewSettings.load()
+        settings_object.weekly_attempt_limit = 4
+        settings_object.save(update_fields=('weekly_attempt_limit', 'updated_at'))
+        self.assertEqual(mock_interview_availability(self.user).limit, 6)
+
+    def test_personal_attempts_still_use_rolling_seven_day_window(self):
+        MockInterviewAllowance.objects.create(user=self.user, extra_attempts=2)
+        now = timezone.now()
+        timestamps = [now - timedelta(days=8)] + [
+            now - timedelta(hours=6 - index) for index in range(6)
+        ]
+        for started_at in timestamps:
+            interview = MockInterview.objects.create(user=self.user)
+            MockInterview.objects.filter(pk=interview.pk).update(started_at=started_at)
+        availability = mock_interview_availability(self.user, now=now)
+        self.assertEqual((availability.limit, availability.used, availability.remaining), (5, 6, 0))
+        self.assertEqual(availability.next_available_at, timestamps[2] + timedelta(days=7))
+
+    @patch('interview.views._active_student', return_value=SimpleNamespace())
+    def test_start_page_shows_personal_attempt_count(self, active_student):
+        MockInterviewAllowance.objects.create(user=self.user, extra_attempts=2)
+        MockInterview.objects.create(user=self.user, status=MockInterview.Status.ABANDONED)
+        response = self.client.get(reverse('mock_interview_start'))
+        self.assertContains(response, 'Осталось попыток: 4 из 5')
+
+    @patch('interview.views._active_student', return_value=SimpleNamespace())
+    def test_student_cannot_increase_limit_by_forging_start_post(self, active_student):
+        for _ in range(3):
+            MockInterview.objects.create(user=self.user, status=MockInterview.Status.ABANDONED)
+        response = self.client.post(reverse('mock_interview_start'), {
+            'level': 'junior', 'frameworks': [self.django.pk],
+            'live_coding_category': 'random', 'extra_attempts': 100,
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(MockInterview.objects.filter(user=self.user).count(), 3)
+        self.assertFalse(MockInterviewAllowance.objects.exists())
+
+    def test_personal_increment_validation_and_uniqueness(self):
+        for value in (-1, 101):
+            with self.subTest(value=value):
+                with self.assertRaises(ValidationError):
+                    MockInterviewAllowance(user=self.user, extra_attempts=value).full_clean()
+        MockInterviewAllowance(user=self.user, extra_attempts=100).full_clean()
+        MockInterviewAllowance.objects.create(user=self.user, extra_attempts=1)
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            MockInterviewAllowance.objects.create(user=self.user, extra_attempts=2)
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            MockInterviewAllowance.objects.filter(user=self.user).update(extra_attempts=101)
 
     def test_selection_uses_only_curated_questions_and_required_blocks(self):
         interview = self.create_interview(self.django, self.flask)
@@ -961,3 +1063,132 @@ class MockInterviewTeacherAccessTests(TestCase):
         queryset = model_admin.get_queryset(request)
 
         self.assertEqual(set(queryset), {self.visible})
+
+    def grant_allowance_permissions(self):
+        self.teacher_user.user_permissions.add(*Permission.objects.filter(
+            content_type__app_label='interview',
+            codename__in=(
+                'view_mockinterviewallowance', 'add_mockinterviewallowance',
+                'change_mockinterviewallowance',
+            ),
+        ))
+        self.client.force_login(self.teacher_user)
+
+    def test_teacher_sees_and_changes_only_own_student_allowance(self):
+        self.grant_allowance_permissions()
+        own = MockInterviewAllowance.objects.create(user=self.student_user, extra_attempts=2)
+        outside = MockInterviewAllowance.objects.create(user=self.other_user, extra_attempts=4)
+        request = RequestFactory().get('/coursemc_control/interview/mockinterviewallowance/')
+        request.user = self.teacher_user
+        model_admin = MockInterviewAllowanceAdmin(MockInterviewAllowance, admin.site)
+        rows = list(model_admin.get_queryset(request))
+        self.assertEqual(rows, [own])
+        with self.assertNumQueries(0):
+            self.assertEqual(model_admin.effective_limit(rows[0]), 5)
+        self.assertTrue(model_admin.has_change_permission(request, own))
+        self.assertFalse(model_admin.has_view_permission(request, outside))
+        self.assertFalse(model_admin.has_change_permission(request, outside))
+
+        response = self.client.post(
+            reverse('admin:interview_mockinterviewallowance_change', args=(own.pk,)),
+            {'extra_attempts': 3, '_save': 'Сохранить'},
+        )
+        self.assertEqual(response.status_code, 302)
+        own.refresh_from_db()
+        self.assertEqual(own.extra_attempts, 3)
+        self.assertEqual(mock_interview_availability(self.student_user).limit, 6)
+
+    def test_teacher_can_add_allowance_for_own_student(self):
+        self.grant_allowance_permissions()
+        url = reverse('admin:interview_mockinterviewallowance_add')
+        response = self.client.get(url)
+        self.assertContains(response, 'Дополнительных попыток за 7 дней')
+        field = response.context['adminform'].form.fields['user']
+        self.assertEqual(set(field.queryset), {self.student_user})
+        response = self.client.post(url, {
+            'user': self.student_user.pk, 'extra_attempts': 2, '_save': 'Сохранить',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(MockInterviewAllowance.objects.get(user=self.student_user).extra_attempts, 2)
+
+    def test_teacher_cannot_submit_foreign_student_in_add_form(self):
+        self.grant_allowance_permissions()
+        response = self.client.post(reverse('admin:interview_mockinterviewallowance_add'), {
+            'user': self.other_user.pk, 'extra_attempts': 2, '_save': 'Сохранить',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('user', response.context['adminform'].form.errors)
+        self.assertFalse(MockInterviewAllowance.objects.exists())
+
+    def test_teacher_cannot_modify_foreign_allowance_by_direct_url(self):
+        self.grant_allowance_permissions()
+        outside = MockInterviewAllowance.objects.create(user=self.other_user, extra_attempts=1)
+        url = reverse('admin:interview_mockinterviewallowance_change', args=(outside.pk,))
+        self.client.post(url, {'extra_attempts': 99, '_save': 'Сохранить'})
+        outside.refresh_from_db()
+        self.assertEqual(outside.extra_attempts, 1)
+
+    def test_existing_allowance_cannot_be_reassigned_in_post(self):
+        self.grant_allowance_permissions()
+        own = MockInterviewAllowance.objects.create(user=self.student_user, extra_attempts=1)
+        response = self.client.post(
+            reverse('admin:interview_mockinterviewallowance_change', args=(own.pk,)),
+            {'user': self.other_user.pk, 'extra_attempts': 2, '_save': 'Сохранить'},
+        )
+        self.assertEqual(response.status_code, 302)
+        own.refresh_from_db()
+        self.assertEqual(own.user, self.student_user)
+        self.assertFalse(MockInterviewAllowance.objects.filter(user=self.other_user).exists())
+
+    def test_staff_without_permission_and_students_cannot_add_allowance(self):
+        url = reverse('admin:interview_mockinterviewallowance_add')
+        self.client.force_login(self.teacher_user)
+        self.assertEqual(self.client.post(url, {
+            'user': self.student_user.pk, 'extra_attempts': 2,
+        }).status_code, 403)
+        self.client.force_login(self.student_user)
+        self.assertEqual(self.client.post(url, {
+            'user': self.student_user.pk, 'extra_attempts': 2,
+        }).status_code, 302)
+        self.assertFalse(MockInterviewAllowance.objects.exists())
+
+    def test_superuser_can_manage_student_from_another_teacher(self):
+        outside_teacher_user = User.objects.create_user('other-mock-teacher', is_staff=True)
+        outside_teacher = Student.objects.create(
+            user=outside_teacher_user, contact='@other-teacher', groups=self.group,
+        )
+        outside_group = LearnGroup.objects.create(
+            title='Другая группа', teacher=outside_teacher,
+        )
+        Student.objects.create(user=self.other_user, contact='@other', groups=outside_group)
+        superuser = User.objects.create_superuser('mock-admin', password='password')
+        self.client.force_login(superuser)
+        response = self.client.post(reverse('admin:interview_mockinterviewallowance_add'), {
+            'user': self.other_user.pk, 'extra_attempts': 2, '_save': 'Сохранить',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(MockInterviewAllowance.objects.get(user=self.other_user).extra_attempts, 2)
+
+    def test_student_management_role_receives_personal_attempt_permissions(self):
+        from Course.permissions import sync_feature_permissions
+
+        role = Group.objects.create(name='Учителя мок-собеседований')
+        role.permissions.add(Permission.objects.get(
+            content_type__app_label='Course', codename='change_student',
+        ))
+        read_only_role = Group.objects.create(name='Только просмотр учеников')
+        read_only_role.permissions.add(Permission.objects.get(
+            content_type__app_label='Course', codename='view_student',
+        ))
+        sync_feature_permissions()
+        sync_feature_permissions()
+        permissions = set(role.permissions.filter(
+            content_type__app_label='interview',
+        ).values_list('codename', flat=True))
+        self.assertEqual(permissions, {
+            'view_mockinterviewallowance', 'add_mockinterviewallowance',
+            'change_mockinterviewallowance',
+        })
+        self.assertFalse(read_only_role.permissions.filter(
+            codename__endswith='mockinterviewallowance',
+        ).exists())

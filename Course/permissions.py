@@ -26,6 +26,7 @@ def sync_feature_permissions():
                 'mockinterview',
                 'mockinterviewanswer',
                 'mockinterviewfile',
+                'mockinterviewallowance',
             ),
         ).select_related('content_type')
     }
@@ -85,6 +86,12 @@ def sync_feature_permissions():
                     additions.append(permission)
 
         if ('Course', 'change_student') in existing:
+            for action in ('view', 'add', 'change'):
+                permission = target_permissions.get(
+                    ('interview', f'{action}_mockinterviewallowance'),
+                )
+                if permission:
+                    additions.append(permission)
             for action in ('add', 'change'):
                 for model in ('studentcard', 'studentnote'):
                     permission = target_permissions.get(

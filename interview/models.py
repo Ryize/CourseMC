@@ -254,6 +254,42 @@ class MockInterviewSettings(models.Model):
         verbose_name_plural = 'Настройки мок-собеседований'
 
 
+class MockInterviewAllowance(models.Model):
+    """Персональная прибавка к общему лимиту в скользящем окне за 7 дней."""
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='mock_interview_allowance',
+        verbose_name='Ученик',
+    )
+    extra_attempts = models.PositiveSmallIntegerField(
+        default=0,
+        validators=(MaxValueValidator(100),),
+        verbose_name='Дополнительных попыток за 7 дней',
+        help_text=(
+            'Прибавляются к общему лимиту только этого ученика. '
+            'Например, при общем лимите 3 значение 2 даст 5 попыток. '
+            'Прибавка действует, пока вы её не измените; 0 возвращает общий лимит. '
+            'Если собеседования отключены общим лимитом 0, прибавка не действует.'
+        ),
+    )
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Обновлено')
+
+    class Meta:
+        verbose_name = 'Дополнительные попытки мок-собеседования'
+        verbose_name_plural = 'Дополнительные попытки мок-собеседований'
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(extra_attempts__lte=100),
+                name='mock_allowance_extra_lte_100',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.user} · +{self.extra_attempts} попыток за 7 дней'
+
+
 class MockInterview(models.Model):
     """Одна неизменяемая после завершения попытка мок-собеседования."""
 
